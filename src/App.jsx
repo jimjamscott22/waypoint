@@ -3,6 +3,7 @@ import Header from './components/Header';
 import CaptureBar from './components/CaptureBar';
 import PipelineTable from './components/PipelineTable';
 import JobDetailPanel from './components/JobDetailPanel';
+import ReviewQueue from './components/ReviewQueue';
 import { useJobsStore } from './hooks/useJobsStore';
 
 export default function App() {
@@ -27,6 +28,7 @@ export default function App() {
         />
         {store.selectedJob && <JobDetailPanel job={store.selectedJob} onClose={store.clearSelection} />}
       </main>
+      <ReviewQueue queue={store.queue} onSave={store.saveToPipeline} onDismiss={store.dismissMatch} />
     </div>
   );
 }
