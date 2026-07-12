@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#eef1f5; font-family:'Public Sans',system-ui,sans-serif; color:#1c2734; }
+  a { color:#2f6fdb; text-decoration:none; }
+  a:hover { color:#1d54b8; text-decoration:underline; }
+  * { box-sizing:border-box; }
+  ::placeholder { color:#93a1b1; }
+</style>
+</helmet>
+
+<div data-screen-label="Pipeline dashboard" style="display:flex; min-height:100vh; min-width:1280px;">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside style="width:224px; flex:none; background:#1c2734; color:#c8d2dd; display:flex; flex-direction:column; padding:20px 14px;">
+    <div style="display:flex; align-items:center; gap:10px; padding:4px 10px 22px;">
+      <div style="width:28px; height:28px; border-radius:8px; background:{{ accent }}; display:grid; place-items:center; color:#fff; font:700 14px 'Bricolage Grotesque',sans-serif;">W</div>
+      <div style="font:600 16px 'Bricolage Grotesque',sans-serif; color:#fff; letter-spacing:0.2px;">Waypoint</div>
+    </div>
+
+    <nav style="display:flex; flex-direction:column; gap:2px;">
+      <div style="display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; background:rgba(255,255,255,0.09); color:#fff; font-size:13.5px; font-weight:600; cursor:pointer;">
+        <span style="width:7px; height:7px; border-radius:2px; background:{{ accent }};"></span> Pipeline
+      </div>
+      <div style="display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; font-size:13.5px; cursor:pointer;" style-hover="background:rgba(255,255,255,0.05); color:#fff;">
+        <span style="width:7px; height:7px; border-radius:50%; border:1.5px solid #6b7a8c;"></span> Capture &amp; queries
+      </div>
+      <div style="display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; font-size:13.5px; cursor:pointer;" style-hover="background:rgba(255,255,255,0.05); color:#fff;">
+        <span style="width:7px; height:7px; border-radius:50%; border:1.5px solid #6b7a8c;"></span> Contacts
+      </div>
+      <div style="display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; font-size:13.5px; cursor:pointer;" style-hover="background:rgba(255,255,255,0.05); color:#fff;">
+        <span style="width:7px; height:7px; border-radius:50%; border:1.5px solid #6b7a8c;"></span> Insights
+      </div>
+    </nav>
+
+    <div style="margin-top:auto; background:rgba(255,255,255,0.06); border-radius:10px; padding:14px; display:flex; flex-direction:column; gap:6px;">
+      <div style="font-size:12px; font-weight:700; color:#fff;">3 follow-ups due</div>
+      <div style="font-size:11.5px; line-height:1.5; color:#9fb0c2;">Lakeview School District is the oldest — a short nudge keeps you on their radar.</div>
+      <div style="margin-top:4px; font-size:12px; font-weight:600; color:{{ accentLight }}; cursor:pointer;">Review follow-ups →</div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main style="flex:1; min-width:0; padding:28px 32px 40px; display:flex; flex-direction:column; gap:20px;">
+
+    <!-- Header -->
+    <header style="display:flex; align-items:flex-end; justify-content:space-between; gap:24px;">
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <div style="font:600 26px 'Bricolage Grotesque',sans-serif; letter-spacing:-0.2px;">Good morning</div>
+        <div style="font-size:13.5px; color:#5c6b7c;">2 interviews on the calendar this week — momentum is on your side.</div>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <div style="background:#fff; border:1px solid #e3e8ee; border-radius:10px; padding:10px 16px; display:flex; flex-direction:column; gap:1px;">
+          <div style="font:600 18px 'Bricolage Grotesque',sans-serif;">4</div>
+          <div style="font-size:11px; color:#5c6b7c; font-weight:500;">applied this week</div>
+        </div>
+        <div style="background:#fff; border:1px solid #e3e8ee; border-radius:10px; padding:10px 16px; display:flex; flex-direction:column; gap:1px;">
+          <div style="font:600 18px 'Bricolage Grotesque',sans-serif;">2</div>
+          <div style="font-size:11px; color:#5c6b7c; font-weight:500;">interviews booked</div>
+        </div>
+        <div style="background:#fff; border:1px solid #e3e8ee; border-radius:10px; padding:10px 16px; display:flex; flex-direction:column; gap:1px;">
+          <div style="font:600 18px 'Bricolage Grotesque',sans-serif;">38%</div>
+          <div style="font-size:11px; color:#5c6b7c; font-weight:500;">response rate</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Capture bar -->
+    <div style="background:#fff; border:1px solid #e3e8ee; border-radius:12px; padding:14px 16px; display:flex; flex-direction:column; gap:10px;">
+      <div style="display:flex; gap:10px;">
+        <input placeholder="Paste a job posting URL — title, company, salary and location fill in automatically" style="flex:1; border:1px solid #dde3ea; border-radius:8px; padding:10px 14px; font:400 13px 'Public Sans',sans-serif; color:#1c2734; background:#f8fafc; outline:none;" style-focus="border-color:{{ accent }}; background:#fff;">
+        <button onClick="{{ noop }}" style="flex:none; border:none; border-radius:8px; background:{{ accent }}; color:#fff; font:600 13px 'Public Sans',sans-serif; padding:0 18px; cursor:pointer;" style-hover="filter:brightness(1.08);">Capture job</button>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:11px; font-weight:600; color:#93a1b1; text-transform:uppercase; letter-spacing:0.6px;">Saved queries</span>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <span style="border:1px solid #dde3ea; border-radius:999px; padding:4px 11px; font-size:12px; color:#3d4c5d; cursor:pointer; background:#fff;" style-hover="border-color:{{ accent }}; color:{{ accent }};">Sysadmin · remote · &lt;7 days</span>
+          <span style="border:1px solid #dde3ea; border-radius:999px; padding:4px 11px; font-size:12px; color:#3d4c5d; cursor:pointer; background:#fff;" style-hover="border-color:{{ accent }}; color:{{ accent }};">IT support · Madison · &lt;14 days</span>
+          <span style="border:1px solid #dde3ea; border-radius:999px; padding:4px 11px; font-size:12px; color:#3d4c5d; cursor:pointer; background:#fff;" style-hover="border-color:{{ accent }}; color:{{ accent }};">Network admin · hybrid</span>
+          <span style="border:1px dashed #c4cdd8; border-radius:999px; padding:4px 11px; font-size:12px; color:#93a1b1; cursor:pointer;" style-hover="color:{{ accent }}; border-color:{{ accent }};">+ New query</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pipeline table -->
+    <div style="background:#fff; border:1px solid #e3e8ee; border-radius:12px; overflow:hidden; display:flex; flex-direction:column;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px 0;">
+        <div style="display:flex; gap:4px;">
+          <sc-for list="{{ tabs }}" as="tab" hint-placeholder-count="5">
+            <button onClick="{{ tab.onSelect }}" style="border:none; cursor:pointer; border-radius:8px; padding:7px 13px; font:600 12.5px 'Public Sans',sans-serif; background:{{ tab.bg }}; color:{{ tab.fg }};">{{ tab.label }} <span style="opacity:0.55; font-weight:500;">{{ tab.count }}</span></button>
+          </sc-for>
+        </div>
+        <div style="font-size:12px; color:#93a1b1;">Sorted by last activity</div>
+      </div>
+
+      <!-- column headers -->
+      <div style="display:grid; grid-template-columns:2.3fr 1fr 1.2fr 1fr 1.3fr 1.5fr; gap:12px; padding:12px 18px 8px; font-size:10.5px; font-weight:700; letter-spacing:0.7px; text-transform:uppercase; color:#93a1b1; border-bottom:1px solid #eef1f5;">
+        <div>Role</div><div>Stage</div><div>Location</div><div>Salary</div><div>Contact</div><div>Next action</div>
+      </div>
+
+      <sc-for list="{{ jobs }}" as="job" hint-placeholder-count="6">
+        <div style="display:grid; grid-template-columns:2.3fr 1fr 1.2fr 1fr 1.3fr 1.5fr; gap:12px; align-items:center; padding:{{ rowPad }} 18px; border-bottom:1px solid #eef1f5; cursor:pointer;" style-hover="background:#f8fafc;">
+          <div style="display:flex; flex-direction:column; gap:2px; min-width:0;">
+            <div style="font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ job.role }}</div>
+            <div style="font-size:12px; color:#5c6b7c;">{{ job.company }}</div>
+          </div>
+          <div><span style="display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:3px 10px; font-size:11.5px; font-weight:600; background:{{ job.chipBg }}; color:{{ job.chipFg }};"><span style="width:5px; height:5px; border-radius:50%; background:{{ job.chipFg }};"></span>{{ job.stage }}</span></div>
+          <div style="font-size:12.5px; color:#3d4c5d;">{{ job.location }}</div>
+          <div style="font-size:12.5px; color:#3d4c5d;">{{ job.salary }}</div>
+          <div style="font-size:12.5px; color:#3d4c5d;">{{ job.contact }}</div>
+          <div style="font-size:12.5px; font-weight:{{ job.nextWeight }}; color:{{ job.nextColor }};">{{ job.next }}</div>
+        </div>
+      </sc-for>
+
+      <div style="padding:12px 18px; font-size:12px; color:#93a1b1;">Showing {{ shownCount }} of {{ totalCount }} tracked jobs</div>
+    </div>
+  </main>
+
+  <!-- ============ REVIEW QUEUE ============ -->
+  <sc-if value="{{ showQueue }}" hint-placeholder-val="{{ true }}">
+    <aside style="width:296px; flex:none; padding:28px 24px 40px 0; display:flex; flex-direction:column; gap:14px;">
+      <div style="display:flex; align-items:baseline; justify-content:space-between;">
+        <div style="font:600 15px 'Bricolage Grotesque',sans-serif;">Scraper results</div>
+        <div style="font-size:11.5px; color:#93a1b1;">ran 2h ago</div>
+      </div>
+      <div style="font-size:12px; line-height:1.5; color:#5c6b7c; margin-top:-8px;">3 new matches from your saved queries — keep the good ones, dismiss the rest.</div>
+
+      <sc-for list="{{ queue }}" as="q" hint-placeholder-count="3">
+        <div style="background:#fff; border:1px solid #e3e8ee; border-radius:12px; padding:14px; display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              <div style="font-size:13px; font-weight:600; line-height:1.3;">{{ q.role }}</div>
+              <div style="font-size:12px; color:#5c6b7c;">{{ q.company }}</div>
+            </div>
+            <span style="flex:none; font-size:10.5px; font-weight:700; color:{{ accent }}; background:{{ accentSoft }}; border-radius:6px; padding:3px 7px;">{{ q.match }}</span>
+          </div>
+          <div style="font-size:11.5px; color:#93a1b1;">{{ q.meta }}</div>
+          <div style="display:flex; gap:8px; margin-top:2px;">
+            <button onClick="{{ noop }}" style="flex:1; border:1px solid {{ accent }}; background:#fff; color:{{ accent }}; border-radius:7px; padding:6px 0; font:600 12px 'Public Sans',sans-serif; cursor:pointer;" style-hover="background:{{ accentSoft }};">Save to pipeline</button>
+            <button onClick="{{ noop }}" style="flex:none; border:1px solid #dde3ea; background:#fff; color:#93a1b1; border-radius:7px; padding:6px 12px; font:500 12px 'Public Sans',sans-serif; cursor:pointer;" style-hover="color:#5c6b7c;">Dismiss</button>
+          </div>
+        </div>
+      </sc-for>
+
+      <div style="border:1px dashed #c4cdd8; border-radius:12px; padding:14px; font-size:12px; line-height:1.55; color:#5c6b7c;">
+        <span style="font-weight:700; color:#3d4c5d;">Tip:</span> queries re-run every morning. Anything you dismiss trains the match score.
+      </div>
+    </aside>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;accent&quot;: { &quot;editor&quot;: &quot;color&quot;, &quot;default&quot;: &quot;#2f6fdb&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;options&quot;: [&quot;#2f6fdb&quot;, &quot;#5b5bd6&quot;, &quot;#0f8a8a&quot;], &quot;section&quot;: &quot;Theme&quot; },
+  &quot;density&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;comfortable&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;options&quot;: [&quot;comfortable&quot;, &quot;compact&quot;], &quot;section&quot;: &quot;Layout&quot; },
+  &quot;showQueue&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Layout&quot; }
+}">
+class Component extends DCLogic {
+  state = { stage: 'All' };
+
+  static STAGES = ['All', 'Saved', 'Applied', 'Interviewing', 'Closed'];
+
+  static CHIP = {
+    Saved:        { bg: '#eef1f5', fg: '#5c6b7c' },
+    Applied:      { bg: '#e8effc', fg: '#2f6fdb' },
+    Interviewing: { bg: '#fdf1df', fg: '#b26a00' },
+    Offer:        { bg: '#e3f4ec', fg: '#1f8a5b' },
+    Closed:       { bg: '#f2f2f2', fg: '#93a1b1' }
+  };
+
+  static JOBS = [
+    { role: 'Systems Administrator', company: 'Corvid Managed Services', stage: 'Interviewing', location: 'Remote (US)', salary: '$75–90k', contact: 'Marcus Lee · IT Dir.', next: 'Tech interview · Jul 14', urgent: true },
+    { role: 'Help Desk Team Lead', company: 'Brightpath Credit Union', stage: 'Interviewing', location: 'Madison, WI', salary: '$60–70k', contact: 'Priya Raman · HR', next: 'Panel interview · Jul 17', urgent: false },
+    { role: 'Cloud Support Associate', company: 'Nimbus Hosting', stage: 'Applied', location: 'Remote (US)', salary: '$65–78k', contact: '—', next: 'Follow up · Jul 16', urgent: false },
+    { role: 'IT Support Specialist II', company: 'Northlake Health System', stage: 'Applied', location: 'Madison, WI · hybrid', salary: '$58–68k', contact: 'Dana Whitfield · HR', next: 'Follow up · Jul 15', urgent: false },
+    { role: 'Network Administrator', company: 'Lakeview School District', stage: 'Applied', location: 'Middleton, WI', salary: '$62–74k', contact: 'jobs@lakeview.k12', next: 'Follow up due today', urgent: true },
+    { role: 'Junior Systems Engineer', company: 'Halberd Logistics', stage: 'Saved', location: 'Sun Prairie, WI', salary: '$70–82k', contact: '—', next: 'Tailor resume &amp; apply', urgent: false },
+    { role: 'IT Operations Technician', company: 'Meridian Colo', stage: 'Saved', location: 'Verona, WI · onsite', salary: '$55–64k', contact: '—', next: 'Research team on LinkedIn', urgent: false },
+    { role: 'Desktop Support Analyst', company: 'Kettering College', stage: 'Closed', location: 'Madison, WI', salary: '$52–60k', contact: 'HR portal', next: 'Closed Jul 1 · keep contact', urgent: false }
+  ];
+
+  static QUEUE = [
+    { role: 'Systems Administrator (Linux)', company: 'Fairwater Insurance Group', match: '92% match', meta: 'Remote · $78–92k · posted 1d ago · via "Sysadmin · remote"' },
+    { role: 'IT Support Specialist', company: 'Oakline Veterinary Partners', match: '84% match', meta: 'Madison, WI · $56–63k · posted 3d ago · via "IT support · Madison"' },
+    { role: 'Network Admin I', company: 'Talgrove Manufacturing', match: '77% match', meta: 'Waunakee, WI · hybrid · posted 2d ago · via "Network admin"' }
+  ];
+
+  renderVals() {
+    const accent = this.props.accent ?? '#2f6fdb';
+    const softMap = { '#2f6fdb': '#e8effc', '#5b5bd6': '#ebebfa', '#0f8a8a': '#e2f3f3' };
+    const lightMap = { '#2f6fdb': '#8fb4f0', '#5b5bd6': '#b0b0ee', '#0f8a8a': '#8fd0d0' };
+    const density = this.props.density ?? 'comfortable';
+    const showQueue = this.props.showQueue ?? true;
+    const stage = this.state.stage;
+
+    const decode = s => s.replace('&amp;', '&');
+    const all = Component.JOBS;
+    const jobs = all
+      .filter(j => stage === 'All' || j.stage === stage)
+      .map(j => ({
+        ...j,
+        next: decode(j.next),
+        chipBg: Component.CHIP[j.stage].bg,
+        chipFg: Component.CHIP[j.stage].fg,
+        nextColor: j.urgent ? '#b3423a' : '#3d4c5d',
+        nextWeight: j.urgent ? 600 : 400
+      }));
+
+    const tabs = Component.STAGES.map(s => ({
+      label: s,
+      count: s === 'All' ? all.length : all.filter(j => j.stage === s).length,
+      bg: s === stage ? '#1c2734' : 'transparent',
+      fg: s === stage ? '#fff' : '#5c6b7c',
+      onSelect: () => this.setState({ stage: s })
+    }));
+
+    return {
+      accent,
+      accentSoft: softMap[accent.toLowerCase()] ?? '#e8effc',
+      accentLight: lightMap[accent.toLowerCase()] ?? '#8fb4f0',
+      rowPad: density === 'compact' ? '8px' : '13px',
+      showQueue,
+      tabs,
+      jobs,
+      queue: Component.QUEUE,
+      shownCount: jobs.length,
+      totalCount: all.length,
+      noop: () => {}
+    };
+  }
+}
+</script>
+</body>
+</html>
