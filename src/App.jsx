@@ -1,5 +1,6 @@
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
+import CaptureBar from './components/CaptureBar';
 
 export default function App() {
   return (
@@ -7,6 +8,7 @@ export default function App() {
       <Sidebar />
       <main style={{ flex: 1 }}>
         <Header />
+        <CaptureBar onCapture={url => console.log('captured', url)} />
       </main>
     </div>
   );
