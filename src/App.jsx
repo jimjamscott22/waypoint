@@ -2,6 +2,7 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import CaptureBar from './components/CaptureBar';
 import PipelineTable from './components/PipelineTable';
+import JobDetailPanel from './components/JobDetailPanel';
 import { useJobsStore } from './hooks/useJobsStore';
 
 export default function App() {
@@ -19,11 +20,12 @@ export default function App() {
           tabs={store.tabs}
           stageFilter={store.stageFilter}
           onSelectStage={store.setStageFilter}
-          onSelectJob={id => console.log('select', id)}
+          onSelectJob={id => store.selectJob(id)}
           onUpdateDraftField={store.updateDraftField}
           onCommitDraft={store.commitDraft}
           onDiscardDraft={store.discardDraft}
         />
+        {store.selectedJob && <JobDetailPanel job={store.selectedJob} onClose={store.clearSelection} />}
       </main>
     </div>
   );
