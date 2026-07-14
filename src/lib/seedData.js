@@ -1,4 +1,5 @@
-export const STAGES = ['All', 'Saved', 'Applied', 'Interviewing', 'Closed'];
+export const JOB_STAGES = ['Saved', 'Applied', 'Interviewing', 'Offer', 'Closed'];
+export const STAGES = ['All', ...JOB_STAGES];
 
 export const INITIAL_JOBS = [
   { id: 'job-1', role: 'Systems Administrator', company: 'Corvid Managed Services', stage: 'Interviewing', location: 'Remote (US)', salary: '$75–90k', contact: 'Marcus Lee · IT Dir.', next: 'Tech interview · Jul 14', urgent: true },

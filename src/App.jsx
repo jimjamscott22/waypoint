@@ -5,6 +5,7 @@ import CaptureBar from './components/CaptureBar';
 import PipelineTable from './components/PipelineTable';
 import JobDetailPanel from './components/JobDetailPanel';
 import ReviewQueue from './components/ReviewQueue';
+import Toast from './components/Toast';
 
 export default function App() {
   const store = useJobsStore();
@@ -23,6 +24,12 @@ export default function App() {
           stageFilter={store.stageFilter}
           onSelectStage={store.setStageFilter}
           onSelectJob={store.selectJob}
+          onEditJob={store.editJob}
+          onDuplicateJob={store.duplicateJob}
+          onDeleteJob={store.deleteJob}
+          onChangeStage={store.changeJobStage}
+          onReorderJobs={store.reorderJobs}
+          onMoveJob={store.moveJob}
           onUpdateDraftField={store.updateDraftField}
           onCommitDraft={store.commitDraft}
           onDiscardDraft={store.discardDraft}
@@ -31,7 +38,19 @@ export default function App() {
 
       <ReviewQueue queue={store.queue} onSave={store.saveToPipeline} onDismiss={store.dismissMatch} />
 
-      {store.selectedJob && <JobDetailPanel job={store.selectedJob} onClose={store.clearSelection} />}
+      {store.selectedJob ? (
+        <JobDetailPanel
+          key={store.selectedJob.id}
+          job={store.selectedJob}
+          initialMode={store.selectedJobMode}
+          onClose={store.clearSelection}
+          onSave={store.updateJob}
+          onDuplicate={store.duplicateJob}
+          onDelete={store.deleteJob}
+        />
+      ) : null}
+
+      <Toast toast={store.toast} onUndo={store.undoDelete} onDismiss={store.dismissToast} drawerOpen={Boolean(store.selectedJob)} />
     </div>
   );
 }
