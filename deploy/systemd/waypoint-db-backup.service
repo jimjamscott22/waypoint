@@ -1,0 +1,15 @@
+[Unit]
+Description=Back up the Waypoint MariaDB database
+After=mariadb.service
+
+[Service]
+Type=oneshot
+User=root
+EnvironmentFile=/etc/waypoint/backup.env
+ExecStart=/opt/waypoint/current/deploy/scripts/backup-waypoint.sh
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/backups/waypoint
+ReadOnlyPaths=/opt/waypoint/current /etc/waypoint

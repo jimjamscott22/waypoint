@@ -6,9 +6,15 @@ import PipelineTable from './components/PipelineTable';
 import JobDetailPanel from './components/JobDetailPanel';
 import ReviewQueue from './components/ReviewQueue';
 import Toast from './components/Toast';
+import MigrationBanner from './components/MigrationBanner';
+import { color, font } from './theme';
 
 export default function App() {
   const store = useJobsStore();
+
+  if (store.loading) {
+    return <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', color: color.textSecondary, font: `500 14px ${font.body}` }}>Connecting to Waypoint…</div>;
+  }
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', minWidth: 1280 }}>
@@ -16,7 +22,14 @@ export default function App() {
 
       <main style={{ flex: 1, minWidth: 0, padding: '28px 32px 40px', display: 'flex', flexDirection: 'column', gap: 20 }}>
         <Header />
-        <CaptureBar onCapture={store.captureJob} />
+        {store.migration ? <MigrationBanner count={store.migration.jobs.length} error={store.migration.error} onImport={store.importLocalJobs} onDiscard={store.discardLocalJobs} /> : null}
+        <CaptureBar
+          onCapture={store.captureJob}
+          queries={store.queries}
+          onCreateQuery={store.createQuery}
+          onUpdateQuery={store.updateQuery}
+          onDeleteQuery={store.deleteQuery}
+        />
         <PipelineTable
           jobs={store.jobs}
           totalCount={store.totalCount}
@@ -36,7 +49,16 @@ export default function App() {
         />
       </main>
 
-      <ReviewQueue queue={store.queue} onSave={store.saveToPipeline} onDismiss={store.dismissMatch} />
+      <ReviewQueue
+        queue={store.queue}
+        latestRun={store.latestRun}
+        provider={store.provider}
+        providerConfigured={store.providerConfigured}
+        running={store.running}
+        onRun={store.runScrape}
+        onSave={store.saveToPipeline}
+        onDismiss={store.dismissMatch}
+      />
 
       {store.selectedJob ? (
         <JobDetailPanel

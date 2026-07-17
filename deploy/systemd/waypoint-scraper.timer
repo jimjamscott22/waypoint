@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Waypoint ingestion every morning
+
+[Timer]
+OnCalendar=*-*-* 06:00:00 America/New_York
+Persistent=true
+Unit=waypoint-scraper.service
+
+[Install]
+WantedBy=timers.target

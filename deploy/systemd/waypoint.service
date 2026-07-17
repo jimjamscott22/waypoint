@@ -1,0 +1,22 @@
+[Unit]
+Description=Waypoint job search dashboard
+After=network-online.target mariadb.service tailscaled.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=waypoint
+Group=waypoint
+WorkingDirectory=/opt/waypoint/current
+EnvironmentFile=/etc/waypoint/waypoint.env
+ExecStart=/usr/bin/node server/index.js
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadOnlyPaths=/opt/waypoint/current /etc/waypoint
+
+[Install]
+WantedBy=multi-user.target

@@ -1,6 +1,6 @@
 # Waypoint
 
-Waypoint is a job search manager dashboard for tracking applications, capturing new leads, and reviewing scraper matches in one place.
+Waypoint is a private job search dashboard with a centralized MariaDB pipeline and daily Adzuna ingestion.
 
 ## Overview
 
@@ -9,23 +9,27 @@ This project is a React + Vite web app built around a single-screen pipeline das
 - capture job postings from a URL
 - track jobs through stages like Saved, Applied, Interviewing, Offer, and Closed
 - review new matches from saved queries in a side queue
-- keep job data in localStorage for persistence between sessions
+- keep job data synchronized through one MariaDB-backed API
 
 ## Features
 
 - **Pipeline dashboard** with a sidebar, header stats, capture bar, job table, and review queue
 - **Stage filtering** to quickly narrow the pipeline by job stage
 - **Job capture** from a pasted URL, with a draft flow for filling in details by hand
-- **Review queue** for scraper matches, with save and dismiss actions
+- **Daily Adzuna ingestion** plus an in-app manual run
+- **Review queue** for persisted matches, with save and dismiss actions
 - **Job details drawer** for viewing and editing a selected job
 - **Drag-and-drop reordering** for manual priority management
 - **Undoable delete flow** with toast notifications
-- **Local persistence** using browser localStorage
+- **Central persistence** using MariaDB 10.6+
+- **Private deployment** on Raspberry Pi through Tailscale Serve
 
 ## Tech Stack
 
 - [React](https://react.dev/)
 - [Vite](https://vite.dev/)
+- [Fastify](https://fastify.dev/)
+- [MariaDB](https://mariadb.org/)
 - JavaScript
 - HTML/CSS via inline component styles and theme tokens
 
@@ -33,8 +37,9 @@ This project is a React + Vite web app built around a single-screen pipeline das
 
 ### Prerequisites
 
-- Node.js 18 or later
+- Node.js 24
 - npm
+- MariaDB 10.6+
 
 ### Install
 
@@ -42,10 +47,13 @@ This project is a React + Vite web app built around a single-screen pipeline das
 npm install
 ```
 
+Copy `.env.example` to a local environment file and provide the MariaDB and Adzuna credentials. Export those values in the shell before running commands.
+
 ### Run locally
 
 ```bash
 npm run dev
+npm run dev:server
 ```
 
 ### Build for production
@@ -64,6 +72,7 @@ npm run preview
 
 ```bash
 npm test
+npm run test:integration
 ```
 
 ## Project Structure
@@ -71,17 +80,20 @@ npm test
 - `src/App.jsx` — top-level layout and app composition
 - `src/components/` — UI components for the dashboard
 - `src/hooks/useJobsStore.js` — application state and job actions
-- `src/lib/` — job data helpers and seeded data
+- `src/lib/` — API client and job data helpers
+- `server/` — Fastify API, MariaDB repositories, migrations, and scraper
+- `deploy/` — systemd units, backup script, and Tailscale helper
+- `docs/` — deployment, operations, and implementation notes
 - `src/theme.js` — design tokens for color, typography, and spacing
 
 ## Data & State
 
-Waypoint seeds the app with sample job data and queue items, then stores changes in localStorage under `waypoint.jobs`.
+MariaDB is authoritative. On the first server-backed load only, existing `waypoint.jobs` localStorage data can be imported or discarded. After that, every device uses the same API-backed pipeline.
 
 ## Notes
 
 - The app is designed as a desktop-first dashboard.
-- The job URL scraper is currently a stub so users can capture a draft and fill in missing fields manually.
+- Pasted job URLs still create editable drafts; scheduled discovery comes from Adzuna.
 - The visual design favors a calm slate-and-blue palette intended to make the job search feel more manageable.
 
 ## License

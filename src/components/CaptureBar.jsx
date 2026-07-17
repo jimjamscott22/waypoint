@@ -1,52 +1,8 @@
 import { useState } from 'react';
 import { color, font, radius } from '../theme';
+import SavedQueries from './SavedQueries';
 
-const SAVED_QUERIES = ['Sysadmin · remote · <7 days', 'IT support · Madison · <14 days', 'Network admin · hybrid'];
-
-function QueryChip({ label }) {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <span
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        border: `1px solid ${hovered ? color.accent : color.inputBorder}`,
-        borderRadius: radius.pill,
-        padding: '4px 11px',
-        fontSize: 12,
-        color: hovered ? color.accent : color.textBodyMid,
-        cursor: 'pointer',
-        background: '#fff',
-        transition: 'border-color 120ms ease, color 120ms ease',
-      }}
-    >
-      {label}
-    </span>
-  );
-}
-
-function NewQueryChip() {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <span
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        border: `1px dashed ${hovered ? color.accent : color.dashedBorder}`,
-        borderRadius: radius.pill,
-        padding: '4px 11px',
-        fontSize: 12,
-        color: hovered ? color.accent : color.textMuted,
-        cursor: 'pointer',
-        transition: 'border-color 120ms ease, color 120ms ease',
-      }}
-    >
-      + New query
-    </span>
-  );
-}
-
-export default function CaptureBar({ onCapture }) {
+export default function CaptureBar({ onCapture, queries, onCreateQuery, onUpdateQuery, onDeleteQuery }) {
   const [url, setUrl] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
   const [buttonHovered, setButtonHovered] = useState(false);
@@ -79,7 +35,7 @@ export default function CaptureBar({ onCapture }) {
           onKeyDown={e => {
             if (e.key === 'Enter') handleCapture();
           }}
-          placeholder="Paste a job posting URL — title, company, salary and location fill in automatically"
+          placeholder="Paste a job posting URL to create an editable draft"
           style={{
             flex: 1,
             border: `1px solid ${inputFocused ? color.accent : color.inputBorder}`,
@@ -112,25 +68,7 @@ export default function CaptureBar({ onCapture }) {
           Capture job
         </button>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span
-          style={{
-            fontSize: 11,
-            fontWeight: 600,
-            color: color.textMuted,
-            textTransform: 'uppercase',
-            letterSpacing: '0.6px',
-          }}
-        >
-          Saved queries
-        </span>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {SAVED_QUERIES.map(label => (
-            <QueryChip key={label} label={label} />
-          ))}
-          <NewQueryChip />
-        </div>
-      </div>
+      <SavedQueries queries={queries} onCreate={onCreateQuery} onUpdate={onUpdateQuery} onDelete={onDeleteQuery} />
     </div>
   );
 }

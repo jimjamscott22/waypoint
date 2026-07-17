@@ -3,19 +3,31 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "vite",
+    "dev:server": "node --watch server/index.js",
+    "start": "node server/index.js",
     "build": "vite build",
     "test": "node --test tests/*.test.js",
+    "test:integration": "node --test tests/integration/*.test.js",
+    "db:migrate": "node server/db/migrate.js",
+    "scrape:daily": "node server/cli/scrape.js",
+    "scrape:smoke": "node server/cli/scrape.js",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fastify/static": "^10.1.0",
+    "fastify": "^5.10.0",
+    "mariadb": "^3.5.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.1",
-    "vite": "^5.4.0"
+    "@vitejs/plugin-react": "^6.0.3",
+    "vite": "^8.1.5"
   },
   "allowScripts": {
     "esbuild@0.21.5": true

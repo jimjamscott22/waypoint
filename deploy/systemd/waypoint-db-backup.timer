@@ -1,0 +1,10 @@
+[Unit]
+Description=Create a nightly Waypoint database backup
+
+[Timer]
+OnCalendar=*-*-* 02:30:00 America/New_York
+Persistent=true
+Unit=waypoint-db-backup.service
+
+[Install]
+WantedBy=timers.target
