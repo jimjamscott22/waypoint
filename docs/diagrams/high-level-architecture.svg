@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" width="900" height="620" font-family="'Public Sans',-apple-system,'Segoe UI',system-ui,sans-serif">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#6c8ebf"/>
+    </marker>
+    <marker id="ar-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#82b366"/>
+    </marker>
+    <marker id="ar-y" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c9a227"/>
+    </marker>
+    <marker id="ar-m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#93a1b1"/>
+    </marker>
+    <filter id="sh" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#1c2734" flood-opacity="0.13"/>
+    </filter>
+  </defs>
+
+  <rect width="900" height="620" fill="#ffffff"/>
+
+  <text x="40" y="34" font-size="19" font-weight="700" fill="#1c2734">Waypoint — High-Level Architecture (C4 Context)</text>
+  <text x="40" y="56" font-size="12.5" fill="#5c6b7c">Self-hosted full-stack app on a Raspberry Pi: React SPA → Fastify API → MariaDB, plus a nightly Adzuna ingestion job.</text>
+
+  <!-- actor -->
+  <g stroke="#1c2734" stroke-width="2.2" fill="none" stroke-linecap="round">
+    <circle cx="58" cy="188" r="11" fill="#1c2734" stroke="none"/>
+    <path d="M58,200 L58,230 M58,208 L42,219 M58,208 L74,219 M58,230 L44,252 M58,230 L72,252"/>
+  </g>
+  <text x="58" y="272" font-size="12" font-weight="600" fill="#1c2734" text-anchor="middle">Job Seeker</text>
+
+  <!-- browser boundary -->
+  <rect x="116" y="108" width="220" height="246" rx="8" fill="none" stroke="#6c8ebf" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="128" y="127" font-size="11.5" font-weight="600" fill="#2f6fdb">Browser</text>
+
+  <rect x="134" y="140" width="184" height="88" rx="11" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" filter="url(#sh)"/>
+  <text x="226" y="166" font-size="13.5" font-weight="700" fill="#1c2734" text-anchor="middle">Waypoint SPA</text>
+  <text x="226" y="185" font-size="10.5" fill="#3d4c5d" text-anchor="middle">React 18 · built by Vite 8</text>
+  <text x="226" y="201" font-size="10.5" fill="#3d4c5d" text-anchor="middle">useJobsStore → apiClient</text>
+  <text x="226" y="218" font-size="10" fill="#93a1b1" text-anchor="middle">no job data of its own</text>
+
+  <g>
+    <path d="M152,268 a74,11 0 0,1 148,0 v62 a74,11 0 0,1 -148,0 z" fill="#f5f5f5" stroke="#666666" stroke-width="1.6" stroke-dasharray="5 4"/>
+    <path d="M152,268 a74,11 0 0,0 148,0" fill="none" stroke="#666666" stroke-width="1.6"/>
+  </g>
+  <text x="226" y="296" font-size="11.5" font-weight="600" fill="#5c6b7c" text-anchor="middle">localStorage</text>
+  <text x="226" y="312" font-size="9.5" fill="#93a1b1" text-anchor="middle">legacy waypoint.jobs</text>
+  <text x="226" y="326" font-size="9.5" fill="#93a1b1" text-anchor="middle">migration source only</text>
+
+  <!-- pi boundary -->
+  <rect x="376" y="88" width="358" height="482" rx="8" fill="none" stroke="#82b366" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="390" y="108" font-size="11.5" font-weight="600" fill="#1f8a5b">Raspberry Pi · systemd · reachable only over Tailscale</text>
+
+  <!-- fastify -->
+  <rect x="396" y="126" width="318" height="96" rx="11" fill="#d5e8d4" stroke="#82b366" stroke-width="2.5" filter="url(#sh)"/>
+  <text x="555" y="152" font-size="13.5" font-weight="700" fill="#1c2734" text-anchor="middle">waypoint.service → node server/index.js</text>
+  <text x="555" y="171" font-size="10.5" fill="#3d4c5d" text-anchor="middle">Fastify 5 · routes: jobs · queries · listings · runs</text>
+  <text x="555" y="187" font-size="10.5" fill="#3d4c5d" text-anchor="middle">@fastify/static serves the built dist/</text>
+  <text x="555" y="205" font-size="10" fill="#5c6b7c" text-anchor="middle">binds 127.0.0.1:3000 · hardened unit (ProtectSystem=strict)</text>
+
+  <!-- timers row -->
+  <rect x="396" y="286" width="150" height="96" rx="11" fill="#fff2cc" stroke="#d6b656" stroke-width="2"/>
+  <text x="471" y="310" font-size="11.5" font-weight="700" fill="#1c2734" text-anchor="middle">db-backup.timer</text>
+  <text x="471" y="327" font-size="10" fill="#3d4c5d" text-anchor="middle">02:30 America/New_York</text>
+  <text x="471" y="345" font-size="10" fill="#3d4c5d" text-anchor="middle">backup-waypoint.sh</text>
+  <text x="471" y="363" font-size="9.5" fill="#93a1b1" text-anchor="middle">nightly dump + restore test</text>
+
+  <rect x="564" y="286" width="150" height="96" rx="11" fill="#fff2cc" stroke="#d6b656" stroke-width="2"/>
+  <text x="639" y="310" font-size="11.5" font-weight="700" fill="#1c2734" text-anchor="middle">scraper.timer</text>
+  <text x="639" y="327" font-size="10" fill="#3d4c5d" text-anchor="middle">06:00 America/New_York</text>
+  <text x="639" y="345" font-size="10" fill="#3d4c5d" text-anchor="middle">server/cli/scrape.js</text>
+  <text x="639" y="363" font-size="9.5" fill="#93a1b1" text-anchor="middle">Persistent=true</text>
+
+  <!-- mariadb -->
+  <g>
+    <path d="M466,446 a89,14 0 0,1 178,0 v66 a89,14 0 0,1 -178,0 z" fill="#e8effc" stroke="#2f6fdb" stroke-width="2.5" filter="url(#sh)"/>
+    <path d="M466,446 a89,14 0 0,0 178,0" fill="none" stroke="#2f6fdb" stroke-width="2.5"/>
+  </g>
+  <text x="555" y="482" font-size="13" font-weight="700" fill="#1c2734" text-anchor="middle">MariaDB ≥ 10.6</text>
+  <text x="555" y="499" font-size="10" fill="#3d4c5d" text-anchor="middle">6 tables · InnoDB · utf8mb4</text>
+  <text x="555" y="514" font-size="9.5" fill="#5c6b7c" text-anchor="middle">unix socket · versioned migrations</text>
+
+  <!-- adzuna -->
+  <rect x="770" y="286" width="106" height="96" rx="11" fill="#f5f5f5" stroke="#666666" stroke-width="1.6"/>
+  <text x="823" y="312" font-size="11.5" font-weight="700" fill="#1c2734" text-anchor="middle">Adzuna</text>
+  <text x="823" y="329" font-size="9.5" fill="#3d4c5d" text-anchor="middle">Jobs Search</text>
+  <text x="823" y="343" font-size="9.5" fill="#3d4c5d" text-anchor="middle">API (US)</text>
+  <text x="823" y="362" font-size="9" fill="#93a1b1" text-anchor="middle">only egress</text>
+
+  <!-- edges -->
+  <path d="M78,196 L112,196" fill="none" stroke="#6c8ebf" stroke-width="2" marker-end="url(#ar)"/>
+
+  <path d="M318,172 L392,172" fill="none" stroke="#6c8ebf" stroke-width="2" marker-end="url(#ar)"/>
+  <text x="355" y="150" font-size="10" fill="#5c6b7c" text-anchor="middle">HTTPS</text>
+  <text x="355" y="163" font-size="10" fill="#5c6b7c" text-anchor="middle">/api/*</text>
+
+  <path d="M392,206 L318,206" fill="none" stroke="#82b366" stroke-width="2" marker-end="url(#ar-g)"/>
+  <text x="355" y="224" font-size="10" fill="#5c6b7c" text-anchor="middle">serves dist/</text>
+
+  <path d="M555,222 L555,436" fill="none" stroke="#2f6fdb" stroke-width="2" marker-end="url(#ar)"/>
+  <text x="563" y="256" font-size="10" fill="#5c6b7c">mariadb pool (5 conns)</text>
+  <text x="563" y="270" font-size="10" fill="#5c6b7c">unix socket, no TCP</text>
+
+  <path d="M456,382 L456,458" fill="none" stroke="#c9a227" stroke-width="2" marker-end="url(#ar-y)"/>
+  <text x="400" y="412" font-size="9.5" fill="#5c6b7c">mysqldump</text>
+
+  <path d="M654,382 L654,458" fill="none" stroke="#c9a227" stroke-width="2" marker-end="url(#ar-y)"/>
+  <text x="662" y="412" font-size="9.5" fill="#5c6b7c">upsert</text>
+  <text x="662" y="425" font-size="9.5" fill="#5c6b7c">listings</text>
+
+  <path d="M714,320 L766,320" fill="none" stroke="#666666" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="740" y="313" font-size="9.5" fill="#5c6b7c" text-anchor="middle">HTTPS</text>
+
+  <!-- legacy read: SPA reads it once, then imports over the same API -->
+  <path d="M226,264 L226,232" fill="none" stroke="#93a1b1" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#ar-m)"/>
+  <text x="234" y="252" font-size="9.5" fill="#93a1b1">read once on boot</text>
+  <text x="128" y="344" font-size="9" fill="#93a1b1">then POST /api/jobs/import, and cleared</text>
+
+  <text x="40" y="596" font-size="10" fill="#93a1b1">Single-user, single-tenant: there is no authentication layer — the Tailscale network boundary is the only access control.</text>
+</svg>

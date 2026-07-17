@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 700" width="900" height="700" font-family="'Public Sans',-apple-system,'Segoe UI',system-ui,sans-serif">
+  <defs>
+    <marker id="c-ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5c6b7c"/>
+    </marker>
+    <marker id="c-b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2f6fdb"/>
+    </marker>
+    <marker id="c-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#82b366"/>
+    </marker>
+    <filter id="c-sh" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#1c2734" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <rect width="900" height="700" fill="#ffffff"/>
+
+  <text x="40" y="34" font-size="19" font-weight="700" fill="#1c2734">Waypoint — Component Relationships (C4 Component)</text>
+  <text x="40" y="56" font-size="12.5" fill="#5c6b7c">Two tiers, one HTTP seam. The store is still the single client-side owner of job state — it just persists over the API now.</text>
+
+  <!-- boundary -->
+  <path d="M440,78 L440,672" fill="none" stroke="#93a1b1" stroke-width="1.6" stroke-dasharray="8 6"/>
+  <text x="432" y="94" font-size="10.5" font-weight="700" fill="#93a1b1" text-anchor="end">BROWSER</text>
+  <text x="450" y="94" font-size="10.5" font-weight="700" fill="#93a1b1">RASPBERRY PI</text>
+
+  <!-- CLIENT -->
+  <rect x="40" y="106" width="360" height="44" rx="9" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
+  <text x="220" y="125" font-size="12.5" font-weight="700" fill="#1c2734" text-anchor="middle">App.jsx</text>
+  <text x="220" y="141" font-size="10" fill="#5c6b7c" text-anchor="middle">calls the hook once · threads props · renders MigrationBanner</text>
+
+  <rect x="40" y="166" width="360" height="90" rx="11" fill="#e8effc" stroke="#2f6fdb" stroke-width="2.5" filter="url(#c-sh)"/>
+  <text x="220" y="190" font-size="13.5" font-weight="700" fill="#1c2734" text-anchor="middle">useJobsStore — the only client-side state</text>
+  <text x="220" y="209" font-size="10" fill="#3d4c5d" text-anchor="middle">jobs · queue · queries · latestRun · migration · loading · running</text>
+  <text x="220" y="224" font-size="10" fill="#3d4c5d" text-anchor="middle">stageFilter · selectedJobId · deletedJobId · toast</text>
+  <text x="220" y="243" font-size="10" font-weight="600" fill="#2f6fdb" text-anchor="middle">bootstrap on mount · every write awaits the API, then re-syncs</text>
+
+  <rect x="40" y="272" width="360" height="52" rx="10" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" filter="url(#c-sh)"/>
+  <text x="220" y="294" font-size="12.5" font-weight="700" fill="#1c2734" text-anchor="middle">apiClient.js — the single fetch wrapper</text>
+  <text x="220" y="312" font-size="10" fill="#3d4c5d" text-anchor="middle">throws Error with .code / .status from the error envelope</text>
+
+  <text x="56" y="348" font-size="11" font-weight="700" fill="#5c6b7c">CLIENT LIB</text>
+
+  <rect x="40" y="362" width="170" height="76" rx="10" fill="#d5e8d4" stroke="#82b366" stroke-width="2.5"/>
+  <text x="125" y="384" font-size="11.5" font-weight="700" fill="#1c2734" text-anchor="middle">jobListOperations.js</text>
+  <text x="125" y="401" font-size="9.5" fill="#3d4c5d" text-anchor="middle">reorderVisibleJobs · moveVisibleJob</text>
+  <text x="125" y="415" font-size="9.5" fill="#3d4c5d" text-anchor="middle">updateJob · duplicateJob</text>
+  <text x="125" y="431" font-size="9.5" font-weight="700" fill="#1f8a5b" text-anchor="middle">pure · computes order to PUSH</text>
+
+  <rect x="230" y="362" width="170" height="76" rx="10" fill="#d5e8d4" stroke="#82b366" stroke-width="2"/>
+  <text x="315" y="384" font-size="11.5" font-weight="700" fill="#1c2734" text-anchor="middle">legacyImport.js</text>
+  <text x="315" y="401" font-size="9.5" fill="#3d4c5d" text-anchor="middle">parseLegacyJobs — validates</text>
+  <text x="315" y="415" font-size="9.5" fill="#3d4c5d" text-anchor="middle">stages, field types, lengths</text>
+  <text x="315" y="431" font-size="9.5" fill="#5c6b7c" text-anchor="middle">500-job import cap</text>
+
+  <rect x="40" y="454" width="170" height="60" rx="10" fill="#f8cecc" stroke="#b3423a" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="125" y="476" font-size="11.5" font-weight="700" fill="#1c2734" text-anchor="middle">parseJobUrl.js</text>
+  <text x="125" y="493" font-size="9.5" fill="#b3423a" text-anchor="middle">STILL A STUB</text>
+  <text x="125" y="507" font-size="9.5" fill="#5c6b7c" text-anchor="middle">capture → empty draft</text>
+
+  <rect x="230" y="454" width="170" height="60" rx="10" fill="#fff2cc" stroke="#d6b656" stroke-width="2"/>
+  <text x="315" y="476" font-size="11.5" font-weight="700" fill="#1c2734" text-anchor="middle">theme.js</text>
+  <text x="315" y="493" font-size="9.5" fill="#3d4c5d" text-anchor="middle">color · chipColor · font · radius</text>
+  <text x="315" y="507" font-size="9.5" fill="#93a1b1" text-anchor="middle">inline styles only</text>
+
+  <rect x="40" y="536" width="360" height="76" rx="10" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" filter="url(#c-sh)"/>
+  <text x="220" y="558" font-size="12" font-weight="700" fill="#1c2734" text-anchor="middle">12 presentational components</text>
+  <text x="220" y="576" font-size="9.5" fill="#3d4c5d" text-anchor="middle">PipelineTable · JobRow · JobActionsMenu · JobDetailPanel · CaptureBar</text>
+  <text x="220" y="590" font-size="9.5" fill="#3d4c5d" text-anchor="middle">ReviewQueue · MatchCard · SavedQueries · MigrationBanner · Toast · Sidebar · Header</text>
+  <text x="220" y="606" font-size="9.5" fill="#93a1b1" text-anchor="middle">props down · callbacks up · local UI state only</text>
+
+  <!-- SERVER -->
+  <rect x="480" y="106" width="390" height="64" rx="10" fill="#d5e8d4" stroke="#82b366" stroke-width="2.5" filter="url(#c-sh)"/>
+  <text x="675" y="128" font-size="12.5" font-weight="700" fill="#1c2734" text-anchor="middle">app.js — buildApp({ services })</text>
+  <text x="675" y="145" font-size="9.5" fill="#3d4c5d" text-anchor="middle">error handler → { error: { code, message } } · /api/health · /api/bootstrap</text>
+  <text x="675" y="160" font-size="9.5" fill="#3d4c5d" text-anchor="middle">@fastify/static + SPA fallback · index.js owns listen + shutdown</text>
+
+  <rect x="480" y="190" width="390" height="56" rx="10" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" filter="url(#c-sh)"/>
+  <text x="675" y="212" font-size="12" font-weight="700" fill="#1c2734" text-anchor="middle">routes/ — jobs · queries · listings · runs</text>
+  <text x="675" y="230" font-size="9.5" fill="#3d4c5d" text-anchor="middle">JSON-schema request validation → 400 VALIDATION_ERROR</text>
+
+  <rect x="480" y="266" width="390" height="56" rx="10" fill="#e8effc" stroke="#2f6fdb" stroke-width="2.5" filter="url(#c-sh)"/>
+  <text x="675" y="288" font-size="12" font-weight="700" fill="#1c2734" text-anchor="middle">services.js — the composition root</text>
+  <text x="675" y="306" font-size="9.5" fill="#3d4c5d" text-anchor="middle">config · pool · 4 repositories · adzunaClient · scraper · logger — all injectable</text>
+
+  <rect x="480" y="342" width="390" height="70" rx="10" fill="#d5e8d4" stroke="#82b366" stroke-width="2" filter="url(#c-sh)"/>
+  <text x="675" y="364" font-size="12" font-weight="700" fill="#1c2734" text-anchor="middle">db/ — repositories</text>
+  <text x="675" y="381" font-size="9.5" fill="#3d4c5d" text-anchor="middle">jobRepository · queryRepository · listingRepository · runRepository</text>
+  <text x="675" y="396" font-size="9.5" fill="#5c6b7c" text-anchor="middle">rows.js maps snake_case columns ⇄ camelCase API shapes</text>
+
+  <rect x="480" y="432" width="390" height="52" rx="10" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
+  <text x="675" y="453" font-size="11.5" font-weight="700" fill="#1c2734" text-anchor="middle">pool.js — withConnection · withTransaction · verifyDatabase</text>
+  <text x="675" y="470" font-size="9.5" fill="#3d4c5d" text-anchor="middle">every connection pinned to SET time_zone = '+00:00'</text>
+
+  <g>
+    <path d="M576,510 a99,13 0 0,1 198,0 v42 a99,13 0 0,1 -198,0 z" fill="#e8effc" stroke="#2f6fdb" stroke-width="2.5"/>
+    <path d="M576,510 a99,13 0 0,0 198,0" fill="none" stroke="#2f6fdb" stroke-width="2.5"/>
+  </g>
+  <text x="675" y="540" font-size="11.5" font-weight="700" fill="#1c2734" text-anchor="middle">MariaDB</text>
+  <text x="675" y="557" font-size="9.5" fill="#5c6b7c" text-anchor="middle">6 tables · InnoDB</text>
+
+  <rect x="480" y="596" width="390" height="70" rx="10" fill="#fff2cc" stroke="#d6b656" stroke-width="2" filter="url(#c-sh)"/>
+  <text x="675" y="618" font-size="12" font-weight="700" fill="#1c2734" text-anchor="middle">scraper/ — service · adzuna · scoring</text>
+  <text x="675" y="635" font-size="9.5" fill="#3d4c5d" text-anchor="middle">service orchestrates the run · adzuna fetches + normalizes · scoring is pure</text>
+  <text x="675" y="651" font-size="9.5" fill="#93a1b1" text-anchor="middle">driven by cli/scrape.js (timer) or routes/runs.js (manual)</text>
+
+  <!-- client edges -->
+  <path d="M220,150 L220,162" fill="none" stroke="#2f6fdb" stroke-width="2" marker-end="url(#c-b)"/>
+  <path d="M220,256 L220,268" fill="none" stroke="#2f6fdb" stroke-width="2" marker-end="url(#c-b)"/>
+  <path d="M110,256 L110,300 L30,300 L30,368 L36,368" fill="none" stroke="#82b366" stroke-width="1.8" marker-end="url(#c-g)"/>
+  <text x="38" y="336" font-size="9" fill="#5c6b7c">uses</text>
+  <path d="M220,324 L220,340" fill="none" stroke="#5c6b7c" stroke-width="1.6" marker-end="url(#c-ar)"/>
+  <path d="M410,211 L424,211 L424,574 L404,574" fill="none" stroke="#2f6fdb" stroke-width="1.8" marker-end="url(#c-b)"/>
+  <text x="330" y="530" font-size="9" fill="#2f6fdb">props down · callbacks up</text>
+
+  <!-- the seam -->
+  <path d="M400,298 L452,298 L452,138 L476,138" fill="none" stroke="#2f6fdb" stroke-width="2.5" marker-end="url(#c-b)"/>
+  <text x="404" y="290" font-size="10" font-weight="700" fill="#2f6fdb">HTTP · /api/*</text>
+
+  <!-- server edges -->
+  <path d="M675,170 L675,186" fill="none" stroke="#5c6b7c" stroke-width="2" marker-end="url(#c-ar)"/>
+  <path d="M675,246 L675,262" fill="none" stroke="#5c6b7c" stroke-width="2" marker-end="url(#c-ar)"/>
+  <path d="M675,322 L675,338" fill="none" stroke="#5c6b7c" stroke-width="2" marker-end="url(#c-ar)"/>
+  <path d="M675,412 L675,428" fill="none" stroke="#5c6b7c" stroke-width="2" marker-end="url(#c-ar)"/>
+  <path d="M675,484 L675,502" fill="none" stroke="#2f6fdb" stroke-width="2" marker-end="url(#c-b)"/>
+  <path d="M780,596 L780,570" fill="none" stroke="#d6b656" stroke-width="2" marker-end="url(#c-ar)"/>
+  <path d="M880,300 L888,300 L888,631 L874,631" fill="none" stroke="#666666" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#c-ar)"/>
+  <text x="486" y="586" font-size="9" fill="#5c6b7c">writes listings + runs</text>
+
+  <text x="40" y="680" font-size="10" fill="#93a1b1">The HTTP seam carries no authentication — the Tailscale network is the only access boundary.</text>
+  <text x="40" y="694" font-size="10" fill="#93a1b1">Every server dependency is injected through services.js, which is what lets the suite run without a live database.</text>
+</svg>

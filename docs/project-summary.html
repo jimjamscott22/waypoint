@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Waypoint — Project Summary</title>
+<style>
+  :root {
+    --page-bg:#eef1f5; --card:#ffffff; --border:#e3e8ee; --divider:#eef1f5;
+    --ink:#1c2734; --text:#3d4c5d; --muted:#5c6b7c; --faint:#93a1b1;
+    --accent:#2f6fdb; --accent-soft:#e8effc; --code-bg:#f8fafc; --code-border:#dde3ea;
+    --sans: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, 'Cascadia Mono', Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--page-bg); color:var(--ink); font-family:var(--sans); font-size:15.5px; line-height:1.65; -webkit-font-smoothing:antialiased; }
+  .shell { max-width: 940px; margin: 0 auto; padding: 40px 24px 96px; }
+
+  .masthead { background:var(--ink); color:#fff; border-radius:14px; padding:34px 36px; margin-bottom:26px; }
+  .masthead .eyebrow { font-size:11px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; color:var(--accent-soft); opacity:.8; }
+  .masthead h1 { margin:8px 0 10px; font-size:34px; line-height:1.15; letter-spacing:-.4px; font-weight:700; }
+  .masthead .lede { color:#c8d2dd; font-size:14px; margin:0; }
+  .meta { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
+  .meta span { background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.14); border-radius:999px; padding:4px 12px; font-size:11.5px; color:#e6ecf3; }
+
+  .toc { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px 24px; margin-bottom:26px; }
+  .toc-title { margin:0 0 10px; font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--faint); border:0; padding:0; }
+  .toc ol { margin:0; padding-left:20px; columns:2; column-gap:32px; }
+  .toc li { margin:3px 0; font-size:13.5px; break-inside:avoid; }
+  .toc a { color:var(--text); text-decoration:none; }
+  .toc a:hover { color:var(--accent); text-decoration:underline; }
+
+  .content { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:8px 40px 40px; }
+  h2 { font-size:23px; font-weight:700; letter-spacing:-.2px; margin:44px 0 14px; padding-top:26px; border-top:1px solid var(--divider); scroll-margin-top:16px; }
+  .content > h2:first-of-type { border-top:0; padding-top:22px; margin-top:0; }
+  h3 { font-size:16.5px; font-weight:700; margin:30px 0 10px; color:var(--ink); }
+  p { margin:0 0 14px; color:var(--text); }
+  strong { color:var(--ink); font-weight:600; }
+  a { color:var(--accent); }
+  hr { display:none; } /* section rules come from the h2 border-top */
+
+  ul, ol { margin:0 0 16px; padding-left:22px; color:var(--text); }
+  li { margin:5px 0; }
+  li::marker { color:var(--faint); }
+
+  code { font-family:var(--mono); font-size:.86em; background:var(--code-bg); border:1px solid var(--code-border); border-radius:4px; padding:1px 5px; color:var(--ink); }
+  pre { background:var(--code-bg); border:1px solid var(--code-border); border-radius:8px; padding:14px 16px; overflow-x:auto; margin:0 0 18px; }
+  pre code { background:none; border:0; padding:0; font-size:12.8px; line-height:1.6; }
+
+  blockquote { margin:0 0 18px; padding:14px 18px; background:var(--accent-soft); border-left:3px solid var(--accent); border-radius:0 8px 8px 0; }
+  blockquote p { margin:0; color:var(--text); font-size:14px; }
+  blockquote p + p { margin-top:8px; }
+
+  .table-wrap, table { display:block; overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; margin:0 0 20px; font-size:13.6px; }
+  th, td { text-align:left; padding:9px 12px; border-bottom:1px solid var(--divider); vertical-align:top; }
+  th { font-size:10.5px; font-weight:700; letter-spacing:.7px; text-transform:uppercase; color:var(--faint); border-bottom:1px solid var(--border); white-space:nowrap; }
+  td { color:var(--text); }
+  td code { white-space:nowrap; }
+  tbody tr:last-child td { border-bottom:0; }
+  tbody tr:hover { background:#fafcfe; }
+
+  figure { margin:22px 0 26px; }
+  figure img { display:block; width:100%; height:auto; background:#fff; border:1px solid var(--border); border-radius:10px; }
+  figcaption { margin-top:9px; font-size:11.5px; color:var(--faint); text-align:center; }
+
+  .footer { margin-top:28px; text-align:center; font-size:11.5px; color:var(--faint); }
+
+  @media print {
+    body { background:#fff; }
+    .shell { max-width:none; padding:0; }
+    .content, .toc { border:0; padding:0; }
+    .masthead { background:#fff; color:var(--ink); border:1px solid var(--border); }
+    .masthead h1 { color:var(--ink); } .masthead .lede { color:var(--muted); }
+    .meta span { color:var(--muted); border-color:var(--border); background:none; }
+    h2 { break-after:avoid; } figure, table, pre { break-inside:avoid; }
+  }
+  @media (max-width:720px) {
+    .content { padding:8px 20px 28px; } .masthead { padding:26px 22px; }
+    .masthead h1 { font-size:26px; } .toc ol { columns:1; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="masthead">
+    <div class="eyebrow">Project Summary</div>
+    <h1>Waypoint — Project Summary</h1>
+    <p class="lede">Self-hosted job search manager: React SPA, Fastify API, MariaDB, and a nightly Adzuna ingestion job on a Raspberry Pi.</p>
+    <div class="meta">
+      <span>Version 1.0</span>
+      <span>2026-07-17</span>
+      <span>Engineering Team, Architects, Stakeholders</span>
+    </div>
+  </header>
+  <nav class="toc" aria-label="Contents"><h2 class="toc-title">Contents</h2><ol><li><a href="#1-executive-summary">Executive Summary</a></li><li><a href="#2-architecture-overview">Architecture Overview</a></li><li><a href="#3-daily-ingestion-pipeline">Daily Ingestion Pipeline</a></li><li><a href="#4-core-components">Core Components</a></li><li><a href="#5-data-contracts">Data Contracts</a></li><li><a href="#6-infrastructure-amp-deployment">Infrastructure &amp; Deployment</a></li><li><a href="#7-extension-patterns">Extension Patterns</a></li><li><a href="#8-rules-amp-anti-patterns">Rules &amp; Anti-Patterns</a></li><li><a href="#9-dependencies">Dependencies</a></li><li><a href="#10-code-structure">Code Structure</a></li></ol></nav>
+  <main class="content">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Waypoint is a self-hosted job search manager. It tracks job applications through a pipeline, and every morning it ingests fresh job listings from the Adzuna API, scores them against your saved queries, and drops the good ones into a review queue.</p>
+<p>It is a <strong>full-stack application designed to run on a single Raspberry Pi</strong>: a React single-page app served by a Fastify API, backed by MariaDB, with two systemd timers — one that scrapes at 06:00 and one that backs up the database at 02:30. It is reachable only over Tailscale.</p>
+<p>The system is deliberately <strong>single-user and single-tenant</strong>. There is no authentication, no accounts, and no multi-tenancy: the private network <em>is</em> the access control. That assumption is what keeps the code small — roughly 2,800 lines across 21 client and 22 server files, with five runtime dependencies.</p>
+<p>Its defining engineering characteristics are <strong>a scrape run that cannot overlap</strong> (a MariaDB advisory lock plus a manual-trigger cooldown), <strong>failure isolation per query</strong> (one bad query is recorded and the loop continues), and <strong>dependency injection through a single composition root</strong>, which is what lets 29 tests run against the real logic without a live database.</p>
+<blockquote>
+<p><strong>Migration note.</strong> Waypoint began as a browser-only app that stored jobs in <code>localStorage</code>. That path still exists, but only as a one-time import: on boot the SPA checks for legacy <code>waypoint.jobs</code> data and, if the server has no jobs, offers to import it. The server is now the source of truth.</p>
+<p><strong>Known gap.</strong> <code>parseJobUrl</code> — the &quot;capture a job from a URL&quot; path — is still a stub that returns an empty draft for the user to fill in by hand. It is unrelated to the Adzuna ingestion pipeline, which is fully implemented. See Section 8.</p>
+</blockquote>
+<hr>
+<h2 id="2-architecture-overview">2. Architecture Overview</h2>
+<figure><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5MDAgNjIwIiB3aWR0aD0iOTAwIiBoZWlnaHQ9IjYyMCIgZm9udC1mYW1pbHk9IidQdWJsaWMgU2FucycsLWFwcGxlLXN5c3RlbSwnU2Vnb2UgVUknLHN5c3RlbS11aSxzYW5zLXNlcmlmIj4KICA8ZGVmcz4KICAgIDxtYXJrZXIgaWQ9ImFyIiB2aWV3Qm94PSIwIDAgMTAgMTAiIHJlZlg9IjkiIHJlZlk9IjUiIG1hcmtlcldpZHRoPSI2IiBtYXJrZXJIZWlnaHQ9IjYiIG9yaWVudD0iYXV0by1zdGFydC1yZXZlcnNlIj4KICAgICAgPHBhdGggZD0iTTAsMCBMMTAsNSBMMCwxMCB6IiBmaWxsPSIjNmM4ZWJmIi8+CiAgICA8L21hcmtlcj4KICAgIDxtYXJrZXIgaWQ9ImFyLWciIHZpZXdCb3g9IjAgMCAxMCAxMCIgcmVmWD0iOSIgcmVmWT0iNSIgbWFya2VyV2lkdGg9IjYiIG1hcmtlckhlaWdodD0iNiIgb3JpZW50PSJhdXRvLXN0YXJ0LXJldmVyc2UiPgogICAgICA8cGF0aCBkPSJNMCwwIEwxMCw1IEwwLDEwIHoiIGZpbGw9IiM4MmIzNjYiLz4KICAgIDwvbWFya2VyPgogICAgPG1hcmtlciBpZD0iYXIteSIgdmlld0JveD0iMCAwIDEwIDEwIiByZWZYPSI5IiByZWZZPSI1IiBtYXJrZXJXaWR0aD0iNiIgbWFya2VySGVpZ2h0PSI2IiBvcmllbnQ9ImF1dG8tc3RhcnQtcmV2ZXJzZSI+CiAgICAgIDxwYXRoIGQ9Ik0wLDAgTDEwLDUgTDAsMTAgeiIgZmlsbD0iI2M5YTIyNyIvPgogICAgPC9tYXJrZXI+CiAgICA8bWFya2VyIGlkPSJhci1tIiB2aWV3Qm94PSIwIDAgMTAgMTAiIHJlZlg9IjkiIHJlZlk9IjUiIG1hcmtlcldpZHRoPSI2IiBtYXJrZXJIZWlnaHQ9IjYiIG9yaWVudD0iYXV0by1zdGFydC1yZXZlcnNlIj4KICAgICAgPHBhdGggZD0iTTAsMCBMMTAsNSBMMCwxMCB6IiBmaWxsPSIjOTNhMWIxIi8+CiAgICA8L21hcmtlcj4KICAgIDxmaWx0ZXIgaWQ9InNoIiB4PSItMjAlIiB5PSItMjAlIiB3aWR0aD0iMTUwJSIgaGVpZ2h0PSIxNTAlIj4KICAgICAgPGZlRHJvcFNoYWRvdyBkeD0iMCIgZHk9IjIiIHN0ZERldmlhdGlvbj0iMyIgZmxvb2QtY29sb3I9IiMxYzI3MzQiIGZsb29kLW9wYWNpdHk9IjAuMTMiLz4KICAgIDwvZmlsdGVyPgogIDwvZGVmcz4KCiAgPHJlY3Qgd2lkdGg9IjkwMCIgaGVpZ2h0PSI2MjAiIGZpbGw9IiNmZmZmZmYiLz4KCiAgPHRleHQgeD0iNDAiIHk9IjM0IiBmb250LXNpemU9IjE5IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMWMyNzM0Ij5XYXlwb2ludCDigJQgSGlnaC1MZXZlbCBBcmNoaXRlY3R1cmUgKEM0IENvbnRleHQpPC90ZXh0PgogIDx0ZXh0IHg9IjQwIiB5PSI1NiIgZm9udC1zaXplPSIxMi41IiBmaWxsPSIjNWM2YjdjIj5TZWxmLWhvc3RlZCBmdWxsLXN0YWNrIGFwcCBvbiBhIFJhc3BiZXJyeSBQaTogUmVhY3QgU1BBIOKGkiBGYXN0aWZ5IEFQSSDihpIgTWFyaWFEQiwgcGx1cyBhIG5pZ2h0bHkgQWR6dW5hIGluZ2VzdGlvbiBqb2IuPC90ZXh0PgoKICA8IS0tIGFjdG9yIC0tPgogIDxnIHN0cm9rZT0iIzFjMjczNCIgc3Ryb2tlLXdpZHRoPSIyLjIiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+CiAgICA8Y2lyY2xlIGN4PSI1OCIgY3k9IjE4OCIgcj0iMTEiIGZpbGw9IiMxYzI3MzQiIHN0cm9rZT0ibm9uZSIvPgogICAgPHBhdGggZD0iTTU4LDIwMCBMNTgsMjMwIE01OCwyMDggTDQyLDIxOSBNNTgsMjA4IEw3NCwyMTkgTTU4LDIzMCBMNDQsMjUyIE01OCwyMzAgTDcyLDI1MiIvPgogIDwvZz4KICA8dGV4dCB4PSI1OCIgeT0iMjcyIiBmb250LXNpemU9IjEyIiBmb250LXdlaWdodD0iNjAwIiBmaWxsPSIjMWMyNzM0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5Kb2IgU2Vla2VyPC90ZXh0PgoKICA8IS0tIGJyb3dzZXIgYm91bmRhcnkgLS0+CiAgPHJlY3QgeD0iMTE2IiB5PSIxMDgiIHdpZHRoPSIyMjAiIGhlaWdodD0iMjQ2IiByeD0iOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNmM4ZWJmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1kYXNoYXJyYXk9IjcgNSIvPgogIDx0ZXh0IHg9IjEyOCIgeT0iMTI3IiBmb250LXNpemU9IjExLjUiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMyZjZmZGIiPkJyb3dzZXI8L3RleHQ+CgogIDxyZWN0IHg9IjEzNCIgeT0iMTQwIiB3aWR0aD0iMTg0IiBoZWlnaHQ9Ijg4IiByeD0iMTEiIGZpbGw9IiNkYWU4ZmMiIHN0cm9rZT0iIzZjOGViZiIgc3Ryb2tlLXdpZHRoPSIyIiBmaWx0ZXI9InVybCgjc2gpIi8+CiAgPHRleHQgeD0iMjI2IiB5PSIxNjYiIGZvbnQtc2l6ZT0iMTMuNSIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFjMjczNCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+V2F5cG9pbnQgU1BBPC90ZXh0PgogIDx0ZXh0IHg9IjIyNiIgeT0iMTg1IiBmb250LXNpemU9IjEwLjUiIGZpbGw9IiMzZDRjNWQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlJlYWN0IDE4IMK3IGJ1aWx0IGJ5IFZpdGUgODwvdGV4dD4KICA8dGV4dCB4PSIyMjYiIHk9IjIwMSIgZm9udC1zaXplPSIxMC41IiBmaWxsPSIjM2Q0YzVkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj51c2VKb2JzU3RvcmUg4oaSIGFwaUNsaWVudDwvdGV4dD4KICA8dGV4dCB4PSIyMjYiIHk9IjIxOCIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzkzYTFiMSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+bm8gam9iIGRhdGEgb2YgaXRzIG93bjwvdGV4dD4KCiAgPGc+CiAgICA8cGF0aCBkPSJNMTUyLDI2OCBhNzQsMTEgMCAwLDEgMTQ4LDAgdjYyIGE3NCwxMSAwIDAsMSAtMTQ4LDAgeiIgZmlsbD0iI2Y1ZjVmNSIgc3Ryb2tlPSIjNjY2NjY2IiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWRhc2hhcnJheT0iNSA0Ii8+CiAgICA8cGF0aCBkPSJNMTUyLDI2OCBhNzQsMTEgMCAwLDAgMTQ4LDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzY2NjY2NiIgc3Ryb2tlLXdpZHRoPSIxLjYiLz4KICA8L2c+CiAgPHRleHQgeD0iMjI2IiB5PSIyOTYiIGZvbnQtc2l6ZT0iMTEuNSIgZm9udC13ZWlnaHQ9IjYwMCIgZmlsbD0iIzVjNmI3YyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+bG9jYWxTdG9yYWdlPC90ZXh0PgogIDx0ZXh0IHg9IjIyNiIgeT0iMzEyIiBmb250LXNpemU9IjkuNSIgZmlsbD0iIzkzYTFiMSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+bGVnYWN5IHdheXBvaW50LmpvYnM8L3RleHQ+CiAgPHRleHQgeD0iMjI2IiB5PSIzMjYiIGZvbnQtc2l6ZT0iOS41IiBmaWxsPSIjOTNhMWIxIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5taWdyYXRpb24gc291cmNlIG9ubHk8L3RleHQ+CgogIDwhLS0gcGkgYm91bmRhcnkgLS0+CiAgPHJlY3QgeD0iMzc2IiB5PSI4OCIgd2lkdGg9IjM1OCIgaGVpZ2h0PSI0ODIiIHJ4PSI4IiBmaWxsPSJub25lIiBzdHJva2U9IiM4MmIzNjYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWRhc2hhcnJheT0iNyA1Ii8+CiAgPHRleHQgeD0iMzkwIiB5PSIxMDgiIGZvbnQtc2l6ZT0iMTEuNSIgZm9udC13ZWlnaHQ9IjYwMCIgZmlsbD0iIzFmOGE1YiI+UmFzcGJlcnJ5IFBpIMK3IHN5c3RlbWQgwrcgcmVhY2hhYmxlIG9ubHkgb3ZlciBUYWlsc2NhbGU8L3RleHQ+CgogIDwhLS0gZmFzdGlmeSAtLT4KICA8cmVjdCB4PSIzOTYiIHk9IjEyNiIgd2lkdGg9IjMxOCIgaGVpZ2h0PSI5NiIgcng9IjExIiBmaWxsPSIjZDVlOGQ0IiBzdHJva2U9IiM4MmIzNjYiIHN0cm9rZS13aWR0aD0iMi41IiBmaWx0ZXI9InVybCgjc2gpIi8+CiAgPHRleHQgeD0iNTU1IiB5PSIxNTIiIGZvbnQtc2l6ZT0iMTMuNSIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFjMjczNCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+d2F5cG9pbnQuc2VydmljZSDihpIgbm9kZSBzZXJ2ZXIvaW5kZXguanM8L3RleHQ+CiAgPHRleHQgeD0iNTU1IiB5PSIxNzEiIGZvbnQtc2l6ZT0iMTAuNSIgZmlsbD0iIzNkNGM1ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+RmFzdGlmeSA1IMK3IHJvdXRlczogam9icyDCtyBxdWVyaWVzIMK3IGxpc3RpbmdzIMK3IHJ1bnM8L3RleHQ+CiAgPHRleHQgeD0iNTU1IiB5PSIxODciIGZvbnQtc2l6ZT0iMTAuNSIgZmlsbD0iIzNkNGM1ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+QGZhc3RpZnkvc3RhdGljIHNlcnZlcyB0aGUgYnVpbHQgZGlzdC88L3RleHQ+CiAgPHRleHQgeD0iNTU1IiB5PSIyMDUiIGZvbnQtc2l6ZT0iMTAiIGZpbGw9IiM1YzZiN2MiIHRleHQtYW5jaG9yPSJtaWRkbGUiPmJpbmRzIDEyNy4wLjAuMTozMDAwIMK3IGhhcmRlbmVkIHVuaXQgKFByb3RlY3RTeXN0ZW09c3RyaWN0KTwvdGV4dD4KCiAgPCEtLSB0aW1lcnMgcm93IC0tPgogIDxyZWN0IHg9IjM5NiIgeT0iMjg2IiB3aWR0aD0iMTUwIiBoZWlnaHQ9Ijk2IiByeD0iMTEiIGZpbGw9IiNmZmYyY2MiIHN0cm9rZT0iI2Q2YjY1NiIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgPHRleHQgeD0iNDcxIiB5PSIzMTAiIGZvbnQtc2l6ZT0iMTEuNSIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFjMjczNCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+ZGItYmFja3VwLnRpbWVyPC90ZXh0PgogIDx0ZXh0IHg9IjQ3MSIgeT0iMzI3IiBmb250LXNpemU9IjEwIiBmaWxsPSIjM2Q0YzVkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj4wMjozMCBBbWVyaWNhL05ld19Zb3JrPC90ZXh0PgogIDx0ZXh0IHg9IjQ3MSIgeT0iMzQ1IiBmb250LXNpemU9IjEwIiBmaWxsPSIjM2Q0YzVkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5iYWNrdXAtd2F5cG9pbnQuc2g8L3RleHQ+CiAgPHRleHQgeD0iNDcxIiB5PSIzNjMiIGZvbnQtc2l6ZT0iOS41IiBmaWxsPSIjOTNhMWIxIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5uaWdodGx5IGR1bXAgKyByZXN0b3JlIHRlc3Q8L3RleHQ+CgogIDxyZWN0IHg9IjU2NCIgeT0iMjg2IiB3aWR0aD0iMTUwIiBoZWlnaHQ9Ijk2IiByeD0iMTEiIGZpbGw9IiNmZmYyY2MiIHN0cm9rZT0iI2Q2YjY1NiIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgPHRleHQgeD0iNjM5IiB5PSIzMTAiIGZvbnQtc2l6ZT0iMTEuNSIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFjMjczNCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+c2NyYXBlci50aW1lcjwvdGV4dD4KICA8dGV4dCB4PSI2MzkiIHk9IjMyNyIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzNkNGM1ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+MDY6MDAgQW1lcmljYS9OZXdfWW9yazwvdGV4dD4KICA8dGV4dCB4PSI2MzkiIHk9IjM0NSIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzNkNGM1ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+c2VydmVyL2NsaS9zY3JhcGUuanM8L3RleHQ+CiAgPHRleHQgeD0iNjM5IiB5PSIzNjMiIGZvbnQtc2l6ZT0iOS41IiBmaWxsPSIjOTNhMWIxIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5QZXJzaXN0ZW50PXRydWU8L3RleHQ+CgogIDwhLS0gbWFyaWFkYiAtLT4KICA8Zz4KICAgIDxwYXRoIGQ9Ik00NjYsNDQ2IGE4OSwxNCAwIDAsMSAxNzgsMCB2NjYgYTg5LDE0IDAgMCwxIC0xNzgsMCB6IiBmaWxsPSIjZThlZmZjIiBzdHJva2U9IiMyZjZmZGIiIHN0cm9rZS13aWR0aD0iMi41IiBmaWx0ZXI9InVybCgjc2gpIi8+CiAgICA8cGF0aCBkPSJNNDY2LDQ0NiBhODksMTQgMCAwLDAgMTc4LDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzJmNmZkYiIgc3Ryb2tlLXdpZHRoPSIyLjUiLz4KICA8L2c+CiAgPHRleHQgeD0iNTU1IiB5PSI0ODIiIGZvbnQtc2l6ZT0iMTMiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMxYzI3MzQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk1hcmlhREIg4omlIDEwLjY8L3RleHQ+CiAgPHRleHQgeD0iNTU1IiB5PSI0OTkiIGZvbnQtc2l6ZT0iMTAiIGZpbGw9IiMzZDRjNWQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPjYgdGFibGVzIMK3IElubm9EQiDCtyB1dGY4bWI0PC90ZXh0PgogIDx0ZXh0IHg9IjU1NSIgeT0iNTE0IiBmb250LXNpemU9IjkuNSIgZmlsbD0iIzVjNmI3YyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+dW5peCBzb2NrZXQgwrcgdmVyc2lvbmVkIG1pZ3JhdGlvbnM8L3RleHQ+CgogIDwhLS0gYWR6dW5hIC0tPgogIDxyZWN0IHg9Ijc3MCIgeT0iMjg2IiB3aWR0aD0iMTA2IiBoZWlnaHQ9Ijk2IiByeD0iMTEiIGZpbGw9IiNmNWY1ZjUiIHN0cm9rZT0iIzY2NjY2NiIgc3Ryb2tlLXdpZHRoPSIxLjYiLz4KICA8dGV4dCB4PSI4MjMiIHk9IjMxMiIgZm9udC1zaXplPSIxMS41IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMWMyNzM0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5BZHp1bmE8L3RleHQ+CiAgPHRleHQgeD0iODIzIiB5PSIzMjkiIGZvbnQtc2l6ZT0iOS41IiBmaWxsPSIjM2Q0YzVkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5Kb2JzIFNlYXJjaDwvdGV4dD4KICA8dGV4dCB4PSI4MjMiIHk9IjM0MyIgZm9udC1zaXplPSI5LjUiIGZpbGw9IiMzZDRjNWQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkFQSSAoVVMpPC90ZXh0PgogIDx0ZXh0IHg9IjgyMyIgeT0iMzYyIiBmb250LXNpemU9IjkiIGZpbGw9IiM5M2ExYjEiIHRleHQtYW5jaG9yPSJtaWRkbGUiPm9ubHkgZWdyZXNzPC90ZXh0PgoKICA8IS0tIGVkZ2VzIC0tPgogIDxwYXRoIGQ9Ik03OCwxOTYgTDExMiwxOTYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzZjOGViZiIgc3Ryb2tlLXdpZHRoPSIyIiBtYXJrZXItZW5kPSJ1cmwoI2FyKSIvPgoKICA8cGF0aCBkPSJNMzE4LDE3MiBMMzkyLDE3MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNmM4ZWJmIiBzdHJva2Utd2lkdGg9IjIiIG1hcmtlci1lbmQ9InVybCgjYXIpIi8+CiAgPHRleHQgeD0iMzU1IiB5PSIxNTAiIGZvbnQtc2l6ZT0iMTAiIGZpbGw9IiM1YzZiN2MiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkhUVFBTPC90ZXh0PgogIDx0ZXh0IHg9IjM1NSIgeT0iMTYzIiBmb250LXNpemU9IjEwIiBmaWxsPSIjNWM2YjdjIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj4vYXBpLyo8L3RleHQ+CgogIDxwYXRoIGQ9Ik0zOTIsMjA2IEwzMTgsMjA2IiBmaWxsPSJub25lIiBzdHJva2U9IiM4MmIzNjYiIHN0cm9rZS13aWR0aD0iMiIgbWFya2VyLWVuZD0idXJsKCNhci1nKSIvPgogIDx0ZXh0IHg9IjM1NSIgeT0iMjI0IiBmb250LXNpemU9IjEwIiBmaWxsPSIjNWM2YjdjIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5zZXJ2ZXMgZGlzdC88L3RleHQ+CgogIDxwYXRoIGQ9Ik01NTUsMjIyIEw1NTUsNDM2IiBmaWxsPSJub25lIiBzdHJva2U9IiMyZjZmZGIiIHN0cm9rZS13aWR0aD0iMiIgbWFya2VyLWVuZD0idXJsKCNhcikiLz4KICA8dGV4dCB4PSI1NjMiIHk9IjI1NiIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzVjNmI3YyI+bWFyaWFkYiBwb29sICg1IGNvbm5zKTwvdGV4dD4KICA8dGV4dCB4PSI1NjMiIHk9IjI3MCIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzVjNmI3YyI+dW5peCBzb2NrZXQsIG5vIFRDUDwvdGV4dD4KCiAgPHBhdGggZD0iTTQ1NiwzODIgTDQ1Niw0NTgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2M5YTIyNyIgc3Ryb2tlLXdpZHRoPSIyIiBtYXJrZXItZW5kPSJ1cmwoI2FyLXkpIi8+CiAgPHRleHQgeD0iNDAwIiB5PSI0MTIiIGZvbnQtc2l6ZT0iOS41IiBmaWxsPSIjNWM2YjdjIj5teXNxbGR1bXA8L3RleHQ+CgogIDxwYXRoIGQ9Ik02NTQsMzgyIEw2NTQsNDU4IiBmaWxsPSJub25lIiBzdHJva2U9IiNjOWEyMjciIHN0cm9rZS13aWR0aD0iMiIgbWFya2VyLWVuZD0idXJsKCNhci15KSIvPgogIDx0ZXh0IHg9IjY2MiIgeT0iNDEyIiBmb250LXNpemU9IjkuNSIgZmlsbD0iIzVjNmI3YyI+dXBzZXJ0PC90ZXh0PgogIDx0ZXh0IHg9IjY2MiIgeT0iNDI1IiBmb250LXNpemU9IjkuNSIgZmlsbD0iIzVjNmI3YyI+bGlzdGluZ3M8L3RleHQ+CgogIDxwYXRoIGQ9Ik03MTQsMzIwIEw3NjYsMzIwIiBmaWxsPSJub25lIiBzdHJva2U9IiM2NjY2NjYiIHN0cm9rZS13aWR0aD0iMS42IiBtYXJrZXItZW5kPSJ1cmwoI2FyKSIvPgogIDx0ZXh0IHg9Ijc0MCIgeT0iMzEzIiBmb250LXNpemU9IjkuNSIgZmlsbD0iIzVjNmI3YyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+SFRUUFM8L3RleHQ+CgogIDwhLS0gbGVnYWN5IHJlYWQ6IFNQQSByZWFkcyBpdCBvbmNlLCB0aGVuIGltcG9ydHMgb3ZlciB0aGUgc2FtZSBBUEkgLS0+CiAgPHBhdGggZD0iTTIyNiwyNjQgTDIyNiwyMzIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzkzYTFiMSIgc3Ryb2tlLXdpZHRoPSIxLjYiIHN0cm9rZS1kYXNoYXJyYXk9IjUgNCIgbWFya2VyLWVuZD0idXJsKCNhci1tKSIvPgogIDx0ZXh0IHg9IjIzNCIgeT0iMjUyIiBmb250LXNpemU9IjkuNSIgZmlsbD0iIzkzYTFiMSI+cmVhZCBvbmNlIG9uIGJvb3Q8L3RleHQ+CiAgPHRleHQgeD0iMTI4IiB5PSIzNDQiIGZvbnQtc2l6ZT0iOSIgZmlsbD0iIzkzYTFiMSI+dGhlbiBQT1NUIC9hcGkvam9icy9pbXBvcnQsIGFuZCBjbGVhcmVkPC90ZXh0PgoKICA8dGV4dCB4PSI0MCIgeT0iNTk2IiBmb250LXNpemU9IjEwIiBmaWxsPSIjOTNhMWIxIj5TaW5nbGUtdXNlciwgc2luZ2xlLXRlbmFudDogdGhlcmUgaXMgbm8gYXV0aGVudGljYXRpb24gbGF5ZXIg4oCUIHRoZSBUYWlsc2NhbGUgbmV0d29yayBib3VuZGFyeSBpcyB0aGUgb25seSBhY2Nlc3MgY29udHJvbC48L3RleHQ+Cjwvc3ZnPgo=" alt="High-Level Architecture" /><figcaption>High-Level Architecture</figcaption></figure>
+<p>Waypoint runs as three cooperating processes on one machine:</p>
+<p><strong>The Fastify server</strong> (<code>waypoint.service</code>) binds <code>127.0.0.1:3000</code>, serves the <code>/api/*</code> routes, and serves the built SPA from <code>dist/</code> via <code>@fastify/static</code> with an <code>index.html</code> fallback for client-side routes. It never listens on a public interface; external reachability is provided by Tailscale, and the systemd unit is hardened (<code>ProtectSystem=strict</code>, <code>NoNewPrivileges</code>, <code>ProtectHome</code>, read-only paths).</p>
+<p><strong>The scraper</strong> (<code>waypoint-scraper.timer</code> → <code>server/cli/scrape.js</code>) is a separate short-lived process, not a job inside the API. It runs at 06:00 America/New_York with <code>Persistent=true</code>, so a run missed while the Pi was off fires on the next boot. The same scrape logic is also reachable through <code>POST /api/scrape-runs</code> for a manual trigger.</p>
+<p><strong>The backup job</strong> (<code>waypoint-db-backup.timer</code>) dumps the database nightly at 02:30 and exercises a restore.</p>
+<p>Three architectural decisions carry most of the weight:</p>
+<p><strong>The database is reached over a unix socket, not TCP.</strong> <code>DB_SOCKET</code> defaults to <code>/run/mysqld/mysqld.sock</code>, and the config explicitly rejects setting both <code>DB_SOCKET</code> and <code>DB_HOST</code>. Nothing needs to open a database port.</p>
+<p><strong><code>services.js</code> is the only place dependencies are wired.</strong> It builds the config, pool, four repositories, the Adzuna client, the scrape service, and the logger — and every one of them can be overridden by the caller. Tests inject a fake pool and a fake Adzuna client to exercise the real service logic without any I/O.</p>
+<p><strong>Time is UTC everywhere, by force.</strong> Every pooled connection runs <code>SET time_zone = &#39;+00:00&#39;</code> on checkout, the pool uses <code>dateStrings: true</code>, and the service formats timestamps itself. Only the systemd timers use a local zone, because that is when a human wants the work to happen.</p>
+<hr>
+<h2 id="3-daily-ingestion-pipeline">3. Daily Ingestion Pipeline</h2>
+<figure><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5MDAgODgwIiB3aWR0aD0iOTAwIiBoZWlnaHQ9Ijg4MCIgZm9udC1mYW1pbHk9IidQdWJsaWMgU2FucycsLWFwcGxlLXN5c3RlbSwnU2Vnb2UgVUknLHN5c3RlbS11aSxzYW5zLXNlcmlmIj4KICA8ZGVmcz4KICAgIDxtYXJrZXIgaWQ9InAtYXIiIHZpZXdCb3g9IjAgMCAxMCAxMCIgcmVmWD0iOSIgcmVmWT0iNSIgbWFya2VyV2lkdGg9IjYiIG1hcmtlckhlaWdodD0iNiIgb3JpZW50PSJhdXRvLXN0YXJ0LXJldmVyc2UiPgogICAgICA8cGF0aCBkPSJNMCwwIEwxMCw1IEwwLDEwIHoiIGZpbGw9IiM1YzZiN2MiLz4KICAgIDwvbWFya2VyPgogICAgPG1hcmtlciBpZD0icC1yZWQiIHZpZXdCb3g9IjAgMCAxMCAxMCIgcmVmWD0iOSIgcmVmWT0iNSIgbWFya2VyV2lkdGg9IjYiIG1hcmtlckhlaWdodD0iNiIgb3JpZW50PSJhdXRvLXN0YXJ0LXJldmVyc2UiPgogICAgICA8cGF0aCBkPSJNMCwwIEwxMCw1IEwwLDEwIHoiIGZpbGw9IiNiMzQyM2EiLz4KICAgIDwvbWFya2VyPgogICAgPG1hcmtlciBpZD0icC1tIiB2aWV3Qm94PSIwIDAgMTAgMTAiIHJlZlg9IjkiIHJlZlk9IjUiIG1hcmtlcldpZHRoPSI2IiBtYXJrZXJIZWlnaHQ9IjYiIG9yaWVudD0iYXV0by1zdGFydC1yZXZlcnNlIj4KICAgICAgPHBhdGggZD0iTTAsMCBMMTAsNSBMMCwxMCB6IiBmaWxsPSIjOTNhMWIxIi8+CiAgICA8L21hcmtlcj4KICAgIDxmaWx0ZXIgaWQ9InAtc2giIHg9Ii0yMCUiIHk9Ii0yMCUiIHdpZHRoPSIxNTAlIiBoZWlnaHQ9IjE1MCUiPgogICAgICA8ZmVEcm9wU2hhZG93IGR4PSIwIiBkeT0iMiIgc3RkRGV2aWF0aW9uPSIyLjUiIGZsb29kLWNvbG9yPSIjMWMyNzM0IiBmbG9vZC1vcGFjaXR5PSIwLjEyIi8+CiAgICA8L2ZpbHRlcj4KICA8L2RlZnM+CgogIDxyZWN0IHdpZHRoPSI5MDAiIGhlaWdodD0iODgwIiBmaWxsPSIjZmZmZmZmIi8+CgogIDx0ZXh0IHg9IjQwIiB5PSIzNCIgZm9udC1zaXplPSIxOSIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFjMjczNCI+V2F5cG9pbnQg4oCUIERhaWx5IEluZ2VzdGlvbiBQaXBlbGluZSAoQzQgQ29udGFpbmVyKTwvdGV4dD4KICA8dGV4dCB4PSI0MCIgeT0iNTYiIGZvbnQtc2l6ZT0iMTIuNSIgZmlsbD0iIzVjNmI3YyI+T25lIHNjcmFwZSBydW46IHRha2UgYW4gYWR2aXNvcnkgbG9jaywgZmV0Y2ggZWFjaCBlbmFibGVkIHNhdmVkIHF1ZXJ5IGZyb20gQWR6dW5hLCBzY29yZSBhbmQgdXBzZXJ0IG1hdGNoZXMsIHRoZW4gcmVjb3JkIHRoZSBvdXRjb21lLjwvdGV4dD4KCiAgPCEtLSAxIHRpbWVyIC0tPgogIDxyZWN0IHg9IjI5MCIgeT0iODgiIHdpZHRoPSIzMjAiIGhlaWdodD0iNTIiIHJ4PSIxMCIgZmlsbD0iI2RhZThmYyIgc3Ryb2tlPSIjNmM4ZWJmIiBzdHJva2Utd2lkdGg9IjIiIGZpbHRlcj0idXJsKCNwLXNoKSIvPgogIDx0ZXh0IHg9IjQ1MCIgeT0iMTEwIiBmb250LXNpemU9IjEyLjUiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMxYzI3MzQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPjEgwrcgd2F5cG9pbnQtc2NyYXBlci50aW1lciDigJQgMDY6MDAgZGFpbHk8L3RleHQ+CiAgPHRleHQgeD0iNDUwIiB5PSIxMjgiIGZvbnQtc2l6ZT0iMTAuNSIgZmlsbD0iIzNkNGM1ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UGVyc2lzdGVudD10cnVlIOKAlCBhIG1pc3NlZCBydW4gZmlyZXMgb24gbmV4dCBib290PC90ZXh0PgoKICA8IS0tIG1hbnVhbCB0cmlnZ2VyIC0tPgogIDxyZWN0IHg9IjY0OCIgeT0iODgiIHdpZHRoPSIyMzIiIGhlaWdodD0iNTIiIHJ4PSIxMCIgZmlsbD0iI2RhZThmYyIgc3Ryb2tlPSIjNmM4ZWJmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1kYXNoYXJyYXk9IjYgNCIvPgogIDx0ZXh0IHg9Ijc2NCIgeT0iMTEwIiBmb250LXNpemU9IjExLjUiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMxYzI3MzQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPm9yIFBPU1QgL2FwaS9zY3JhcGUtcnVuczwvdGV4dD4KICA8dGV4dCB4PSI3NjQiIHk9IjEyOCIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzNkNGM1ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+bWFudWFsIOKAlCAxNS1taW4gY29vbGRvd24g4oaSIDQyOTwvdGV4dD4KCiAgPCEtLSAyIC0tPgogIDxyZWN0IHg9IjI5MCIgeT0iMTY0IiB3aWR0aD0iMzIwIiBoZWlnaHQ9IjUyIiByeD0iMTAiIGZpbGw9IiNkYWU4ZmMiIHN0cm9rZT0iIzZjOGViZiIgc3Ryb2tlLXdpZHRoPSIyIiBmaWx0ZXI9InVybCgjcC1zaCkiLz4KICA8dGV4dCB4PSI0NTAiIHk9IjE4NiIgZm9udC1zaXplPSIxMi41IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMWMyNzM0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj4yIMK3IHNlcnZlci9jbGkvc2NyYXBlLmpzIOKGkiBjcmVhdGVTZXJ2aWNlcygpPC90ZXh0PgogIDx0ZXh0IHg9IjQ1MCIgeT0iMjA0IiBmb250LXNpemU9IjEwLjUiIGZpbGw9IiMzZDRjNWQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPnZlcmlmeURhdGFiYXNlKCkg4oCUIHJlZnVzZXMgTWFyaWFEQiBvbGRlciB0aGFuIDEwLjY8L3RleHQ+CgogIDwhLS0gMyBsb2NrIC0tPgogIDxyZWN0IHg9IjI5MCIgeT0iMjQwIiB3aWR0aD0iMzIwIiBoZWlnaHQ9IjUyIiByeD0iMTAiIGZpbGw9IiNkNWU4ZDQiIHN0cm9rZT0iIzgyYjM2NiIgc3Ryb2tlLXdpZHRoPSIyIiBmaWx0ZXI9InVybCgjcC1zaCkiLz4KICA8dGV4dCB4PSI0NTAiIHk9IjI2MiIgZm9udC1zaXplPSIxMi41IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMWMyNzM0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj4zIMK3IEdFVF9MT0NLKCd3YXlwb2ludDpzY3JhcGUnLCAwKTwvdGV4dD4KICA8dGV4dCB4PSI0NTAiIHk9IjI4MCIgZm9udC1zaXplPSIxMC41IiBmaWxsPSIjM2Q0YzVkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5ub24tYmxvY2tpbmcg4oCUIG9uZSBydW4gYXQgYSB0aW1lLCBjbHVzdGVyLXdpZGU8L3RleHQ+CgogIDxyZWN0IHg9IjY0OCIgeT0iMjQwIiB3aWR0aD0iMjMyIiBoZWlnaHQ9IjUyIiByeD0iMTAiIGZpbGw9IiNmOGNlY2MiIHN0cm9rZT0iI2IzNDIzYSIgc3Ryb2tlLXdpZHRoPSIxLjYiIHN0cm9rZS1kYXNoYXJyYXk9IjUgNCIvPgogIDx0ZXh0IHg9Ijc2NCIgeT0iMjYyIiBmb250LXNpemU9IjEwLjUiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiNiMzQyM2EiIHRleHQtYW5jaG9yPSJtaWRkbGUiPm5vdCBhY3F1aXJlZCDihpIgNDA5PC90ZXh0PgogIDx0ZXh0IHg9Ijc2NCIgeT0iMjc5IiBmb250LXNpemU9IjEwIiBmaWxsPSIjNWM2YjdjIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5SVU5fSU5fUFJPR1JFU1MsIG5vdGhpbmcgd3JpdHRlbjwvdGV4dD4KCiAgPCEtLSA0IC0tPgogIDxyZWN0IHg9IjI5MCIgeT0iMzE2IiB3aWR0aD0iMzIwIiBoZWlnaHQ9IjQ4IiByeD0iMTAiIGZpbGw9IiNkNWU4ZDQiIHN0cm9rZT0iIzgyYjM2NiIgc3Ryb2tlLXdpZHRoPSIyIiBmaWx0ZXI9InVybCgjcC1zaCkiLz4KICA8dGV4dCB4PSI0NTAiIHk9IjMzNyIgZm9udC1zaXplPSIxMiIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFjMjczNCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+NCDCtyByZWNvdmVyU3RhbGUoJmd0OyAzMCBtaW4pPC90ZXh0PgogIDx0ZXh0IHg9IjQ1MCIgeT0iMzU0IiBmb250LXNpemU9IjEwIiBmaWxsPSIjM2Q0YzVkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5jbG9zZXMgb3V0IHJ1bnMgYWJhbmRvbmVkIGJ5IGEgY3Jhc2g8L3RleHQ+CgogIDwhLS0gNSAtLT4KICA8cmVjdCB4PSIyOTAiIHk9IjM4OCIgd2lkdGg9IjMyMCIgaGVpZ2h0PSI0OCIgcng9IjEwIiBmaWxsPSIjZDVlOGQ0IiBzdHJva2U9IiM4MmIzNjYiIHN0cm9rZS13aWR0aD0iMiIgZmlsdGVyPSJ1cmwoI3Atc2gpIi8+CiAgPHRleHQgeD0iNDUwIiB5PSI0MDkiIGZvbnQtc2l6ZT0iMTIiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMxYzI3MzQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPjUgwrcgcXVlcnlSZXBvc2l0b3J5Lmxpc3QoeyBlbmFibGVkT25seTogdHJ1ZSB9KTwvdGV4dD4KICA8dGV4dCB4PSI0NTAiIHk9IjQyNiIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzNkNGM1ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+cnVuIHJvdyBjcmVhdGVkIHdpdGggc3RhdHVzICdydW5uaW5nJzwvdGV4dD4KCiAgPCEtLSBsb29wIGNvbnRhaW5lciAtLT4KICA8cmVjdCB4PSIyNTgiIHk9IjQ1NiIgd2lkdGg9IjM4NCIgaGVpZ2h0PSIyMTYiIHJ4PSIxMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjODJiMzY2IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1kYXNoYXJyYXk9IjcgNSIvPgogIDx0ZXh0IHg9IjI3MiIgeT0iNDc2IiBmb250LXNpemU9IjExIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMWY4YTViIj42IMK3IGZvciBlYWNoIGVuYWJsZWQgc2F2ZWQgcXVlcnk8L3RleHQ+CgogIDxyZWN0IHg9IjI5MCIgeT0iNDg2IiB3aWR0aD0iMzIwIiBoZWlnaHQ9IjQ4IiByeD0iOSIgZmlsbD0iI2Q1ZThkNCIgc3Ryb2tlPSIjODJiMzY2IiBzdHJva2Utd2lkdGg9IjEuOCIvPgogIDx0ZXh0IHg9IjQ1MCIgeT0iNTA2IiBmb250LXNpemU9IjExLjUiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMxYzI3MzQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPmFkenVuYUNsaWVudC5zZWFyY2gocXVlcnkpPC90ZXh0PgogIDx0ZXh0IHg9IjQ1MCIgeT0iNTIzIiBmb250LXNpemU9IjEwIiBmaWxsPSIjM2Q0YzVkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7iiaQzIGF0dGVtcHRzIMK3IGhvbm9ycyBSZXRyeS1BZnRlciDCtyAxNXMgdGltZW91dDwvdGV4dD4KCiAgPHJlY3QgeD0iMjkwIiB5PSI1NDgiIHdpZHRoPSIzMjAiIGhlaWdodD0iNDgiIHJ4PSI5IiBmaWxsPSIjZDVlOGQ0IiBzdHJva2U9IiM4MmIzNjYiIHN0cm9rZS13aWR0aD0iMS44Ii8+CiAgPHRleHQgeD0iNDUwIiB5PSI1NjgiIGZvbnQtc2l6ZT0iMTEuNSIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFjMjczNCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+bm9ybWFsaXplIOKGkiBkcm9wIG1hbGZvcm1lZCDihpIgZmlsdGVyIGJ5IGFnZTwvdGV4dD4KICA8dGV4dCB4PSI0NTAiIHk9IjU4NSIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzNkNGM1ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+aXNXaXRoaW5BZ2VMaW1pdChxdWVyeS5tYXhBZ2VEYXlzKTwvdGV4dD4KCiAgPHJlY3QgeD0iMjkwIiB5PSI2MTAiIHdpZHRoPSIzMjAiIGhlaWdodD0iNDgiIHJ4PSI5IiBmaWxsPSIjZDVlOGQ0IiBzdHJva2U9IiM4MmIzNjYiIHN0cm9rZS13aWR0aD0iMS44Ii8+CiAgPHRleHQgeD0iNDUwIiB5PSI2MzAiIGZvbnQtc2l6ZT0iMTEuNSIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFjMjczNCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+d2l0aFRyYW5zYWN0aW9uIOKGkiB1cHNlcnRMaXN0aW5nTWF0Y2g8L3RleHQ+CiAgPHRleHQgeD0iNDUwIiB5PSI2NDciIGZvbnQtc2l6ZT0iMTAiIGZpbGw9IiMzZDRjNWQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPnNjb3JlTGlzdGluZygpIHBlciBsaXN0aW5nIMK3IGNvdW50cyBuZXcgbWF0Y2hlczwvdGV4dD4KCiAgPCEtLSBzY29yaW5nIG5vdGUgLS0+CiAgPHJlY3QgeD0iNjYyIiB5PSI0ODYiIHdpZHRoPSIyMTgiIGhlaWdodD0iMTEwIiByeD0iMTAiIGZpbGw9IiNmZmYyY2MiIHN0cm9rZT0iI2Q2YjY1NiIgc3Ryb2tlLXdpZHRoPSIxLjgiLz4KICA8dGV4dCB4PSI3NzEiIHk9IjUwOSIgZm9udC1zaXplPSIxMSIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFjMjczNCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+c2NvcmVMaXN0aW5nKCk8L3RleHQ+CiAgPHRleHQgeD0iNzcxIiB5PSI1MjgiIGZvbnQtc2l6ZT0iMTAiIGZpbGw9IiMzZDRjNWQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPjcwIMOXIGtleXdvcmQgY292ZXJhZ2UgKHRpdGxlKTwvdGV4dD4KICA8dGV4dCB4PSI3NzEiIHk9IjU0NCIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzNkNGM1ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+KyAyMCDDlyBjb3ZlcmFnZSAoZGVzY3JpcHRpb24pPC90ZXh0PgogIDx0ZXh0IHg9Ijc3MSIgeT0iNTYwIiBmb250LXNpemU9IjEwIiBmaWxsPSIjM2Q0YzVkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj4rIDEwIMOXIHJlY2VuY3k8L3RleHQ+CiAgPHRleHQgeD0iNzcxIiB5PSI1ODAiIGZvbnQtc2l6ZT0iOS41IiBmaWxsPSIjOTNhMWIxIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5zdG9wLXdvcmRzLCBzdGVtbWluZywgcHJlZml4IG1hdGNoPC90ZXh0PgoKICA8IS0tIGZhaWx1cmUgbm90ZSAtLT4KICA8cmVjdCB4PSIzMCIgeT0iNTQ4IiB3aWR0aD0iMjA4IiBoZWlnaHQ9Ijg2IiByeD0iMTAiIGZpbGw9IiNmNWY1ZjUiIHN0cm9rZT0iIzY2NjY2NiIgc3Ryb2tlLXdpZHRoPSIxLjQiLz4KICA8dGV4dCB4PSIxMzQiIHk9IjU3MSIgZm9udC1zaXplPSIxMC41IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMWMyNzM0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5hIGZhaWxlZCBxdWVyeSBpcyByZWNvcmRlZCw8L3RleHQ+CiAgPHRleHQgeD0iMTM0IiB5PSI1ODciIGZvbnQtc2l6ZT0iMTAuNSIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFjMjczNCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+dGhlIGxvb3AgY29udGludWVzPC90ZXh0PgogIDx0ZXh0IHg9IjEzNCIgeT0iNjA2IiBmb250LXNpemU9IjkuNSIgZmlsbD0iIzVjNmI3YyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+ZXJyb3IgdGV4dCBwYXNzZXMgdGhyb3VnaDwvdGV4dD4KICA8dGV4dCB4PSIxMzQiIHk9IjYyMCIgZm9udC1zaXplPSI5LjUiIGZpbGw9IiM1YzZiN2MiIHRleHQtYW5jaG9yPSJtaWRkbGUiPnNhbml0aXplRXJyb3IoKSDigJQga2V5cyByZWRhY3RlZDwvdGV4dD4KCiAgPCEtLSA3IC0tPgogIDxyZWN0IHg9IjI5MCIgeT0iNjkyIiB3aWR0aD0iMzIwIiBoZWlnaHQ9IjQ4IiByeD0iMTAiIGZpbGw9IiNmZmYyY2MiIHN0cm9rZT0iI2Q2YjY1NiIgc3Ryb2tlLXdpZHRoPSIyIiBmaWx0ZXI9InVybCgjcC1zaCkiLz4KICA8dGV4dCB4PSI0NTAiIHk9IjcxMyIgZm9udC1zaXplPSIxMiIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFjMjczNCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+NyDCtyBsaXN0aW5ncy5leHBpcmUoJmd0OyAzMCBkYXlzKTwvdGV4dD4KICA8dGV4dCB4PSI0NTAiIHk9IjczMCIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzNkNGM1ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+dW5zZWVuIGxpc3RpbmdzIGZsaXAgdG8gc3RhdHVzICdleHBpcmVkJzwvdGV4dD4KCiAgPCEtLSA4IC0tPgogIDxyZWN0IHg9IjI5MCIgeT0iNzY0IiB3aWR0aD0iMzIwIiBoZWlnaHQ9IjUyIiByeD0iMTAiIGZpbGw9IiNmZmYyY2MiIHN0cm9rZT0iI2Q2YjY1NiIgc3Ryb2tlLXdpZHRoPSIyIiBmaWx0ZXI9InVybCgjcC1zaCkiLz4KICA8dGV4dCB4PSI0NTAiIHk9Ijc4NiIgZm9udC1zaXplPSIxMiIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFjMjczNCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+OCDCtyBydW5SZXBvc2l0b3J5LmZpbmlzaChzdGF0dXMpPC90ZXh0PgogIDx0ZXh0IHg9IjQ1MCIgeT0iODA0IiBmb250LXNpemU9IjEwIiBmaWxsPSIjM2Q0YzVkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5hbGwgb2sg4oaSIHN1Y2Nlc3Mgwrcgc29tZSDihpIgcGFydGlhbCDCtyBub25lIOKGkiBmYWlsZWQ8L3RleHQ+CgogIDwhLS0gOSAtLT4KICA8cmVjdCB4PSIyOTAiIHk9IjgzOCIgd2lkdGg9IjMyMCIgaGVpZ2h0PSIzNCIgcng9IjkiIGZpbGw9IiNlOGVmZmMiIHN0cm9rZT0iIzJmNmZkYiIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgPHRleHQgeD0iNDUwIiB5PSI4NjAiIGZvbnQtc2l6ZT0iMTEuNSIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzJmNmZkYiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+OSDCtyBSRUxFQVNFX0xPQ0sg4oCUIGluIGZpbmFsbHksIGFsd2F5cyBydW5zPC90ZXh0PgoKICA8IS0tIGVkZ2VzIC0tPgogIDxwYXRoIGQ9Ik00NTAsMTQwIEw0NTAsMTYwIiBmaWxsPSJub25lIiBzdHJva2U9IiM1YzZiN2MiIHN0cm9rZS13aWR0aD0iMiIgbWFya2VyLWVuZD0idXJsKCNwLWFyKSIvPgogIDxwYXRoIGQ9Ik02NDgsMTE0IEw2MjAsMTE0IEw2MjAsMTUwIEw0NTAsMTUwIiBmaWxsPSJub25lIiBzdHJva2U9IiM2YzhlYmYiIHN0cm9rZS13aWR0aD0iMS42IiBzdHJva2UtZGFzaGFycmF5PSI1IDQiLz4KICA8cGF0aCBkPSJNNDUwLDIxNiBMNDUwLDIzNiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNWM2YjdjIiBzdHJva2Utd2lkdGg9IjIiIG1hcmtlci1lbmQ9InVybCgjcC1hcikiLz4KICA8cGF0aCBkPSJNNjEwLDI2NiBMNjQ0LDI2NiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYjM0MjNhIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWRhc2hhcnJheT0iNSA0IiBtYXJrZXItZW5kPSJ1cmwoI3AtcmVkKSIvPgogIDxwYXRoIGQ9Ik00NTAsMjkyIEw0NTAsMzEyIiBmaWxsPSJub25lIiBzdHJva2U9IiM1YzZiN2MiIHN0cm9rZS13aWR0aD0iMiIgbWFya2VyLWVuZD0idXJsKCNwLWFyKSIvPgogIDxwYXRoIGQ9Ik00NTAsMzY0IEw0NTAsMzg0IiBmaWxsPSJub25lIiBzdHJva2U9IiM1YzZiN2MiIHN0cm9rZS13aWR0aD0iMiIgbWFya2VyLWVuZD0idXJsKCNwLWFyKSIvPgogIDxwYXRoIGQ9Ik00NTAsNDM2IEw0NTAsNDgyIiBmaWxsPSJub25lIiBzdHJva2U9IiM1YzZiN2MiIHN0cm9rZS13aWR0aD0iMiIgbWFya2VyLWVuZD0idXJsKCNwLWFyKSIvPgogIDxwYXRoIGQ9Ik00NTAsNTM0IEw0NTAsNTQ0IiBmaWxsPSJub25lIiBzdHJva2U9IiM1YzZiN2MiIHN0cm9rZS13aWR0aD0iMiIgbWFya2VyLWVuZD0idXJsKCNwLWFyKSIvPgogIDxwYXRoIGQ9Ik00NTAsNTk2IEw0NTAsNjA2IiBmaWxsPSJub25lIiBzdHJva2U9IiM1YzZiN2MiIHN0cm9rZS13aWR0aD0iMiIgbWFya2VyLWVuZD0idXJsKCNwLWFyKSIvPgogIDxwYXRoIGQ9Ik00NTAsNjcyIEw0NTAsNjg4IiBmaWxsPSJub25lIiBzdHJva2U9IiM1YzZiN2MiIHN0cm9rZS13aWR0aD0iMiIgbWFya2VyLWVuZD0idXJsKCNwLWFyKSIvPgogIDxwYXRoIGQ9Ik00NTAsNzQwIEw0NTAsNzYwIiBmaWxsPSJub25lIiBzdHJva2U9IiM1YzZiN2MiIHN0cm9rZS13aWR0aD0iMiIgbWFya2VyLWVuZD0idXJsKCNwLWFyKSIvPgogIDxwYXRoIGQ9Ik00NTAsODE2IEw0NTAsODM0IiBmaWxsPSJub25lIiBzdHJva2U9IiM1YzZiN2MiIHN0cm9rZS13aWR0aD0iMiIgbWFya2VyLWVuZD0idXJsKCNwLWFyKSIvPgogIDxwYXRoIGQ9Ik0yOTAsNTcyIEwyNDIsNTcyIiBmaWxsPSJub25lIiBzdHJva2U9IiM5M2ExYjEiIHN0cm9rZS13aWR0aD0iMS40IiBtYXJrZXItZW5kPSJ1cmwoI3AtbSkiLz4KICA8cGF0aCBkPSJNNjEwLDUxMCBMNjU4LDUxMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTNhMWIxIiBzdHJva2Utd2lkdGg9IjEuNCIgc3Ryb2tlLWRhc2hhcnJheT0iNSA0IiBtYXJrZXItZW5kPSJ1cmwoI3AtbSkiLz4KPC9zdmc+Cg==" alt="Processing Pipeline" /><figcaption>Processing Pipeline</figcaption></figure>
+<p>This is the system&#39;s core loop, and it is written defensively at every step.</p>
+<p><strong>Trigger.</strong> Either the 06:00 timer or <code>POST /api/scrape-runs</code>. A manual run first checks for another manual run in the last 15 minutes and rejects with <strong>429 <code>RUN_COOLDOWN</code></strong> if it finds one. Scheduled runs skip that check.</p>
+<p><strong>Locking.</strong> The run takes <code>GET_LOCK(&#39;waypoint:scrape&#39;, 0)</code> — timeout zero, so it never queues. If another run holds it, the request fails immediately with <strong>409 <code>RUN_IN_PROGRESS</code></strong> and writes nothing. The lock is released in a <code>finally</code> block, so it survives any failure path.</p>
+<p><strong>Stale recovery.</strong> <code>recoverStale</code> closes out any run still marked <code>running</code> after 30 minutes — the repair path for a process killed mid-run.</p>
+<p><strong>Per query.</strong> For each <em>enabled</em> saved query:</p>
+<ol>
+<li><code>adzunaClient.search(query)</code> — up to 3 attempts, 15-second timeout via <code>AbortSignal.timeout</code>, <code>results_per_page=50</code>. Retries only on 429 or 5xx, and honors a <code>Retry-After</code> header in either seconds or HTTP-date form, falling back to 1s then 3s.</li>
+<li><code>normalizeAdzunaJob</code> drops any listing missing an id, title, creation date, or redirect URL, and rejects unparseable dates. Malformed records are discarded rather than failing the query.</li>
+<li><code>isWithinAgeLimit</code> filters to the query&#39;s <code>maxAgeDays</code>.</li>
+<li>Inside a transaction, each listing is upserted with <code>upsertListingMatch</code> and scored with <code>scoreListing</code>. New matches are counted.</li>
+</ol>
+<p><strong>Failure isolation is the important part.</strong> A query that throws is caught, recorded to <code>scrape_run_queries</code> with status <code>failed</code> and a sanitized message, and <strong>the loop moves to the next query.</strong> One provider hiccup cannot lose the whole morning&#39;s ingestion.</p>
+<p><strong>Finalization.</strong> Listings unseen for 30 days flip to <code>expired</code>. The run&#39;s status is computed: all queries succeeded → <code>success</code>, some → <code>partial</code>, none → <code>failed</code>. If a <em>fatal</em> error escapes the loop, the run is still closed out as <code>partial</code> or <code>failed</code> before the error propagates — the run table never keeps a lie.</p>
+<h3>Scoring</h3>
+<p><code>scoreListing</code> is a pure function, and the only heuristic in the system:</p>
+<pre><code class="language-text">score = 70 × keywordCoverage(query.keywords, listing.title)
+      + 20 × keywordCoverage(query.keywords, listing.description)
+      + 10 × recency          // 1 → today, 0 → at the age limit
+</code></pre>
+<p><code>keywordCoverage</code> is the fraction of query tokens found in the candidate. Tokenization strips accents, lowercases, removes stop-words, and applies light stemming (trailing <code>s</code>, <code>-ation</code>, <code>-ator</code>). Matching is prefix-based for tokens of four characters or more, so <code>admin</code> matches <code>administrator</code>. The result is rounded to two decimals and constrained by the schema to 0–100.</p>
+<p>Title relevance is weighted 3.5× description relevance, and recency can contribute at most 10 points — a perfectly-titled month-old listing still outranks a fresh irrelevant one.</p>
+<hr>
+<h2 id="4-core-components">4. Core Components</h2>
+<figure><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5MDAgNzAwIiB3aWR0aD0iOTAwIiBoZWlnaHQ9IjcwMCIgZm9udC1mYW1pbHk9IidQdWJsaWMgU2FucycsLWFwcGxlLXN5c3RlbSwnU2Vnb2UgVUknLHN5c3RlbS11aSxzYW5zLXNlcmlmIj4KICA8ZGVmcz4KICAgIDxtYXJrZXIgaWQ9ImMtYXIiIHZpZXdCb3g9IjAgMCAxMCAxMCIgcmVmWD0iOSIgcmVmWT0iNSIgbWFya2VyV2lkdGg9IjYiIG1hcmtlckhlaWdodD0iNiIgb3JpZW50PSJhdXRvLXN0YXJ0LXJldmVyc2UiPgogICAgICA8cGF0aCBkPSJNMCwwIEwxMCw1IEwwLDEwIHoiIGZpbGw9IiM1YzZiN2MiLz4KICAgIDwvbWFya2VyPgogICAgPG1hcmtlciBpZD0iYy1iIiB2aWV3Qm94PSIwIDAgMTAgMTAiIHJlZlg9IjkiIHJlZlk9IjUiIG1hcmtlcldpZHRoPSI2IiBtYXJrZXJIZWlnaHQ9IjYiIG9yaWVudD0iYXV0by1zdGFydC1yZXZlcnNlIj4KICAgICAgPHBhdGggZD0iTTAsMCBMMTAsNSBMMCwxMCB6IiBmaWxsPSIjMmY2ZmRiIi8+CiAgICA8L21hcmtlcj4KICAgIDxtYXJrZXIgaWQ9ImMtZyIgdmlld0JveD0iMCAwIDEwIDEwIiByZWZYPSI5IiByZWZZPSI1IiBtYXJrZXJXaWR0aD0iNiIgbWFya2VySGVpZ2h0PSI2IiBvcmllbnQ9ImF1dG8tc3RhcnQtcmV2ZXJzZSI+CiAgICAgIDxwYXRoIGQ9Ik0wLDAgTDEwLDUgTDAsMTAgeiIgZmlsbD0iIzgyYjM2NiIvPgogICAgPC9tYXJrZXI+CiAgICA8ZmlsdGVyIGlkPSJjLXNoIiB4PSItMjAlIiB5PSItMjAlIiB3aWR0aD0iMTUwJSIgaGVpZ2h0PSIxNTAlIj4KICAgICAgPGZlRHJvcFNoYWRvdyBkeD0iMCIgZHk9IjIiIHN0ZERldmlhdGlvbj0iMi41IiBmbG9vZC1jb2xvcj0iIzFjMjczNCIgZmxvb2Qtb3BhY2l0eT0iMC4xMiIvPgogICAgPC9maWx0ZXI+CiAgPC9kZWZzPgoKICA8cmVjdCB3aWR0aD0iOTAwIiBoZWlnaHQ9IjcwMCIgZmlsbD0iI2ZmZmZmZiIvPgoKICA8dGV4dCB4PSI0MCIgeT0iMzQiIGZvbnQtc2l6ZT0iMTkiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMxYzI3MzQiPldheXBvaW50IOKAlCBDb21wb25lbnQgUmVsYXRpb25zaGlwcyAoQzQgQ29tcG9uZW50KTwvdGV4dD4KICA8dGV4dCB4PSI0MCIgeT0iNTYiIGZvbnQtc2l6ZT0iMTIuNSIgZmlsbD0iIzVjNmI3YyI+VHdvIHRpZXJzLCBvbmUgSFRUUCBzZWFtLiBUaGUgc3RvcmUgaXMgc3RpbGwgdGhlIHNpbmdsZSBjbGllbnQtc2lkZSBvd25lciBvZiBqb2Igc3RhdGUg4oCUIGl0IGp1c3QgcGVyc2lzdHMgb3ZlciB0aGUgQVBJIG5vdy48L3RleHQ+CgogIDwhLS0gYm91bmRhcnkgLS0+CiAgPHBhdGggZD0iTTQ0MCw3OCBMNDQwLDY3MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTNhMWIxIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWRhc2hhcnJheT0iOCA2Ii8+CiAgPHRleHQgeD0iNDMyIiB5PSI5NCIgZm9udC1zaXplPSIxMC41IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjOTNhMWIxIiB0ZXh0LWFuY2hvcj0iZW5kIj5CUk9XU0VSPC90ZXh0PgogIDx0ZXh0IHg9IjQ1MCIgeT0iOTQiIGZvbnQtc2l6ZT0iMTAuNSIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzkzYTFiMSI+UkFTUEJFUlJZIFBJPC90ZXh0PgoKICA8IS0tIENMSUVOVCAtLT4KICA8cmVjdCB4PSI0MCIgeT0iMTA2IiB3aWR0aD0iMzYwIiBoZWlnaHQ9IjQ0IiByeD0iOSIgZmlsbD0iI2RhZThmYyIgc3Ryb2tlPSIjNmM4ZWJmIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8dGV4dCB4PSIyMjAiIHk9IjEyNSIgZm9udC1zaXplPSIxMi41IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMWMyNzM0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5BcHAuanN4PC90ZXh0PgogIDx0ZXh0IHg9IjIyMCIgeT0iMTQxIiBmb250LXNpemU9IjEwIiBmaWxsPSIjNWM2YjdjIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5jYWxscyB0aGUgaG9vayBvbmNlIMK3IHRocmVhZHMgcHJvcHMgwrcgcmVuZGVycyBNaWdyYXRpb25CYW5uZXI8L3RleHQ+CgogIDxyZWN0IHg9IjQwIiB5PSIxNjYiIHdpZHRoPSIzNjAiIGhlaWdodD0iOTAiIHJ4PSIxMSIgZmlsbD0iI2U4ZWZmYyIgc3Ryb2tlPSIjMmY2ZmRiIiBzdHJva2Utd2lkdGg9IjIuNSIgZmlsdGVyPSJ1cmwoI2Mtc2gpIi8+CiAgPHRleHQgeD0iMjIwIiB5PSIxOTAiIGZvbnQtc2l6ZT0iMTMuNSIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFjMjczNCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+dXNlSm9ic1N0b3JlIOKAlCB0aGUgb25seSBjbGllbnQtc2lkZSBzdGF0ZTwvdGV4dD4KICA8dGV4dCB4PSIyMjAiIHk9IjIwOSIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzNkNGM1ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+am9icyDCtyBxdWV1ZSDCtyBxdWVyaWVzIMK3IGxhdGVzdFJ1biDCtyBtaWdyYXRpb24gwrcgbG9hZGluZyDCtyBydW5uaW5nPC90ZXh0PgogIDx0ZXh0IHg9IjIyMCIgeT0iMjI0IiBmb250LXNpemU9IjEwIiBmaWxsPSIjM2Q0YzVkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5zdGFnZUZpbHRlciDCtyBzZWxlY3RlZEpvYklkIMK3IGRlbGV0ZWRKb2JJZCDCtyB0b2FzdDwvdGV4dD4KICA8dGV4dCB4PSIyMjAiIHk9IjI0MyIgZm9udC1zaXplPSIxMCIgZm9udC13ZWlnaHQ9IjYwMCIgZmlsbD0iIzJmNmZkYiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Ym9vdHN0cmFwIG9uIG1vdW50IMK3IGV2ZXJ5IHdyaXRlIGF3YWl0cyB0aGUgQVBJLCB0aGVuIHJlLXN5bmNzPC90ZXh0PgoKICA8cmVjdCB4PSI0MCIgeT0iMjcyIiB3aWR0aD0iMzYwIiBoZWlnaHQ9IjUyIiByeD0iMTAiIGZpbGw9IiNkYWU4ZmMiIHN0cm9rZT0iIzZjOGViZiIgc3Ryb2tlLXdpZHRoPSIyIiBmaWx0ZXI9InVybCgjYy1zaCkiLz4KICA8dGV4dCB4PSIyMjAiIHk9IjI5NCIgZm9udC1zaXplPSIxMi41IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMWMyNzM0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5hcGlDbGllbnQuanMg4oCUIHRoZSBzaW5nbGUgZmV0Y2ggd3JhcHBlcjwvdGV4dD4KICA8dGV4dCB4PSIyMjAiIHk9IjMxMiIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzNkNGM1ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+dGhyb3dzIEVycm9yIHdpdGggLmNvZGUgLyAuc3RhdHVzIGZyb20gdGhlIGVycm9yIGVudmVsb3BlPC90ZXh0PgoKICA8dGV4dCB4PSI1NiIgeT0iMzQ4IiBmb250LXNpemU9IjExIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjNWM2YjdjIj5DTElFTlQgTElCPC90ZXh0PgoKICA8cmVjdCB4PSI0MCIgeT0iMzYyIiB3aWR0aD0iMTcwIiBoZWlnaHQ9Ijc2IiByeD0iMTAiIGZpbGw9IiNkNWU4ZDQiIHN0cm9rZT0iIzgyYjM2NiIgc3Ryb2tlLXdpZHRoPSIyLjUiLz4KICA8dGV4dCB4PSIxMjUiIHk9IjM4NCIgZm9udC1zaXplPSIxMS41IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMWMyNzM0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5qb2JMaXN0T3BlcmF0aW9ucy5qczwvdGV4dD4KICA8dGV4dCB4PSIxMjUiIHk9IjQwMSIgZm9udC1zaXplPSI5LjUiIGZpbGw9IiMzZDRjNWQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPnJlb3JkZXJWaXNpYmxlSm9icyDCtyBtb3ZlVmlzaWJsZUpvYjwvdGV4dD4KICA8dGV4dCB4PSIxMjUiIHk9IjQxNSIgZm9udC1zaXplPSI5LjUiIGZpbGw9IiMzZDRjNWQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPnVwZGF0ZUpvYiDCtyBkdXBsaWNhdGVKb2I8L3RleHQ+CiAgPHRleHQgeD0iMTI1IiB5PSI0MzEiIGZvbnQtc2l6ZT0iOS41IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMWY4YTViIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5wdXJlIMK3IGNvbXB1dGVzIG9yZGVyIHRvIFBVU0g8L3RleHQ+CgogIDxyZWN0IHg9IjIzMCIgeT0iMzYyIiB3aWR0aD0iMTcwIiBoZWlnaHQ9Ijc2IiByeD0iMTAiIGZpbGw9IiNkNWU4ZDQiIHN0cm9rZT0iIzgyYjM2NiIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgPHRleHQgeD0iMzE1IiB5PSIzODQiIGZvbnQtc2l6ZT0iMTEuNSIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFjMjczNCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+bGVnYWN5SW1wb3J0LmpzPC90ZXh0PgogIDx0ZXh0IHg9IjMxNSIgeT0iNDAxIiBmb250LXNpemU9IjkuNSIgZmlsbD0iIzNkNGM1ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+cGFyc2VMZWdhY3lKb2JzIOKAlCB2YWxpZGF0ZXM8L3RleHQ+CiAgPHRleHQgeD0iMzE1IiB5PSI0MTUiIGZvbnQtc2l6ZT0iOS41IiBmaWxsPSIjM2Q0YzVkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5zdGFnZXMsIGZpZWxkIHR5cGVzLCBsZW5ndGhzPC90ZXh0PgogIDx0ZXh0IHg9IjMxNSIgeT0iNDMxIiBmb250LXNpemU9IjkuNSIgZmlsbD0iIzVjNmI3YyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+NTAwLWpvYiBpbXBvcnQgY2FwPC90ZXh0PgoKICA8cmVjdCB4PSI0MCIgeT0iNDU0IiB3aWR0aD0iMTcwIiBoZWlnaHQ9IjYwIiByeD0iMTAiIGZpbGw9IiNmOGNlY2MiIHN0cm9rZT0iI2IzNDIzYSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtZGFzaGFycmF5PSI2IDQiLz4KICA8dGV4dCB4PSIxMjUiIHk9IjQ3NiIgZm9udC1zaXplPSIxMS41IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMWMyNzM0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5wYXJzZUpvYlVybC5qczwvdGV4dD4KICA8dGV4dCB4PSIxMjUiIHk9IjQ5MyIgZm9udC1zaXplPSI5LjUiIGZpbGw9IiNiMzQyM2EiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlNUSUxMIEEgU1RVQjwvdGV4dD4KICA8dGV4dCB4PSIxMjUiIHk9IjUwNyIgZm9udC1zaXplPSI5LjUiIGZpbGw9IiM1YzZiN2MiIHRleHQtYW5jaG9yPSJtaWRkbGUiPmNhcHR1cmUg4oaSIGVtcHR5IGRyYWZ0PC90ZXh0PgoKICA8cmVjdCB4PSIyMzAiIHk9IjQ1NCIgd2lkdGg9IjE3MCIgaGVpZ2h0PSI2MCIgcng9IjEwIiBmaWxsPSIjZmZmMmNjIiBzdHJva2U9IiNkNmI2NTYiIHN0cm9rZS13aWR0aD0iMiIvPgogIDx0ZXh0IHg9IjMxNSIgeT0iNDc2IiBmb250LXNpemU9IjExLjUiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMxYzI3MzQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPnRoZW1lLmpzPC90ZXh0PgogIDx0ZXh0IHg9IjMxNSIgeT0iNDkzIiBmb250LXNpemU9IjkuNSIgZmlsbD0iIzNkNGM1ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Y29sb3IgwrcgY2hpcENvbG9yIMK3IGZvbnQgwrcgcmFkaXVzPC90ZXh0PgogIDx0ZXh0IHg9IjMxNSIgeT0iNTA3IiBmb250LXNpemU9IjkuNSIgZmlsbD0iIzkzYTFiMSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+aW5saW5lIHN0eWxlcyBvbmx5PC90ZXh0PgoKICA8cmVjdCB4PSI0MCIgeT0iNTM2IiB3aWR0aD0iMzYwIiBoZWlnaHQ9Ijc2IiByeD0iMTAiIGZpbGw9IiNkYWU4ZmMiIHN0cm9rZT0iIzZjOGViZiIgc3Ryb2tlLXdpZHRoPSIyIiBmaWx0ZXI9InVybCgjYy1zaCkiLz4KICA8dGV4dCB4PSIyMjAiIHk9IjU1OCIgZm9udC1zaXplPSIxMiIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFjMjczNCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+MTIgcHJlc2VudGF0aW9uYWwgY29tcG9uZW50czwvdGV4dD4KICA8dGV4dCB4PSIyMjAiIHk9IjU3NiIgZm9udC1zaXplPSI5LjUiIGZpbGw9IiMzZDRjNWQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlBpcGVsaW5lVGFibGUgwrcgSm9iUm93IMK3IEpvYkFjdGlvbnNNZW51IMK3IEpvYkRldGFpbFBhbmVsIMK3IENhcHR1cmVCYXI8L3RleHQ+CiAgPHRleHQgeD0iMjIwIiB5PSI1OTAiIGZvbnQtc2l6ZT0iOS41IiBmaWxsPSIjM2Q0YzVkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5SZXZpZXdRdWV1ZSDCtyBNYXRjaENhcmQgwrcgU2F2ZWRRdWVyaWVzIMK3IE1pZ3JhdGlvbkJhbm5lciDCtyBUb2FzdCDCtyBTaWRlYmFyIMK3IEhlYWRlcjwvdGV4dD4KICA8dGV4dCB4PSIyMjAiIHk9IjYwNiIgZm9udC1zaXplPSI5LjUiIGZpbGw9IiM5M2ExYjEiIHRleHQtYW5jaG9yPSJtaWRkbGUiPnByb3BzIGRvd24gwrcgY2FsbGJhY2tzIHVwIMK3IGxvY2FsIFVJIHN0YXRlIG9ubHk8L3RleHQ+CgogIDwhLS0gU0VSVkVSIC0tPgogIDxyZWN0IHg9IjQ4MCIgeT0iMTA2IiB3aWR0aD0iMzkwIiBoZWlnaHQ9IjY0IiByeD0iMTAiIGZpbGw9IiNkNWU4ZDQiIHN0cm9rZT0iIzgyYjM2NiIgc3Ryb2tlLXdpZHRoPSIyLjUiIGZpbHRlcj0idXJsKCNjLXNoKSIvPgogIDx0ZXh0IHg9IjY3NSIgeT0iMTI4IiBmb250LXNpemU9IjEyLjUiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMxYzI3MzQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPmFwcC5qcyDigJQgYnVpbGRBcHAoeyBzZXJ2aWNlcyB9KTwvdGV4dD4KICA8dGV4dCB4PSI2NzUiIHk9IjE0NSIgZm9udC1zaXplPSI5LjUiIGZpbGw9IiMzZDRjNWQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPmVycm9yIGhhbmRsZXIg4oaSIHsgZXJyb3I6IHsgY29kZSwgbWVzc2FnZSB9IH0gwrcgL2FwaS9oZWFsdGggwrcgL2FwaS9ib290c3RyYXA8L3RleHQ+CiAgPHRleHQgeD0iNjc1IiB5PSIxNjAiIGZvbnQtc2l6ZT0iOS41IiBmaWxsPSIjM2Q0YzVkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5AZmFzdGlmeS9zdGF0aWMgKyBTUEEgZmFsbGJhY2sgwrcgaW5kZXguanMgb3ducyBsaXN0ZW4gKyBzaHV0ZG93bjwvdGV4dD4KCiAgPHJlY3QgeD0iNDgwIiB5PSIxOTAiIHdpZHRoPSIzOTAiIGhlaWdodD0iNTYiIHJ4PSIxMCIgZmlsbD0iI2RhZThmYyIgc3Ryb2tlPSIjNmM4ZWJmIiBzdHJva2Utd2lkdGg9IjIiIGZpbHRlcj0idXJsKCNjLXNoKSIvPgogIDx0ZXh0IHg9IjY3NSIgeT0iMjEyIiBmb250LXNpemU9IjEyIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMWMyNzM0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5yb3V0ZXMvIOKAlCBqb2JzIMK3IHF1ZXJpZXMgwrcgbGlzdGluZ3MgwrcgcnVuczwvdGV4dD4KICA8dGV4dCB4PSI2NzUiIHk9IjIzMCIgZm9udC1zaXplPSI5LjUiIGZpbGw9IiMzZDRjNWQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkpTT04tc2NoZW1hIHJlcXVlc3QgdmFsaWRhdGlvbiDihpIgNDAwIFZBTElEQVRJT05fRVJST1I8L3RleHQ+CgogIDxyZWN0IHg9IjQ4MCIgeT0iMjY2IiB3aWR0aD0iMzkwIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiNlOGVmZmMiIHN0cm9rZT0iIzJmNmZkYiIgc3Ryb2tlLXdpZHRoPSIyLjUiIGZpbHRlcj0idXJsKCNjLXNoKSIvPgogIDx0ZXh0IHg9IjY3NSIgeT0iMjg4IiBmb250LXNpemU9IjEyIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMWMyNzM0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5zZXJ2aWNlcy5qcyDigJQgdGhlIGNvbXBvc2l0aW9uIHJvb3Q8L3RleHQ+CiAgPHRleHQgeD0iNjc1IiB5PSIzMDYiIGZvbnQtc2l6ZT0iOS41IiBmaWxsPSIjM2Q0YzVkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5jb25maWcgwrcgcG9vbCDCtyA0IHJlcG9zaXRvcmllcyDCtyBhZHp1bmFDbGllbnQgwrcgc2NyYXBlciDCtyBsb2dnZXIg4oCUIGFsbCBpbmplY3RhYmxlPC90ZXh0PgoKICA8cmVjdCB4PSI0ODAiIHk9IjM0MiIgd2lkdGg9IjM5MCIgaGVpZ2h0PSI3MCIgcng9IjEwIiBmaWxsPSIjZDVlOGQ0IiBzdHJva2U9IiM4MmIzNjYiIHN0cm9rZS13aWR0aD0iMiIgZmlsdGVyPSJ1cmwoI2Mtc2gpIi8+CiAgPHRleHQgeD0iNjc1IiB5PSIzNjQiIGZvbnQtc2l6ZT0iMTIiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMxYzI3MzQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPmRiLyDigJQgcmVwb3NpdG9yaWVzPC90ZXh0PgogIDx0ZXh0IHg9IjY3NSIgeT0iMzgxIiBmb250LXNpemU9IjkuNSIgZmlsbD0iIzNkNGM1ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+am9iUmVwb3NpdG9yeSDCtyBxdWVyeVJlcG9zaXRvcnkgwrcgbGlzdGluZ1JlcG9zaXRvcnkgwrcgcnVuUmVwb3NpdG9yeTwvdGV4dD4KICA8dGV4dCB4PSI2NzUiIHk9IjM5NiIgZm9udC1zaXplPSI5LjUiIGZpbGw9IiM1YzZiN2MiIHRleHQtYW5jaG9yPSJtaWRkbGUiPnJvd3MuanMgbWFwcyBzbmFrZV9jYXNlIGNvbHVtbnMg4oeEIGNhbWVsQ2FzZSBBUEkgc2hhcGVzPC90ZXh0PgoKICA8cmVjdCB4PSI0ODAiIHk9IjQzMiIgd2lkdGg9IjM5MCIgaGVpZ2h0PSI1MiIgcng9IjEwIiBmaWxsPSIjZGFlOGZjIiBzdHJva2U9IiM2YzhlYmYiIHN0cm9rZS13aWR0aD0iMiIvPgogIDx0ZXh0IHg9IjY3NSIgeT0iNDUzIiBmb250LXNpemU9IjExLjUiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMxYzI3MzQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPnBvb2wuanMg4oCUIHdpdGhDb25uZWN0aW9uIMK3IHdpdGhUcmFuc2FjdGlvbiDCtyB2ZXJpZnlEYXRhYmFzZTwvdGV4dD4KICA8dGV4dCB4PSI2NzUiIHk9IjQ3MCIgZm9udC1zaXplPSI5LjUiIGZpbGw9IiMzZDRjNWQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPmV2ZXJ5IGNvbm5lY3Rpb24gcGlubmVkIHRvIFNFVCB0aW1lX3pvbmUgPSAnKzAwOjAwJzwvdGV4dD4KCiAgPGc+CiAgICA8cGF0aCBkPSJNNTc2LDUxMCBhOTksMTMgMCAwLDEgMTk4LDAgdjQyIGE5OSwxMyAwIDAsMSAtMTk4LDAgeiIgZmlsbD0iI2U4ZWZmYyIgc3Ryb2tlPSIjMmY2ZmRiIiBzdHJva2Utd2lkdGg9IjIuNSIvPgogICAgPHBhdGggZD0iTTU3Niw1MTAgYTk5LDEzIDAgMCwwIDE5OCwwIiBmaWxsPSJub25lIiBzdHJva2U9IiMyZjZmZGIiIHN0cm9rZS13aWR0aD0iMi41Ii8+CiAgPC9nPgogIDx0ZXh0IHg9IjY3NSIgeT0iNTQwIiBmb250LXNpemU9IjExLjUiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMxYzI3MzQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk1hcmlhREI8L3RleHQ+CiAgPHRleHQgeD0iNjc1IiB5PSI1NTciIGZvbnQtc2l6ZT0iOS41IiBmaWxsPSIjNWM2YjdjIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj42IHRhYmxlcyDCtyBJbm5vREI8L3RleHQ+CgogIDxyZWN0IHg9IjQ4MCIgeT0iNTk2IiB3aWR0aD0iMzkwIiBoZWlnaHQ9IjcwIiByeD0iMTAiIGZpbGw9IiNmZmYyY2MiIHN0cm9rZT0iI2Q2YjY1NiIgc3Ryb2tlLXdpZHRoPSIyIiBmaWx0ZXI9InVybCgjYy1zaCkiLz4KICA8dGV4dCB4PSI2NzUiIHk9IjYxOCIgZm9udC1zaXplPSIxMiIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFjMjczNCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+c2NyYXBlci8g4oCUIHNlcnZpY2UgwrcgYWR6dW5hIMK3IHNjb3Jpbmc8L3RleHQ+CiAgPHRleHQgeD0iNjc1IiB5PSI2MzUiIGZvbnQtc2l6ZT0iOS41IiBmaWxsPSIjM2Q0YzVkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5zZXJ2aWNlIG9yY2hlc3RyYXRlcyB0aGUgcnVuIMK3IGFkenVuYSBmZXRjaGVzICsgbm9ybWFsaXplcyDCtyBzY29yaW5nIGlzIHB1cmU8L3RleHQ+CiAgPHRleHQgeD0iNjc1IiB5PSI2NTEiIGZvbnQtc2l6ZT0iOS41IiBmaWxsPSIjOTNhMWIxIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5kcml2ZW4gYnkgY2xpL3NjcmFwZS5qcyAodGltZXIpIG9yIHJvdXRlcy9ydW5zLmpzIChtYW51YWwpPC90ZXh0PgoKICA8IS0tIGNsaWVudCBlZGdlcyAtLT4KICA8cGF0aCBkPSJNMjIwLDE1MCBMMjIwLDE2MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMmY2ZmRiIiBzdHJva2Utd2lkdGg9IjIiIG1hcmtlci1lbmQ9InVybCgjYy1iKSIvPgogIDxwYXRoIGQ9Ik0yMjAsMjU2IEwyMjAsMjY4IiBmaWxsPSJub25lIiBzdHJva2U9IiMyZjZmZGIiIHN0cm9rZS13aWR0aD0iMiIgbWFya2VyLWVuZD0idXJsKCNjLWIpIi8+CiAgPHBhdGggZD0iTTExMCwyNTYgTDExMCwzMDAgTDMwLDMwMCBMMzAsMzY4IEwzNiwzNjgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzgyYjM2NiIgc3Ryb2tlLXdpZHRoPSIxLjgiIG1hcmtlci1lbmQ9InVybCgjYy1nKSIvPgogIDx0ZXh0IHg9IjM4IiB5PSIzMzYiIGZvbnQtc2l6ZT0iOSIgZmlsbD0iIzVjNmI3YyI+dXNlczwvdGV4dD4KICA8cGF0aCBkPSJNMjIwLDMyNCBMMjIwLDM0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNWM2YjdjIiBzdHJva2Utd2lkdGg9IjEuNiIgbWFya2VyLWVuZD0idXJsKCNjLWFyKSIvPgogIDxwYXRoIGQ9Ik00MTAsMjExIEw0MjQsMjExIEw0MjQsNTc0IEw0MDQsNTc0IiBmaWxsPSJub25lIiBzdHJva2U9IiMyZjZmZGIiIHN0cm9rZS13aWR0aD0iMS44IiBtYXJrZXItZW5kPSJ1cmwoI2MtYikiLz4KICA8dGV4dCB4PSIzMzAiIHk9IjUzMCIgZm9udC1zaXplPSI5IiBmaWxsPSIjMmY2ZmRiIj5wcm9wcyBkb3duIMK3IGNhbGxiYWNrcyB1cDwvdGV4dD4KCiAgPCEtLSB0aGUgc2VhbSAtLT4KICA8cGF0aCBkPSJNNDAwLDI5OCBMNDUyLDI5OCBMNDUyLDEzOCBMNDc2LDEzOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMmY2ZmRiIiBzdHJva2Utd2lkdGg9IjIuNSIgbWFya2VyLWVuZD0idXJsKCNjLWIpIi8+CiAgPHRleHQgeD0iNDA0IiB5PSIyOTAiIGZvbnQtc2l6ZT0iMTAiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMyZjZmZGIiPkhUVFAgwrcgL2FwaS8qPC90ZXh0PgoKICA8IS0tIHNlcnZlciBlZGdlcyAtLT4KICA8cGF0aCBkPSJNNjc1LDE3MCBMNjc1LDE4NiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNWM2YjdjIiBzdHJva2Utd2lkdGg9IjIiIG1hcmtlci1lbmQ9InVybCgjYy1hcikiLz4KICA8cGF0aCBkPSJNNjc1LDI0NiBMNjc1LDI2MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNWM2YjdjIiBzdHJva2Utd2lkdGg9IjIiIG1hcmtlci1lbmQ9InVybCgjYy1hcikiLz4KICA8cGF0aCBkPSJNNjc1LDMyMiBMNjc1LDMzOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNWM2YjdjIiBzdHJva2Utd2lkdGg9IjIiIG1hcmtlci1lbmQ9InVybCgjYy1hcikiLz4KICA8cGF0aCBkPSJNNjc1LDQxMiBMNjc1LDQyOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNWM2YjdjIiBzdHJva2Utd2lkdGg9IjIiIG1hcmtlci1lbmQ9InVybCgjYy1hcikiLz4KICA8cGF0aCBkPSJNNjc1LDQ4NCBMNjc1LDUwMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMmY2ZmRiIiBzdHJva2Utd2lkdGg9IjIiIG1hcmtlci1lbmQ9InVybCgjYy1iKSIvPgogIDxwYXRoIGQ9Ik03ODAsNTk2IEw3ODAsNTcwIiBmaWxsPSJub25lIiBzdHJva2U9IiNkNmI2NTYiIHN0cm9rZS13aWR0aD0iMiIgbWFya2VyLWVuZD0idXJsKCNjLWFyKSIvPgogIDxwYXRoIGQ9Ik04ODAsMzAwIEw4ODgsMzAwIEw4ODgsNjMxIEw4NzQsNjMxIiBmaWxsPSJub25lIiBzdHJva2U9IiM2NjY2NjYiIHN0cm9rZS13aWR0aD0iMS40IiBzdHJva2UtZGFzaGFycmF5PSI1IDQiIG1hcmtlci1lbmQ9InVybCgjYy1hcikiLz4KICA8dGV4dCB4PSI0ODYiIHk9IjU4NiIgZm9udC1zaXplPSI5IiBmaWxsPSIjNWM2YjdjIj53cml0ZXMgbGlzdGluZ3MgKyBydW5zPC90ZXh0PgoKICA8dGV4dCB4PSI0MCIgeT0iNjgwIiBmb250LXNpemU9IjEwIiBmaWxsPSIjOTNhMWIxIj5UaGUgSFRUUCBzZWFtIGNhcnJpZXMgbm8gYXV0aGVudGljYXRpb24g4oCUIHRoZSBUYWlsc2NhbGUgbmV0d29yayBpcyB0aGUgb25seSBhY2Nlc3MgYm91bmRhcnkuPC90ZXh0PgogIDx0ZXh0IHg9IjQwIiB5PSI2OTQiIGZvbnQtc2l6ZT0iMTAiIGZpbGw9IiM5M2ExYjEiPkV2ZXJ5IHNlcnZlciBkZXBlbmRlbmN5IGlzIGluamVjdGVkIHRocm91Z2ggc2VydmljZXMuanMsIHdoaWNoIGlzIHdoYXQgbGV0cyB0aGUgc3VpdGUgcnVuIHdpdGhvdXQgYSBsaXZlIGRhdGFiYXNlLjwvdGV4dD4KPC9zdmc+Cg==" alt="Component Relationships" /><figcaption>Component Relationships</figcaption></figure>
+<h3>Server</h3>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>server/index.js</code></td>
+<td>Process lifecycle: verify DB, listen, drain on <code>SIGINT</code>/<code>SIGTERM</code></td>
+</tr>
+<tr>
+<td><code>server/app.js</code></td>
+<td><code>buildApp({ services })</code> — error handler, <code>/api/health</code>, <code>/api/bootstrap</code>, route registration, static + SPA fallback</td>
+</tr>
+<tr>
+<td><code>server/services.js</code></td>
+<td>The composition root; everything injectable</td>
+</tr>
+<tr>
+<td><code>server/config.js</code></td>
+<td>Env parsing with validation; throws on a missing password or a non-positive integer</td>
+</tr>
+<tr>
+<td><code>server/errors.js</code></td>
+<td><code>AppError</code> (status + code) and <code>sanitizeError</code></td>
+</tr>
+<tr>
+<td><code>server/logger.js</code></td>
+<td>Structured single-line JSON logs</td>
+</tr>
+<tr>
+<td><code>server/db/pool.js</code></td>
+<td><code>createPool</code>, <code>withConnection</code>, <code>withTransaction</code>, <code>verifyDatabase</code></td>
+</tr>
+<tr>
+<td><code>server/db/*Repository.js</code></td>
+<td>One repository per aggregate: jobs, queries, listings, runs</td>
+</tr>
+<tr>
+<td><code>server/db/rows.js</code></td>
+<td>Maps <code>snake_case</code> columns to <code>camelCase</code> API shapes</td>
+</tr>
+<tr>
+<td><code>server/db/migrate.js</code></td>
+<td>Checksummed, lock-guarded, forward-only migrations</td>
+</tr>
+<tr>
+<td><code>server/scraper/*</code></td>
+<td><code>service.js</code> orchestrates, <code>adzuna.js</code> fetches and normalizes, <code>scoring.js</code> ranks</td>
+</tr>
+</tbody></table>
+<p>Two server details worth internalizing:</p>
+<p><strong>Errors are a contract, not an accident.</strong> Every failure leaves as <code>{ error: { code, message } }</code>. <code>AppError</code> carries its own status and code; schema violations become <code>400 VALIDATION_ERROR</code>; anything unrecognized is logged and returned as a generic <code>500 INTERNAL_ERROR</code> so internals never leak to the client.</p>
+<p><strong><code>sanitizeError</code> is a security control.</strong> It redacts <code>app_id</code>/<code>app_key</code> query parameters and <code>password=</code> values, then truncates to 500 characters. Adzuna credentials travel in the request URL, so an unsanitized fetch error would otherwise write your API key into the logs <em>and</em> into <code>scrape_runs.error_summary</code> in the database. Every path that persists or logs an error message goes through it.</p>
+<p><strong>Migrations refuse to drift.</strong> Each <code>.sql</code> file is hashed; if an already-applied migration&#39;s checksum has changed, <code>migrate.js</code> throws rather than proceeding. It holds <code>GET_LOCK(&#39;waypoint:migrate&#39;, 30)</code> and runs under a separate, more privileged user (<code>MIGRATION_DB_USER</code>) that is deliberately kept out of the runtime service environment.</p>
+<h3>Client</h3>
+<p><code>useJobsStore</code> remains the single client-side owner of job state, but it is now server-backed:</p>
+<ul>
+<li><strong>Boot:</strong> <code>api.bootstrap()</code> fetches jobs, queries, matches, latest run, and provider status in one round trip, backed by a single <code>Promise.all</code> on the server.</li>
+<li><strong>Writes:</strong> each action <code>await</code>s its API call, applies the server&#39;s returned row to local state, and on failure calls <code>fail(error)</code> — which shows the message as an error toast <strong>and re-syncs from the server</strong>, so a rejected write cannot leave the UI lying.</li>
+<li><strong>Reorder:</strong> <code>jobListOperations</code> still computes the new order client-side, but the result is now <em>pushed</em> to <code>POST /api/jobs/reorder</code> rather than written to <code>localStorage</code>.</li>
+</ul>
+<p>The pure lib layer survives intact and remains the most valuable client code: <code>reorderVisibleJobs</code> permutes only the slots visible jobs occupy, leaving filtered-out jobs pinned in place, and returns the original array unchanged on any inconsistent input (duplicate ids, unknown ids, count mismatch, no-op).</p>
+<p><strong>Visible vs. all jobs is still load-bearing.</strong> The store exposes <code>jobs</code> as the <em>filtered</em> list while <code>totalCount</code> reports the full length, which is why reordering must be expressed as a permutation of visible ids against the full array.</p>
+<p>All 12 components remain presentational — props down, callbacks up, local UI state only, styled with inline objects built from <code>theme.js</code> tokens.</p>
+<hr>
+<h2 id="5-data-contracts">5. Data Contracts</h2>
+<h3>API</h3>
+<p>All responses are JSON. Errors are always <code>{ error: { code, message } }</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GET</code></td>
+<td><code>/api/health</code></td>
+<td>Status, MariaDB version, whether the provider is configured</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/bootstrap</code></td>
+<td>Everything the SPA needs on load, in one call</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/jobs</code></td>
+<td>Create a job</td>
+</tr>
+<tr>
+<td><code>PATCH</code></td>
+<td><code>/api/jobs/:id</code></td>
+<td>Update fields</td>
+</tr>
+<tr>
+<td><code>DELETE</code></td>
+<td><code>/api/jobs/:id</code></td>
+<td>Soft delete (sets <code>deleted_at</code>)</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/jobs/:id/restore</code></td>
+<td>Undo a delete</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/jobs/reorder</code></td>
+<td>Persist an explicit <code>orderedIds</code> permutation</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/jobs/import</code></td>
+<td>One-time legacy <code>localStorage</code> import</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/queries</code> · <code>PATCH /api/queries/:id</code> · <code>DELETE /api/queries/:id</code></td>
+<td>Saved query CRUD</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/listings/:id/save</code></td>
+<td>Promote a match into the pipeline</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/listings/:id/dismiss</code></td>
+<td>Dismiss a match</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/scrape-runs</code></td>
+<td>Trigger a manual run</td>
+</tr>
+</tbody></table>
+<p>Known error codes: <code>VALIDATION_ERROR</code> (400), <code>RUN_IN_PROGRESS</code> (409), <code>RUN_COOLDOWN</code> (429), <code>NOT_FOUND</code> (404), <code>INTERNAL_ERROR</code> (500).</p>
+<h3>Database schema</h3>
+<p>Six tables, all InnoDB / <code>utf8mb4_unicode_ci</code>, with <code>CHECK</code> constraints enforcing enums at the database level rather than trusting the application.</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>listings</code></td>
+<td>Scraped postings. <code>UNIQUE (provider, provider_job_id)</code> is what makes ingestion idempotent. <code>status ∈ (new, saved, dismissed, expired)</code>.</td>
+</tr>
+<tr>
+<td><code>jobs</code></td>
+<td>The pipeline. <code>stage</code> is CHECK-constrained to the five stages; <code>sort_order</code> carries manual priority; <code>deleted_at</code> gives soft delete + undo; <code>source_listing_id</code> is a UNIQUE FK to <code>listings</code> — <strong>one listing can be saved into the pipeline only once</strong>, and <code>ON DELETE SET NULL</code> means expiring a listing never destroys the job you made from it.</td>
+</tr>
+<tr>
+<td><code>saved_queries</code></td>
+<td><code>max_age_days</code> CHECK-constrained to exactly <code>(1, 3, 7, 14, 30)</code>. Seeded with three queries.</td>
+</tr>
+<tr>
+<td><code>listing_queries</code></td>
+<td>Join table carrying the <code>score</code> (CHECK 0–100) — one listing can match several queries with different scores.</td>
+</tr>
+<tr>
+<td><code>scrape_runs</code></td>
+<td>Run history: trigger, status, counters, <code>error_summary</code>.</td>
+</tr>
+<tr>
+<td><code>scrape_run_queries</code></td>
+<td>Per-query outcome within a run, including the failure message.</td>
+</tr>
+</tbody></table>
+<p><code>schema_migrations</code> (name, checksum, applied_at) is created by the migrator itself.</p>
+<p>Timestamps are <code>DATETIME(3)</code> defaulting to <code>UTC_TIMESTAMP(3)</code>. Money is <code>DECIMAL(12,2)</code>, not float.</p>
+<h3>Legacy import</h3>
+<p><code>parseLegacyJobs</code> validates before anything reaches the server: JSON must parse, must be an array, must be ≤ 500 jobs, every record must be an object with string <code>role</code>/<code>company</code> and a <code>stage</code> in <code>JOB_STAGES</code>, and every string field is length-capped. Any violation returns a user-facing error string and imports nothing — it fails the whole batch rather than importing something half-understood.</p>
+<hr>
+<h2 id="6-infrastructure-amp-deployment">6. Infrastructure &amp; Deployment</h2>
+<p>Target: <strong>a Raspberry Pi running MariaDB ≥ 10.6 and Node ≥ 24</strong>, reachable over Tailscale. <code>docs/deployment-raspberry-pi.md</code> is the authoritative runbook and covers provisioning, secrets, migration, HTTPS, verification, backups, and rollback.</p>
+<table>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Implementation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Process supervision</td>
+<td>systemd — <code>waypoint.service</code>, hardened, <code>Restart=on-failure</code></td>
+</tr>
+<tr>
+<td>Scheduled ingestion</td>
+<td><code>waypoint-scraper.timer</code> — 06:00 America/New_York, <code>Persistent=true</code></td>
+</tr>
+<tr>
+<td>Backups</td>
+<td><code>waypoint-db-backup.timer</code> — 02:30, <code>backup-waypoint.sh</code>, with restore testing</td>
+</tr>
+<tr>
+<td>Networking</td>
+<td>Tailscale (<code>configure-tailscale.sh</code>); the app binds <code>127.0.0.1</code> only</td>
+</tr>
+<tr>
+<td>Secrets</td>
+<td><code>EnvironmentFile=/etc/waypoint/waypoint.env</code>, outside the read-only app directory</td>
+</tr>
+<tr>
+<td>Migrations</td>
+<td><code>npm run db:migrate</code> under a separate DB user</td>
+</tr>
+<tr>
+<td>Database access</td>
+<td>Unix socket by default</td>
+</tr>
+<tr>
+<td>CI/CD</td>
+<td><strong>None.</strong> Deployment is scripted but manually invoked.</td>
+</tr>
+<tr>
+<td>Containers</td>
+<td><strong>None.</strong> No Dockerfile; systemd is the runtime.</td>
+</tr>
+<tr>
+<td>Linter / formatter</td>
+<td><strong>Not configured.</strong></td>
+</tr>
+<tr>
+<td>TypeScript</td>
+<td>Not used. Plain JavaScript with JSX.</td>
+</tr>
+</tbody></table>
+<h3>Configuration</h3>
+<p><code>.env.example</code> documents the schema. Values are placeholders and no real credentials live in the repository.</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>HOST</code> / <code>PORT</code> / <code>NODE_ENV</code></td>
+<td>Server binding; defaults <code>127.0.0.1:3000</code></td>
+</tr>
+<tr>
+<td><code>DB_SOCKET</code> <em>or</em> <code>DB_HOST</code>+<code>DB_PORT</code></td>
+<td>Mutually exclusive — setting both throws</td>
+</tr>
+<tr>
+<td><code>DB_NAME</code> / <code>DB_USER</code> / <code>DB_PASSWORD</code></td>
+<td><code>DB_PASSWORD</code> is <strong>required</strong>; startup fails without it</td>
+</tr>
+<tr>
+<td><code>DB_CONNECTION_LIMIT</code></td>
+<td>Default 5</td>
+</tr>
+<tr>
+<td><code>ADZUNA_APP_ID</code> / <code>ADZUNA_APP_KEY</code></td>
+<td>If absent, <code>config.adzuna.configured</code> is false, no client is built, and <code>services.scraper</code> is <code>null</code> — the app runs fine, ingestion is simply disabled</td>
+</tr>
+<tr>
+<td><code>MIGRATION_DB_USER</code> / <code>MIGRATION_DB_PASSWORD</code></td>
+<td>Migration-only; keep out of the runtime environment</td>
+</tr>
+</tbody></table>
+<h3>Commands</h3>
+<pre><code class="language-bash">npm run dev            # Vite dev server (frontend)
+npm run dev:server     # node --watch server/index.js
+npm start              # node server/index.js
+npm run build          # production SPA build into dist/
+npm test               # node --test tests/*.test.js  → 29 tests
+npm run test:integration   # tests/integration/*.test.js — needs a live MariaDB
+npm run db:migrate     # apply migrations
+npm run scrape:daily   # one ingestion run (what the timer invokes)
+</code></pre>
+<p>Testing uses the built-in <code>node:test</code> runner — no Jest or Vitest — so test files import source modules directly and <strong>must use explicit <code>.js</code> extensions</strong>. The unit suite (9 files, 29 tests) covers scoring, the scrape service, config, the Adzuna client, API routes, database lifecycle, legacy import, listing formatting, and the pure list operations. Integration tests are separated under <code>tests/integration/</code> because they require a real database.</p>
+<hr>
+<h2 id="7-extension-patterns">7. Extension Patterns</h2>
+<h3>Add an API endpoint</h3>
+<ol>
+<li>Add the method to the relevant repository in <code>server/db/</code>, using <code>withConnection</code>/<code>withTransaction</code> rather than touching the pool directly. Map rows through <code>rows.js</code>.</li>
+<li>Add the route in <code>server/routes/</code>, with a JSON schema for the body so invalid input fails as <code>400 VALIDATION_ERROR</code> before your handler runs.</li>
+<li>Throw <code>AppError(status, code, message)</code> for expected failures — never a bare <code>Error</code>, which becomes a generic 500.</li>
+<li>Add the method to <code>src/lib/apiClient.js</code>.</li>
+<li>Add the action to <code>useJobsStore</code>, <code>await</code> it, and route failures through <code>fail(error)</code>.</li>
+<li>Thread it through <code>App.jsx</code> to the component.</li>
+</ol>
+<h3>Add a scraper provider</h3>
+<p>Model it on <code>server/scraper/adzuna.js</code>: export a factory returning <code>{ search(query) }</code> that resolves an array of normalized listings, and a <code>normalizeX</code> function that returns <code>null</code> for anything malformed. Wire it in <code>services.js</code>. The provider is already stored per-listing (<code>listings.provider</code>, unique with <code>provider_job_id</code>), so a second source needs no schema change. Make sure any credential you put in a URL is covered by <code>sanitizeError</code>.</p>
+<h3>Change the schema</h3>
+<p>Add a new numbered file to <code>server/db/migrations/</code>. <strong>Never edit an applied migration</strong> — the checksum guard will refuse it. Migrations are forward-only; there is no down path.</p>
+<h3>Implement the real URL scraper</h3>
+<p>Replace <code>src/lib/parseJobUrl.js</code>, keeping its signature: take a <code>url</code>, resolve <code>{ role, company, location, salary, contact, url }</code>. The draft flow already exists to let the user correct whatever it gets wrong. Note the current stub cannot fail — a real implementation adds rejection and timeout paths that <code>captureJob</code> does not yet handle.</p>
+<h3>Add a job field</h3>
+<p>Migration → <code>rows.js</code> mapping → repository select/insert → route schema → <code>toForm</code> in <code>JobDetailPanel</code> → the form control. Read defensively (<code>job.x ?? &#39;&#39;</code>); older rows will not have it.</p>
+<hr>
+<h2 id="8-rules-amp-anti-patterns">8. Rules &amp; Anti-Patterns</h2>
+<p><strong>Do</strong></p>
+<ul>
+<li>Route every error that gets logged or persisted through <code>sanitizeError</code> — Adzuna keys ride in the URL.</li>
+<li>Throw <code>AppError</code> with an explicit status and code for expected failures.</li>
+<li>Take dependencies through <code>services.js</code> so they stay injectable and testable.</li>
+<li>Use <code>withConnection</code> / <code>withTransaction</code>; let them own release and rollback.</li>
+<li>Keep enum invariants in <code>CHECK</code> constraints, matching the existing tables.</li>
+<li>Keep client list logic pure in <code>jobListOperations.js</code>, and test it.</li>
+<li>Re-sync from the server when a write fails, rather than leaving optimistic state behind.</li>
+<li>Use explicit <code>.js</code> extensions in imports.</li>
+</ul>
+<p><strong>Don&#39;t</strong></p>
+<ul>
+<li>Don&#39;t edit an applied migration — add a new one.</li>
+<li>Don&#39;t put credentials in a log line, an error message, or a committed <code>.env</code>.</li>
+<li>Don&#39;t run a scrape without the advisory lock; concurrent runs corrupt run bookkeeping.</li>
+<li>Don&#39;t let one failing query abort a whole run — record it and continue.</li>
+<li>Don&#39;t add a second source of truth for jobs on the client.</li>
+<li>Don&#39;t reorder by splicing the visible array; go through <code>reorderVisibleJobs</code>.</li>
+<li>Don&#39;t hardcode hex values or add a CSS framework — use <code>theme.js</code> tokens with inline styles.</li>
+<li>Don&#39;t expose the server beyond Tailscale. <strong>There is no authentication.</strong> A public bind would expose every route to anyone.</li>
+<li>Don&#39;t import from or edit <code>Dashboard.dc.html</code>, <code>support.js</code>, or <code>.thumbnail</code> — original design handoff artifacts, not part of the build.</li>
+</ul>
+<p><strong>Known gaps</strong></p>
+<ul>
+<li><code>parseJobUrl</code> is still a stub; capturing from a URL yields an empty draft.</li>
+<li>No authentication or authorization of any kind.</li>
+<li>No CI; tests and deployment are run by hand.</li>
+<li>Sidebar nav is inert and Header stats are hard-coded constants, not derived from data.</li>
+<li>No component or hook tests — no DOM environment is configured.</li>
+<li>Migrations are forward-only, with no rollback path.</li>
+</ul>
+<hr>
+<h2 id="9-dependencies">9. Dependencies</h2>
+<p>Five runtime dependencies, two dev dependencies. Still no router, no state library, no UI kit, no ORM, no HTTP client — <code>fetch</code> and hand-written SQL.</p>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Version</th>
+<th>Category</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>fastify</code></td>
+<td><code>^5.10.0</code></td>
+<td>Server</td>
+<td>HTTP framework, schema validation, logging</td>
+</tr>
+<tr>
+<td><code>@fastify/static</code></td>
+<td><code>^10.1.0</code></td>
+<td>Server</td>
+<td>Serves the built SPA with an index fallback</td>
+</tr>
+<tr>
+<td><code>mariadb</code></td>
+<td><code>^3.5.3</code></td>
+<td>Server</td>
+<td>Connection pool; the only database driver</td>
+</tr>
+<tr>
+<td><code>react</code> / <code>react-dom</code></td>
+<td><code>^18.3.1</code></td>
+<td>Client</td>
+<td>UI; hooks carry all client state</td>
+</tr>
+<tr>
+<td><code>vite</code></td>
+<td><code>^8.1.5</code></td>
+<td>Build</td>
+<td>Dev server and bundler</td>
+</tr>
+<tr>
+<td><code>@vitejs/plugin-react</code></td>
+<td><code>^6.0.3</code></td>
+<td>Build</td>
+<td>JSX transform, Fast Refresh</td>
+</tr>
+</tbody></table>
+<p><code>engines.node</code> is <code>&gt;=24</code>, which the code relies on: <code>AbortSignal.timeout</code>, native <code>fetch</code>, and <code>node:test</code> are all used directly rather than polyfilled. Testing needs no dependency at all.</p>
+<hr>
+<h2 id="10-code-structure">10. Code Structure</h2>
+<pre><code>waypoint/
+├── index.html                       # Vite entry
+├── vite.config.js
+├── package.json                     # 5 runtime deps · engines.node &gt;= 24
+├── .env.example                     # config schema (placeholders only)
+│
+├── server/
+│   ├── index.js                     # listen + graceful shutdown
+│   ├── app.js                       # ★ buildApp() — routes, errors, static
+│   ├── services.js                  # ★ composition root — everything injectable
+│   ├── config.js                    # env parsing + validation
+│   ├── errors.js                    # AppError + sanitizeError (redaction)
+│   ├── logger.js                    # structured JSON logs
+│   ├── routes/                      # jobs · queries · listings · runs
+│   ├── db/
+│   │   ├── pool.js                  # withConnection · withTransaction
+│   │   ├── rows.js                  # snake_case ⇄ camelCase
+│   │   ├── migrate.js               # checksummed, lock-guarded
+│   │   ├── migrations/001_initial.sql   # ★ the 6-table schema
+│   │   └── *Repository.js           # jobs · queries · listings · runs
+│   ├── scraper/
+│   │   ├── service.js               # ★ the run: lock, loop, isolate, finalize
+│   │   ├── adzuna.js                # fetch + retry + normalize
+│   │   └── scoring.js               # pure ranking heuristic
+│   └── cli/scrape.js                # what the timer executes
+│
+├── src/                             # the SPA
+│   ├── App.jsx                      # composition; calls the hook once
+│   ├── hooks/useJobsStore.js        # ★ all client state; server-backed
+│   ├── lib/
+│   │   ├── apiClient.js             # the only fetch wrapper
+│   │   ├── jobListOperations.js     # ★ pure list logic
+│   │   ├── legacyImport.js          # localStorage migration validation
+│   │   ├── parseJobUrl.js           # STUB
+│   │   └── seedData.js              # JOB_STAGES only
+│   ├── components/                  # 12 presentational components
+│   └── theme.js                     # design tokens; no CSS files exist
+│
+├── tests/                           # node:test · 29 unit tests
+│   └── integration/                 # needs a live MariaDB
+│
+├── deploy/
+│   ├── systemd/                     # service + scraper/backup timers
+│   ├── scripts/                     # backup · migrate · tailscale
+│   └── *.env.example
+│
+└── docs/
+    ├── deployment-raspberry-pi.md   # the operational runbook
+    └── implementation-summary-daily-ingestion.md
+</code></pre>
+<p>The tree is the architecture: <code>services.js</code> wires the server, <code>app.js</code> exposes it, the repositories own SQL, the scraper owns the ingestion loop, and on the client one hook owns state while one pure module owns list logic.</p>
+  </main>
+  <div class="footer">Generated from <code>docs/project-summary.md</code> · diagrams embedded inline · self-contained, no external assets</div>
+</div>
+</body>
+</html>
