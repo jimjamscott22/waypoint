@@ -14,7 +14,12 @@ const RANGE_COPY = {
 
 function formatCoverage(value) {
   if (!value) return null;
-  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(value));
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(value));
 }
 
 export default function InsightsHeader({ range, onChangeRange, data, loading, headingRef }) {
