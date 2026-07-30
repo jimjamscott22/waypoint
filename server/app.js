@@ -8,6 +8,7 @@ import { jobRoutes } from './routes/jobs.js';
 import { queryRoutes } from './routes/queries.js';
 import { listingRoutes } from './routes/listings.js';
 import { runRoutes } from './routes/runs.js';
+import { insightRoutes } from './routes/insights.js';
 
 const dist = fileURLToPath(new URL('../dist/', import.meta.url));
 
@@ -50,6 +51,7 @@ export function buildApp({ services, logger = false, serveStatic = true }) {
   app.register(queryRoutes, services);
   app.register(listingRoutes, services);
   app.register(runRoutes, services);
+  app.register(insightRoutes, services);
 
   const staticAvailable = serveStatic && existsSync(dist);
   if (staticAvailable) {

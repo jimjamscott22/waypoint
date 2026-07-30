@@ -10,6 +10,16 @@ function fakeServices() {
     queries: { list: async () => [] },
     listings: { listNew: async () => [] },
     runs: { latest: async () => null },
+    insights: {
+      get: async range => ({
+        range,
+        outcomes: {},
+        funnel: [],
+        weeklyActivity: [],
+        recommendations: [],
+        discovery: {},
+      }),
+    },
     scraper: null,
   };
 }
@@ -39,6 +49,29 @@ test('reports an unconfigured provider for manual runs', async t => {
   const response = await app.inject({ method: 'POST', url: '/api/scrape-runs' });
   assert.equal(response.statusCode, 503);
   assert.deepEqual(response.json().error, { code: 'PROVIDER_NOT_CONFIGURED', message: 'Adzuna credentials are not configured' });
+});
+
+test('returns Insights with a default or selected reporting range', async t => {
+  const services = fakeServices();
+  const requested = [];
+  services.insights.get = async range => {
+    requested.push(range);
+    return { range };
+  };
+  const app = buildApp({ services, serveStatic: false });
+  t.after(() => app.close());
+
+  const defaultResponse = await app.inject({ method: 'GET', url: '/api/insights' });
+  const selectedResponse = await app.inject({ method: 'GET', url: '/api/insights?range=30d' });
+  const invalidResponse = await app.inject({ method: 'GET', url: '/api/insights?range=year' });
+
+  assert.equal(defaultResponse.statusCode, 200);
+  assert.equal(defaultResponse.json().range, '90d');
+  assert.equal(selectedResponse.statusCode, 200);
+  assert.equal(selectedResponse.json().range, '30d');
+  assert.deepEqual(requested, ['90d', '30d']);
+  assert.equal(invalidResponse.statusCode, 400);
+  assert.equal(invalidResponse.json().error.code, 'VALIDATION_ERROR');
 });
 
 test('serves the built SPA while keeping unknown API routes JSON-only', async t => {

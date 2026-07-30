@@ -6,6 +6,8 @@ import { withTransaction } from '../../server/db/pool.js';
 import { createJobRepository } from '../../server/db/jobRepository.js';
 import { createListingRepository, upsertListingMatch } from '../../server/db/listingRepository.js';
 import { createQueryRepository } from '../../server/db/queryRepository.js';
+import { createInsightsRepository } from '../../server/db/insightsRepository.js';
+import { createInsightsService } from '../../server/insights/service.js';
 import { normalizeAdzunaJob } from '../../server/scraper/adzuna.js';
 
 const enabled = Boolean(process.env.TEST_DB_PASSWORD && process.env.TEST_MIGRATION_DB_PASSWORD);
@@ -79,6 +81,8 @@ test('applies MariaDB migrations repeatably to the isolated test database', { sk
     await assert.rejects(jobs.importAll([{ role: 'Imported', company: 'Example', stage: 'Saved' }]), error => error.code === 'JOBS_NOT_EMPTY');
     await jobs.remove(firstJob.id);
     assert.equal((await jobs.restore(firstJob.id)).id, firstJob.id);
+    await jobs.update(firstJob.id, { stage: 'Applied' });
+    await jobs.update(firstJob.id, { stage: 'Interviewing' });
 
     await assert.rejects(withTransaction(pool, async connection => {
       await connection.query(
@@ -121,6 +125,14 @@ test('applies MariaDB migrations repeatably to the isolated test database', { sk
     assert.equal(dismissedStatus[0].status, 'dismissed');
 
     const queryRepository = createQueryRepository(pool);
+    const attributionQuery = await queryRepository.create({ name: 'Attribution', keywords: 'systems support', location: '', maxAgeDays: 7 });
+    await withTransaction(pool, connection => upsertListingMatch(
+      connection,
+      providerListing,
+      attributionQuery.id,
+      88,
+      '2026-07-16 12:15:00.000'
+    ));
     const editableQuery = await queryRepository.create({ name: 'Editable', keywords: 'systems', location: '', maxAgeDays: 7 });
     const staleListing = { ...providerListing, providerJobId: 'integration-stale-query', url: 'https://example.test/integration-stale-query' };
     const stale = await withTransaction(pool, connection => upsertListingMatch(connection, staleListing, editableQuery.id, 75, '2026-07-16 12:00:00.000'));
@@ -128,6 +140,19 @@ test('applies MariaDB migrations repeatably to the isolated test database', { sk
     const staleStatus = await withConnection(pool, connection => connection.query('SELECT status FROM listings WHERE id = ?', [stale.id]));
     assert.equal(staleStatus[0].status, 'expired');
     await queryRepository.remove(editableQuery.id);
+
+    const insights = createInsightsService({
+      repository: createInsightsRepository(pool),
+      now: () => new Date('2026-07-30T12:00:00.000Z'),
+    });
+    const report = await insights.get('all');
+    assert.ok(report.outcomes.applicationsSent >= 1);
+    assert.ok(report.outcomes.interviewsReached >= 1);
+    assert.ok(report.discovery.matchesFound >= 2);
+    assert.ok(
+      report.discovery.queries.reduce((sum, query) => sum + query.matchesFound, 0) >
+      report.discovery.matchesFound
+    );
 
     await withConnection(pool, async firstLock => {
       const acquired = await firstLock.query("SELECT GET_LOCK('waypoint:test:scrape', 0) AS acquired");
