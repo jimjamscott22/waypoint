@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { JOB_STAGES } from '../lib/seedData';
+import { formatDateTime, fromLocalDateTimeInput, toLocalDateTimeInput } from '../lib/dateTime';
 import { color, font, radius } from '../theme';
 
 function toForm(job) {
@@ -11,6 +12,7 @@ function toForm(job) {
     salary: job.salary ?? '',
     contact: job.contact ?? '',
     next: job.next ?? '',
+    nextActionAt: toLocalDateTimeInput(job.nextActionAt),
     urgent: Boolean(job.urgent),
     url: job.url ?? '',
     notes: job.notes ?? '',
@@ -89,9 +91,14 @@ export default function JobDetailPanel({ job, initialMode, onClose, onSave, onDu
       setErrors(nextErrors);
       return;
     }
-    const cleanedForm = { ...form, role: form.role.trim(), company: form.company.trim() };
+    const cleanedForm = {
+      ...form,
+      role: form.role.trim(),
+      company: form.company.trim(),
+      nextActionAt: fromLocalDateTimeInput(form.nextActionAt),
+    };
     onSave(job.id, cleanedForm);
-    setForm(cleanedForm);
+    setForm({ ...cleanedForm, nextActionAt: toLocalDateTimeInput(cleanedForm.nextActionAt) });
     setMode('view');
   };
 
@@ -129,6 +136,7 @@ export default function JobDetailPanel({ job, initialMode, onClose, onSave, onDu
     ['Salary', job.salary],
     ['Contact', job.contact],
     ['Next action', job.next],
+    ['Next action due', formatDateTime(job.nextActionAt)],
     ['Urgent', job.urgent ? 'Yes' : 'No'],
     ['URL', job.url],
     ['Notes', job.notes],
@@ -169,6 +177,7 @@ export default function JobDetailPanel({ job, initialMode, onClose, onSave, onDu
             <label style={labelStyle}>Salary<input value={form.salary} onChange={event => updateField('salary', event.target.value)} style={inputStyle} /></label>
             <label style={labelStyle}>Contact<input value={form.contact} onChange={event => updateField('contact', event.target.value)} style={inputStyle} /></label>
             <label style={labelStyle}>Next action<input value={form.next} onChange={event => updateField('next', event.target.value)} style={inputStyle} /></label>
+            <label style={labelStyle}>Next action due<input type="datetime-local" value={form.nextActionAt} onChange={event => updateField('nextActionAt', event.target.value)} style={inputStyle} /></label>
             <label style={labelStyle}>URL<input type="url" value={form.url} onChange={event => updateField('url', event.target.value)} style={inputStyle} /></label>
             <label style={labelStyle}>Notes<textarea rows={4} value={form.notes} onChange={event => updateField('notes', event.target.value)} style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.45 }} /></label>
             <label style={{ display: 'flex', alignItems: 'center', gap: 9, color: color.textBodyMid, fontSize: 12.5, cursor: 'pointer' }}>

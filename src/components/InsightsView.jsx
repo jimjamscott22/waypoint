@@ -4,6 +4,8 @@ import InsightsHeader from './InsightsHeader';
 import OutcomeSummary from './OutcomeSummary';
 import PipelineFunnel from './PipelineFunnel';
 import WeeklyActivityChart from './WeeklyActivityChart';
+import FocusNext from './FocusNext';
+import DiscoverySummary from './DiscoverySummary';
 
 function LoadingDashboard() {
   return (
@@ -17,7 +19,16 @@ function LoadingDashboard() {
   );
 }
 
-export default function InsightsView({ data, loading, error, range, onChangeRange, onRetry }) {
+export default function InsightsView({
+  data,
+  loading,
+  error,
+  range,
+  onChangeRange,
+  onRetry,
+  onOpenJob,
+  onOpenQuery,
+}) {
   const headingRef = useRef(null);
 
   useEffect(() => {
@@ -64,6 +75,8 @@ export default function InsightsView({ data, loading, error, range, onChangeRang
         <PipelineFunnel funnel={data?.funnel} />
         <WeeklyActivityChart rows={data?.weeklyActivity} />
       </div>
+      <FocusNext recommendations={data?.recommendations} onOpenJob={onOpenJob} onOpenQuery={onOpenQuery} />
+      <DiscoverySummary discovery={data?.discovery} onOpenQuery={onOpenQuery} />
     </section>
   );
 }
