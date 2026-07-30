@@ -2,7 +2,15 @@ import { useState } from 'react';
 import { color, font, radius } from '../theme';
 import SavedQueries from './SavedQueries';
 
-export default function CaptureBar({ onCapture, queries, onCreateQuery, onUpdateQuery, onDeleteQuery }) {
+export default function CaptureBar({
+  onCapture,
+  queries,
+  onCreateQuery,
+  onUpdateQuery,
+  onDeleteQuery,
+  focusQueryId,
+  onFocusQueryHandled,
+}) {
   const [url, setUrl] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
   const [buttonHovered, setButtonHovered] = useState(false);
@@ -68,7 +76,14 @@ export default function CaptureBar({ onCapture, queries, onCreateQuery, onUpdate
           Capture job
         </button>
       </div>
-      <SavedQueries queries={queries} onCreate={onCreateQuery} onUpdate={onUpdateQuery} onDelete={onDeleteQuery} />
+      <SavedQueries
+        queries={queries}
+        onCreate={onCreateQuery}
+        onUpdate={onUpdateQuery}
+        onDelete={onDeleteQuery}
+        focusQueryId={focusQueryId}
+        onFocusHandled={onFocusQueryHandled}
+      />
     </div>
   );
 }

@@ -18,6 +18,7 @@ test('advertises JSON only for requests that include a JSON body', async t => {
 
   await api.saveListing('listing-1');
   await api.createJob({ role: 'Admin', company: 'Acme', stage: 'Saved' });
+  await api.insights('30d');
 
   assert.deepEqual(requests, [
     {
@@ -31,6 +32,10 @@ test('advertises JSON only for requests that include a JSON body', async t => {
         body: '{"role":"Admin","company":"Acme","stage":"Saved"}',
         headers: { 'Content-Type': 'application/json' },
       },
+    },
+    {
+      path: '/api/insights?range=30d',
+      options: { headers: {} },
     },
   ]);
 });

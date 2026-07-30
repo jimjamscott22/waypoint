@@ -34,6 +34,12 @@ export function useJobsStore() {
   const [migration, setMigration] = useState(null);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
+  const [activeView, setActiveView] = useState('Pipeline');
+  const [insightsRange, setInsightsRange] = useState('90d');
+  const [insights, setInsights] = useState(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [insightsError, setInsightsError] = useState(null);
+  const [focusedQueryId, setFocusedQueryId] = useState(null);
   const [stageFilter, setStageFilter] = useState('All');
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [selectedJobMode, setSelectedJobMode] = useState('view');
@@ -70,6 +76,26 @@ export function useJobsStore() {
       .catch(error => notify(`Waypoint could not connect to the server: ${error.message}`, 'error'))
       .finally(() => setLoading(false));
   }, [refresh, notify]);
+
+  const loadInsights = useCallback(async range => {
+    setInsightsLoading(true);
+    setInsightsError(null);
+    try {
+      const result = await api.insights(range);
+      setInsights(result);
+      return result;
+    } catch (error) {
+      setInsightsError(error);
+      return null;
+    } finally {
+      setInsightsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeView !== 'Insights') return;
+    loadInsights(insightsRange);
+  }, [activeView, insightsRange, loadInsights]);
 
   const fail = useCallback(async error => {
     notify(error.message, 'error');
@@ -223,14 +249,30 @@ export function useJobsStore() {
   }, [migration, notify, fail]);
   const discardLocalJobs = useCallback(() => { localStorage.removeItem(STORAGE_KEY); setMigration(null); }, []);
 
+  const openInsightJob = useCallback(({ jobId, stage }) => {
+    setStageFilter(stage ?? 'All');
+    setSelectedJobId(jobId);
+    setSelectedJobMode('view');
+    setActiveView('Pipeline');
+  }, []);
+  const openInsightQuery = useCallback(queryId => {
+    setFocusedQueryId(queryId);
+    setActiveView('Pipeline');
+  }, []);
+  const clearFocusedQuery = useCallback(() => setFocusedQueryId(null), []);
+  const retryInsights = useCallback(() => loadInsights(insightsRange), [loadInsights, insightsRange]);
+
   const selectedJob = useMemo(() => jobs.find(job => job.id === selectedJobId) ?? null, [jobs, selectedJobId]);
   return {
     jobs: visibleJobs, totalCount: jobs.length, stageFilter, setStageFilter, tabs, queue, queries,
     latestRun, provider, providerConfigured, running, loading, migration, selectedJob, selectedJobMode, toast,
+    activeView, setActiveView, insightsRange, setInsightsRange, insights, insightsLoading, insightsError,
+    focusedQueryId,
     captureJob, updateDraftField, commitDraft, discardDraft, saveToPipeline, dismissMatch,
     selectJob: id => { setSelectedJobId(id); setSelectedJobMode('view'); },
     editJob: id => { setSelectedJobId(id); setSelectedJobMode('edit'); },
     clearSelection, updateJob, changeJobStage, reorderJobs, moveJob, duplicateJob, deleteJob, undoDelete, dismissToast,
     createQuery, updateQuery, deleteQuery, runScrape, importLocalJobs, discardLocalJobs,
+    retryInsights, openInsightJob, openInsightQuery, clearFocusedQuery,
   };
 }

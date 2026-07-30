@@ -29,4 +29,5 @@ export const api = {
   saveListing: id => request(`/api/listings/${id}/save`, { method: 'POST' }),
   dismissListing: id => request(`/api/listings/${id}/dismiss`, { method: 'POST' }),
   runScrape: () => request('/api/scrape-runs', { method: 'POST' }),
+  insights: (range = '90d') => request(`/api/insights?range=${encodeURIComponent(range)}`),
 };

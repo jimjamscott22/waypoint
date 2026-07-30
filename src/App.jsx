@@ -7,6 +7,7 @@ import JobDetailPanel from './components/JobDetailPanel';
 import ReviewQueue from './components/ReviewQueue';
 import Toast from './components/Toast';
 import MigrationBanner from './components/MigrationBanner';
+import InsightsView from './components/InsightsView';
 import { color, font } from './theme';
 
 export default function App() {
@@ -18,47 +19,66 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', minWidth: 1280 }}>
-      <Sidebar />
+      <Sidebar activeView={store.activeView} onSelectView={store.setActiveView} />
 
       <main style={{ flex: 1, minWidth: 0, padding: '28px 32px 40px', display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <Header />
-        {store.migration ? <MigrationBanner count={store.migration.jobs.length} error={store.migration.error} onImport={store.importLocalJobs} onDiscard={store.discardLocalJobs} /> : null}
-        <CaptureBar
-          onCapture={store.captureJob}
-          queries={store.queries}
-          onCreateQuery={store.createQuery}
-          onUpdateQuery={store.updateQuery}
-          onDeleteQuery={store.deleteQuery}
-        />
-        <PipelineTable
-          jobs={store.jobs}
-          totalCount={store.totalCount}
-          tabs={store.tabs}
-          stageFilter={store.stageFilter}
-          onSelectStage={store.setStageFilter}
-          onSelectJob={store.selectJob}
-          onEditJob={store.editJob}
-          onDuplicateJob={store.duplicateJob}
-          onDeleteJob={store.deleteJob}
-          onChangeStage={store.changeJobStage}
-          onReorderJobs={store.reorderJobs}
-          onMoveJob={store.moveJob}
-          onUpdateDraftField={store.updateDraftField}
-          onCommitDraft={store.commitDraft}
-          onDiscardDraft={store.discardDraft}
-        />
+        {store.activeView === 'Pipeline' ? (
+          <>
+            <Header />
+            {store.migration ? <MigrationBanner count={store.migration.jobs.length} error={store.migration.error} onImport={store.importLocalJobs} onDiscard={store.discardLocalJobs} /> : null}
+            <CaptureBar
+              onCapture={store.captureJob}
+              queries={store.queries}
+              onCreateQuery={store.createQuery}
+              onUpdateQuery={store.updateQuery}
+              onDeleteQuery={store.deleteQuery}
+              focusQueryId={store.focusedQueryId}
+              onFocusQueryHandled={store.clearFocusedQuery}
+            />
+            <PipelineTable
+              jobs={store.jobs}
+              totalCount={store.totalCount}
+              tabs={store.tabs}
+              stageFilter={store.stageFilter}
+              onSelectStage={store.setStageFilter}
+              onSelectJob={store.selectJob}
+              onEditJob={store.editJob}
+              onDuplicateJob={store.duplicateJob}
+              onDeleteJob={store.deleteJob}
+              onChangeStage={store.changeJobStage}
+              onReorderJobs={store.reorderJobs}
+              onMoveJob={store.moveJob}
+              onUpdateDraftField={store.updateDraftField}
+              onCommitDraft={store.commitDraft}
+              onDiscardDraft={store.discardDraft}
+            />
+          </>
+        ) : (
+          <InsightsView
+            data={store.insights}
+            loading={store.insightsLoading}
+            error={store.insightsError}
+            range={store.insightsRange}
+            onChangeRange={store.setInsightsRange}
+            onRetry={store.retryInsights}
+            onOpenJob={store.openInsightJob}
+            onOpenQuery={store.openInsightQuery}
+          />
+        )}
       </main>
 
-      <ReviewQueue
-        queue={store.queue}
-        latestRun={store.latestRun}
-        provider={store.provider}
-        providerConfigured={store.providerConfigured}
-        running={store.running}
-        onRun={store.runScrape}
-        onSave={store.saveToPipeline}
-        onDismiss={store.dismissMatch}
-      />
+      {store.activeView === 'Pipeline' ? (
+        <ReviewQueue
+          queue={store.queue}
+          latestRun={store.latestRun}
+          provider={store.provider}
+          providerConfigured={store.providerConfigured}
+          running={store.running}
+          onRun={store.runScrape}
+          onSave={store.saveToPipeline}
+          onDismiss={store.dismissMatch}
+        />
+      ) : null}
 
       {store.selectedJob ? (
         <JobDetailPanel
