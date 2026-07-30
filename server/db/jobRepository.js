@@ -11,11 +11,19 @@ const columns = {
   salary: 'salary',
   contact: 'contact',
   next: 'next_action',
+  nextActionAt: 'next_action_at',
   notes: 'notes',
   urgent: 'urgent',
   isDraft: 'is_draft',
   url: 'url',
 };
+
+function databaseTimestamp(value) {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) throw new Error('Next action timestamp is invalid');
+  return date.toISOString().replace('T', ' ').replace('Z', '');
+}
 
 function values(input) {
   return {
@@ -26,11 +34,20 @@ function values(input) {
     salary: input.salary ?? '',
     contact: input.contact ?? '',
     next: input.next ?? 'Tailor resume & apply',
+    nextActionAt: databaseTimestamp(input.nextActionAt),
     notes: input.notes ?? '',
     urgent: input.urgent ? 1 : 0,
     isDraft: input.isDraft ? 1 : 0,
     url: input.url || null,
   };
+}
+
+async function insertStageEvent(connection, jobId, fromStage, toStage) {
+  await connection.query(
+    `INSERT INTO job_stage_events (id, job_id, from_stage, to_stage, occurred_at)
+     VALUES (?, ?, ?, ?, UTC_TIMESTAMP(3))`,
+    [randomUUID(), jobId, fromStage, toStage]
+  );
 }
 
 async function rowById(connection, id, { includeDeleted = false } = {}) {
@@ -46,10 +63,11 @@ export async function insertJob(connection, input, { id = randomUUID(), sourceLi
   await connection.query('UPDATE jobs SET sort_order = sort_order + 1 WHERE deleted_at IS NULL');
   await connection.query(
     `INSERT INTO jobs
-      (id, role, company, stage, location, salary, contact, next_action, notes, urgent, is_draft, url, sort_order, source_listing_id)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
-    [id, job.role, job.company, job.stage, job.location, job.salary, job.contact, job.next, job.notes, job.urgent, job.isDraft, job.url, sourceListingId]
+      (id, role, company, stage, location, salary, contact, next_action, next_action_at, notes, urgent, is_draft, url, sort_order, source_listing_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
+    [id, job.role, job.company, job.stage, job.location, job.salary, job.contact, job.next, job.nextActionAt, job.notes, job.urgent, job.isDraft, job.url, sourceListingId]
   );
+  await insertStageEvent(connection, id, null, job.stage);
   return mapJob(await rowById(connection, id));
 }
 
@@ -83,7 +101,10 @@ export function createJobRepository(pool) {
           const column = columns[key];
           if (!column) continue;
           assignments.push(`${column} = ?`);
-          parameters.push(key === 'urgent' || key === 'isDraft' ? (value ? 1 : 0) : (key === 'url' ? value || null : value));
+          if (key === 'urgent' || key === 'isDraft') parameters.push(value ? 1 : 0);
+          else if (key === 'url') parameters.push(value || null);
+          else if (key === 'nextActionAt') parameters.push(databaseTimestamp(value));
+          else parameters.push(value);
         }
         if (assignments.length) {
           parameters.push(id);
@@ -91,6 +112,9 @@ export function createJobRepository(pool) {
             `UPDATE jobs SET ${assignments.join(', ')}, updated_at = UTC_TIMESTAMP(3) WHERE id = ? AND deleted_at IS NULL`,
             parameters
           );
+        }
+        if (changes.stage !== undefined && changes.stage !== current.stage) {
+          await insertStageEvent(connection, id, current.stage, changes.stage);
         }
         return mapJob(await rowById(connection, id));
       });
@@ -139,10 +163,11 @@ export function createJobRepository(pool) {
           const id = randomUUID();
           await connection.query(
             `INSERT INTO jobs
-              (id, role, company, stage, location, salary, contact, next_action, notes, urgent, is_draft, url, sort_order)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [id, job.role, job.company, job.stage, job.location, job.salary, job.contact, job.next, job.notes, job.urgent, job.isDraft, job.url, sortOrder]
+              (id, role, company, stage, location, salary, contact, next_action, next_action_at, notes, urgent, is_draft, url, sort_order)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [id, job.role, job.company, job.stage, job.location, job.salary, job.contact, job.next, job.nextActionAt, job.notes, job.urgent, job.isDraft, job.url, sortOrder]
           );
+          await insertStageEvent(connection, id, null, job.stage);
           imported.push(mapJob(await rowById(connection, id)));
         }
         return imported;

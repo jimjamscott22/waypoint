@@ -34,6 +34,8 @@ test('applies MariaDB migrations repeatably to the isolated test database', { sk
     assert.ok(await verifyDatabase(pool));
     const tables = await withConnection(pool, connection => connection.query("SHOW TABLES LIKE 'jobs'"));
     assert.equal(tables.length, 1);
+    const eventTables = await withConnection(pool, connection => connection.query("SHOW TABLES LIKE 'job_stage_events'"));
+    assert.equal(eventTables.length, 1);
 
     await assert.rejects(
       withConnection(pool, connection => connection.query('CREATE TABLE runtime_privilege_probe (id INT)')),
@@ -53,6 +55,26 @@ test('applies MariaDB migrations repeatably to the isolated test database', { sk
     const firstJob = await jobs.create({ role: 'First', company: 'Example', stage: 'Saved' });
     const secondJob = await jobs.create({ role: 'Second', company: 'Example', stage: 'Applied' });
     assert.match(firstJob.createdAt, /Z$/);
+    const initialEvents = await withConnection(pool, connection => connection.query(
+      'SELECT from_stage, to_stage FROM job_stage_events WHERE job_id = ? ORDER BY occurred_at, id',
+      [secondJob.id]
+    ));
+    assert.deepEqual(initialEvents.map(row => [row.from_stage, row.to_stage]), [[null, 'Applied']]);
+    const interviewed = await jobs.update(secondJob.id, {
+      stage: 'Interviewing',
+      nextActionAt: '2026-07-30T14:30:00.000Z',
+    });
+    assert.equal(interviewed.stage, 'Interviewing');
+    assert.equal(interviewed.nextActionAt, '2026-07-30T14:30:00.000Z');
+    await jobs.update(secondJob.id, { role: 'Second updated' });
+    const transitionEvents = await withConnection(pool, connection => connection.query(
+      'SELECT from_stage, to_stage FROM job_stage_events WHERE job_id = ? ORDER BY occurred_at, id',
+      [secondJob.id]
+    ));
+    assert.deepEqual(transitionEvents.map(row => [row.from_stage, row.to_stage]), [
+      [null, 'Applied'],
+      ['Applied', 'Interviewing'],
+    ]);
     assert.deepEqual((await jobs.reorder([firstJob.id, secondJob.id])).map(job => job.id), [firstJob.id, secondJob.id]);
     await assert.rejects(jobs.importAll([{ role: 'Imported', company: 'Example', stage: 'Saved' }]), error => error.code === 'JOBS_NOT_EMPTY');
     await jobs.remove(firstJob.id);

@@ -14,6 +14,7 @@ export function mapJob(row) {
     salary: row.salary,
     contact: row.contact,
     next: row.next_action,
+    nextActionAt: toIso(row.next_action_at),
     notes: row.notes,
     urgent: Boolean(row.urgent),
     isDraft: Boolean(row.is_draft),

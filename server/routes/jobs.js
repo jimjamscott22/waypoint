@@ -8,6 +8,7 @@ const jobProperties = {
   salary: { type: 'string', maxLength: 120 },
   contact: { type: 'string', maxLength: 255 },
   next: { type: 'string', maxLength: 255 },
+  nextActionAt: { anyOf: [{ type: 'string', format: 'date-time' }, { type: 'null' }] },
   notes: { type: 'string', maxLength: 10000 },
   urgent: { type: 'boolean' },
   isDraft: { type: 'boolean' },
