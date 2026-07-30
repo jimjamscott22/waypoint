@@ -9,13 +9,13 @@ audience: Engineering Team, Architects, Stakeholders
 
 ## 1. Executive Summary
 
-Waypoint is a self-hosted job search manager. It tracks job applications through a pipeline, and every morning it ingests fresh job listings from the Adzuna API, scores them against your saved queries, and drops the good ones into a review queue.
+Waypoint is a self-hosted job search manager. It tracks job applications through a pipeline, turns stage history into an actionable Insights command center, and every morning ingests fresh job listings from the Adzuna API, scores them against your saved queries, and drops the good ones into a review queue.
 
 It is a **full-stack application designed to run on a single Raspberry Pi**: a React single-page app served by a Fastify API, backed by MariaDB, with two systemd timers — one that scrapes at 06:00 and one that backs up the database at 02:30. It is reachable only over Tailscale.
 
-The system is deliberately **single-user and single-tenant**. There is no authentication, no accounts, and no multi-tenancy: the private network *is* the access control. That assumption is what keeps the code small — roughly 2,800 lines across 21 client and 22 server files, with five runtime dependencies.
+The system is deliberately **single-user and single-tenant**. There is no authentication, no accounts, and no multi-tenancy: the private network *is* the access control. That assumption keeps the code and dependency surface small.
 
-Its defining engineering characteristics are **a scrape run that cannot overlap** (a MariaDB advisory lock plus a manual-trigger cooldown), **failure isolation per query** (one bad query is recorded and the loop continues), and **dependency injection through a single composition root**, which is what lets 29 tests run against the real logic without a live database.
+Its defining engineering characteristics are **a scrape run that cannot overlap** (a MariaDB advisory lock plus a manual-trigger cooldown), **failure isolation per query** (one bad query is recorded and the loop continues), **transactional stage history**, and **dependency injection through a single composition root**, which keeps the logic testable without a live database.
 
 > **Migration note.** Waypoint began as a browser-only app that stored jobs in `localStorage`. That path still exists, but only as a one-time import: on boot the SPA checks for legacy `waypoint.jobs` data and, if the server has no jobs, offers to import it. The server is now the source of truth.
 >
@@ -39,7 +39,7 @@ Three architectural decisions carry most of the weight:
 
 **The database is reached over a unix socket, not TCP.** `DB_SOCKET` defaults to `/run/mysqld/mysqld.sock`, and the config explicitly rejects setting both `DB_SOCKET` and `DB_HOST`. Nothing needs to open a database port.
 
-**`services.js` is the only place dependencies are wired.** It builds the config, pool, four repositories, the Adzuna client, the scrape service, and the logger — and every one of them can be overridden by the caller. Tests inject a fake pool and a fake Adzuna client to exercise the real service logic without any I/O.
+**`services.js` is the only place dependencies are wired.** It builds the config, pool, repositories, Insights service, Adzuna client, scrape service, and logger — and every one of them can be overridden by the caller. Tests inject fakes to exercise the real service logic without any I/O.
 
 **Time is UTC everywhere, by force.** Every pooled connection runs `SET time_zone = '+00:00'` on checkout, the pool uses `dateStrings: true`, and the service formats timestamps itself. Only the systemd timers use a local zone, because that is when a human wants the work to happen.
 
@@ -99,7 +99,7 @@ Title relevance is weighted 3.5× description relevance, and recency can contrib
 | `server/errors.js` | `AppError` (status + code) and `sanitizeError` |
 | `server/logger.js` | Structured single-line JSON logs |
 | `server/db/pool.js` | `createPool`, `withConnection`, `withTransaction`, `verifyDatabase` |
-| `server/db/*Repository.js` | One repository per aggregate: jobs, queries, listings, runs |
+| `server/db/*Repository.js` | Focused repositories for jobs, queries, listings, runs, and Insights source data |
 | `server/db/rows.js` | Maps `snake_case` columns to `camelCase` API shapes |
 | `server/db/migrate.js` | Checksummed, lock-guarded, forward-only migrations |
 | `server/scraper/*` | `service.js` orchestrates, `adzuna.js` fetches and normalizes, `scoring.js` ranks |
@@ -117,6 +117,7 @@ Two server details worth internalizing:
 `useJobsStore` remains the single client-side owner of job state, but it is now server-backed:
 
 - **Boot:** `api.bootstrap()` fetches jobs, queries, matches, latest run, and provider status in one round trip, backed by a single `Promise.all` on the server.
+- **Views:** Pipeline and Insights share the same store; Insights loads aggregated server data for the selected range without resetting Pipeline state.
 - **Writes:** each action `await`s its API call, applies the server's returned row to local state, and on failure calls `fail(error)` — which shows the message as an error toast **and re-syncs from the server**, so a rejected write cannot leave the UI lying.
 - **Reorder:** `jobListOperations` still computes the new order client-side, but the result is now *pushed* to `POST /api/jobs/reorder` rather than written to `localStorage`.
 
@@ -124,7 +125,7 @@ The pure lib layer survives intact and remains the most valuable client code: `r
 
 **Visible vs. all jobs is still load-bearing.** The store exposes `jobs` as the *filtered* list while `totalCount` reports the full length, which is why reordering must be expressed as a permutation of visible ids against the full array.
 
-All 12 components remain presentational — props down, callbacks up, local UI state only, styled with inline objects built from `theme.js` tokens.
+Components remain presentational — props down, callbacks up, local UI state only, styled with inline objects built from `theme.js` tokens.
 
 ---
 
@@ -138,6 +139,7 @@ All responses are JSON. Errors are always `{ error: { code, message } }`.
 |---|---|---|
 | `GET` | `/api/health` | Status, MariaDB version, whether the provider is configured |
 | `GET` | `/api/bootstrap` | Everything the SPA needs on load, in one call |
+| `GET` | `/api/insights?range=30d\|90d\|all` | Outcome, activity, recommendation, and discovery aggregates |
 | `POST` | `/api/jobs` | Create a job |
 | `PATCH` | `/api/jobs/:id` | Update fields |
 | `DELETE` | `/api/jobs/:id` | Soft delete (sets `deleted_at`) |
@@ -153,12 +155,13 @@ Known error codes: `VALIDATION_ERROR` (400), `RUN_IN_PROGRESS` (409), `RUN_COOLD
 
 ### Database schema
 
-Six tables, all InnoDB / `utf8mb4_unicode_ci`, with `CHECK` constraints enforcing enums at the database level rather than trusting the application.
+Seven application tables, all InnoDB / `utf8mb4_unicode_ci`, with `CHECK` constraints enforcing enums at the database level rather than trusting the application.
 
 | Table | Notes |
 |---|---|
 | `listings` | Scraped postings. `UNIQUE (provider, provider_job_id)` is what makes ingestion idempotent. `status ∈ (new, saved, dismissed, expired)`. |
-| `jobs` | The pipeline. `stage` is CHECK-constrained to the five stages; `sort_order` carries manual priority; `deleted_at` gives soft delete + undo; `source_listing_id` is a UNIQUE FK to `listings` — **one listing can be saved into the pipeline only once**, and `ON DELETE SET NULL` means expiring a listing never destroys the job you made from it. |
+| `jobs` | The pipeline. `stage` is CHECK-constrained to the five stages; `next_action_at` adds an optional follow-up date; `sort_order` carries manual priority; `deleted_at` gives soft delete + undo; `source_listing_id` is a UNIQUE FK to `listings`. |
+| `job_stage_events` | Baseline and transition history used by Insights. Stage changes are inserted in the same transaction as the job update; pre-migration movement is never fabricated. |
 | `saved_queries` | `max_age_days` CHECK-constrained to exactly `(1, 3, 7, 14, 30)`. Seeded with three queries. |
 | `listing_queries` | Join table carrying the `score` (CHECK 0–100) — one listing can match several queries with different scores. |
 | `scrape_runs` | Run history: trigger, status, counters, `error_summary`. |
@@ -281,7 +284,7 @@ Migration → `rows.js` mapping → repository select/insert → route schema �
 - `parseJobUrl` is still a stub; capturing from a URL yields an empty draft.
 - No authentication or authorization of any kind.
 - No CI; tests and deployment are run by hand.
-- Sidebar nav is inert and Header stats are hard-coded constants, not derived from data.
+- Pipeline and Insights work; Capture & queries and Contacts do not yet have dedicated top-level views. Pipeline Header stats remain hard-coded constants.
 - No component or hook tests — no DOM environment is configured.
 - Migrations are forward-only, with no rollback path.
 

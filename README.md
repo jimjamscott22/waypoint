@@ -4,21 +4,26 @@ Waypoint is a private job search dashboard with a centralized MariaDB pipeline a
 
 ## Overview
 
-This project is a React + Vite web app built around a single-screen pipeline dashboard. It helps you:
+This project is a React + Vite web app built around a pipeline and outcome dashboard. It helps you:
 
 - capture job postings from a URL
 - track jobs through stages like Saved, Applied, Interviewing, Offer, and Closed
 - review new matches from saved queries in a side queue
+- understand 30-day, 90-day, and all-time job-search outcomes
+- act on overdue follow-ups, stalled applications, and low-performing searches
 - keep job data synchronized through one MariaDB-backed API
 
 ## Features
 
 - **Pipeline dashboard** with a sidebar, header stats, capture bar, job table, and review queue
+- **Insights command center** with outcome metrics, a cohort funnel, weekly momentum, recommendations, and saved-query performance
 - **Stage filtering** to quickly narrow the pipeline by job stage
 - **Job capture** from a pasted URL, with a draft flow for filling in details by hand
 - **Daily Adzuna ingestion** plus an in-app manual run
 - **Review queue** for persisted matches, with save and dismiss actions
 - **Job details drawer** for viewing and editing a selected job
+- **Optional next-action dates** for accurate follow-up reminders
+- **Stage-history tracking** for forward-looking conversion and activity metrics
 - **Drag-and-drop reordering** for manual priority management
 - **Undoable delete flow** with toast notifications
 - **Central persistence** using MariaDB 10.6+
@@ -88,7 +93,7 @@ npm run test:integration
 
 ## Data & State
 
-MariaDB is authoritative. On the first server-backed load only, existing `waypoint.jobs` localStorage data can be imported or discarded. After that, every device uses the same API-backed pipeline.
+MariaDB is authoritative. On the first server-backed load only, existing `waypoint.jobs` localStorage data can be imported or discarded. After that, every device uses the same API-backed pipeline. Stage transitions are recorded from the Insights migration forward; Waypoint does not invent earlier movement and displays the reliable-history start date.
 
 ## Notes
 
