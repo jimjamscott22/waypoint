@@ -54,6 +54,6 @@ test('times out stalled requests and stops after two retries', async () => {
       return new Promise((_resolve, reject) => signal.addEventListener('abort', () => reject(signal.reason), { once: true }));
     },
   });
-  await assert.rejects(client.search({ keywords: 'systems', location: '' }), /timeout/i);
+  await assert.rejects(client.search({ keywords: 'systems', location: '' }), /timed out/i);
   assert.equal(attempts, 3);
 });

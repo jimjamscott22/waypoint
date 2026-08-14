@@ -1,5 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { buildApp } from '../server/app.js';
 
 function fakeServices() {
@@ -75,7 +78,13 @@ test('returns Insights with a default or selected reporting range', async t => {
 });
 
 test('serves the built SPA while keeping unknown API routes JSON-only', async t => {
-  const app = buildApp({ services: fakeServices() });
+  const staticRoot = mkdtempSync(join(tmpdir(), 'waypoint-dist-'));
+  mkdirSync(join(staticRoot, 'assets'));
+  writeFileSync(join(staticRoot, 'index.html'), '<div id="root"></div><script src="/assets/app.js"></script>');
+  writeFileSync(join(staticRoot, 'assets', 'app.js'), 'console.log("built");');
+  t.after(() => rmSync(staticRoot, { recursive: true, force: true }));
+
+  const app = buildApp({ services: fakeServices(), staticRoot });
   t.after(() => app.close());
 
   const page = await app.inject({ method: 'GET', url: '/jobs/saved' });

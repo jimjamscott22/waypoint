@@ -8,6 +8,16 @@ function nullableNumber(value) {
   return Number.isFinite(number) ? number : null;
 }
 
+async function fetchWithTimeout(fetchImpl, url, options, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(new Error('Adzuna request timed out')), timeoutMs);
+  try {
+    return await fetchImpl(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function retryDelay(response, attempt) {
   const header = response?.headers?.get?.('retry-after');
   if (header) {
@@ -54,7 +64,7 @@ export function createAdzunaClient({ appId, appKey, fetchImpl = fetch, sleep = m
       for (let attempt = 0; attempt < 3; attempt += 1) {
         let response;
         try {
-          response = await fetchImpl(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(timeoutMs) });
+          response = await fetchWithTimeout(fetchImpl, url, { headers: { Accept: 'application/json' } }, timeoutMs);
           if (response.ok) {
             const payload = await response.json();
             return (Array.isArray(payload.results) ? payload.results : []).map(normalizeAdzunaJob).filter(Boolean);

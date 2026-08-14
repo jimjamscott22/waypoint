@@ -10,9 +10,9 @@ import { listingRoutes } from './routes/listings.js';
 import { runRoutes } from './routes/runs.js';
 import { insightRoutes } from './routes/insights.js';
 
-const dist = fileURLToPath(new URL('../dist/', import.meta.url));
+const defaultDist = fileURLToPath(new URL('../dist/', import.meta.url));
 
-export function buildApp({ services, logger = false, serveStatic = true }) {
+export function buildApp({ services, logger = false, serveStatic = true, staticRoot = defaultDist }) {
   const app = Fastify({ logger });
 
   app.setErrorHandler((error, request, reply) => {
@@ -53,9 +53,9 @@ export function buildApp({ services, logger = false, serveStatic = true }) {
   app.register(runRoutes, services);
   app.register(insightRoutes, services);
 
-  const staticAvailable = serveStatic && existsSync(dist);
+  const staticAvailable = serveStatic && existsSync(staticRoot);
   if (staticAvailable) {
-    app.register(fastifyStatic, { root: dist, wildcard: false });
+    app.register(fastifyStatic, { root: staticRoot, wildcard: false });
   }
 
   app.setNotFoundHandler((request, reply) => {
