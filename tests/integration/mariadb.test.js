@@ -167,3 +167,135 @@ test('applies MariaDB migrations repeatably to the isolated test database', { sk
     await pool.end();
   }
 });
+
+test('applies the structured discovery migration with Auburn defaults and safe seed handling', { skip: !enabled }, async () => {
+  const env = {
+    ...process.env,
+    DB_NAME: process.env.TEST_DB_NAME || 'waypoint_test',
+    DB_USER: process.env.TEST_DB_USER || 'waypoint_test_app',
+    DB_PASSWORD: process.env.TEST_DB_PASSWORD,
+    MIGRATION_DB_USER: process.env.TEST_MIGRATION_DB_USER || 'waypoint_test_migrate',
+    MIGRATION_DB_PASSWORD: process.env.TEST_MIGRATION_DB_PASSWORD,
+  };
+  await runMigrations(env);
+
+  const connection = env.DB_HOST
+    ? { host: env.DB_HOST, port: Number(env.DB_PORT || 3306) }
+    : { socketPath: env.DB_SOCKET || '/run/mysqld/mysqld.sock' };
+  const pool = createPool({
+    ...connection, database: env.DB_NAME, user: env.DB_USER, password: env.DB_PASSWORD, connectionLimit: 2,
+  });
+  try {
+    const auburnId = '10000000-0000-4000-8000-000000000004';
+    const auburn = await withConnection(pool, connection => connection.query('SELECT * FROM saved_queries WHERE id = ?', [auburnId]));
+    assert.equal(auburn.length, 1);
+    assert.equal(auburn[0].center_display_name, 'Auburn, Cayuga County, New York, United States');
+    assert.equal(Number(auburn[0].preferred_radius_miles), 20);
+    assert.equal(Number(auburn[0].maximum_radius_miles), 40);
+    assert.equal(Number(auburn[0].enabled), 1);
+    const auburnFamilies = await withConnection(pool, connection => connection.query(
+      'SELECT role_family FROM saved_query_role_families WHERE query_id = ? ORDER BY role_family', [auburnId]
+    ));
+    assert.deepEqual(auburnFamilies.map(row => row.role_family), [
+      'cloud-support', 'desktop-support', 'it-operations', 'it-support',
+      'junior-systems-engineering', 'network-administration', 'systems-administration',
+    ]);
+
+    const seedFamilies = await withConnection(pool, connection => connection.query(
+      `SELECT query_id, role_family FROM saved_query_role_families
+       WHERE query_id IN (
+         '10000000-0000-4000-8000-000000000001',
+         '10000000-0000-4000-8000-000000000002',
+         '10000000-0000-4000-8000-000000000003'
+       ) ORDER BY query_id`
+    ));
+    assert.deepEqual(seedFamilies.map(row => `${row.query_id}:${row.role_family}`), [
+      '10000000-0000-4000-8000-000000000001:systems-administration',
+      '10000000-0000-4000-8000-000000000002:it-support',
+      '10000000-0000-4000-8000-000000000003:network-administration',
+    ]);
+
+    const queryRepository = createQueryRepository(pool);
+    const legacyQuery = await queryRepository.create({ name: 'Legacy sysadmin', keywords: 'systems administrator', location: 'Syracuse, NY', maxAgeDays: 7 });
+    const legacyRow = await withConnection(pool, connection => connection.query('SELECT * FROM saved_queries WHERE id = ?', [legacyQuery.id]));
+    assert.equal(legacyRow[0].name, 'Legacy sysadmin');
+    assert.equal(legacyRow[0].keywords, 'systems administrator');
+    assert.equal(legacyRow[0].location, 'Syracuse, NY');
+    await withConnection(pool, connection => connection.query(
+      `UPDATE saved_queries SET optional_terms = CASE WHEN TRIM(keywords) = '' THEN JSON_ARRAY() ELSE JSON_ARRAY(keywords) END WHERE id = ?`,
+      [legacyQuery.id]
+    ));
+    const legacyOptionalTerms = await withConnection(pool, connection => connection.query(
+      'SELECT optional_terms FROM saved_queries WHERE id = ?', [legacyQuery.id]
+    ));
+    const parsedOptionalTerms = typeof legacyOptionalTerms[0].optional_terms === 'string'
+      ? JSON.parse(legacyOptionalTerms[0].optional_terms)
+      : legacyOptionalTerms[0].optional_terms;
+    assert.deepEqual(parsedOptionalTerms, ['systems administrator']);
+    await queryRepository.remove(legacyQuery.id);
+
+    const untouchedProbeId = '40000000-0000-4000-8000-000000000001';
+    const editedProbeId = '40000000-0000-4000-8000-000000000002';
+    await withConnection(pool, async connection => {
+      await connection.query(
+        `INSERT INTO saved_queries (id, name, keywords, location, max_age_days, enabled, created_at, updated_at) VALUES
+          (?, 'Untouched seed probe', 'probe', '', 7, 1, '2026-01-01 00:00:00.000', '2026-01-01 00:00:00.000'),
+          (?, 'Edited seed probe', 'probe', '', 7, 1, '2026-01-01 00:00:00.000', '2026-02-01 00:00:00.000')`,
+        [untouchedProbeId, editedProbeId]
+      );
+      await connection.query(
+        `UPDATE saved_queries SET enabled = 0, updated_at = UTC_TIMESTAMP(3)
+         WHERE id IN (?, ?) AND updated_at = created_at`,
+        [untouchedProbeId, editedProbeId]
+      );
+      const probeRows = await connection.query(
+        'SELECT id, enabled FROM saved_queries WHERE id IN (?, ?) ORDER BY id',
+        [untouchedProbeId, editedProbeId]
+      );
+      assert.deepEqual(probeRows.map(row => [row.id, Number(row.enabled)]), [
+        [untouchedProbeId, 0],
+        [editedProbeId, 1],
+      ]);
+      await connection.query('DELETE FROM saved_queries WHERE id IN (?, ?)', [untouchedProbeId, editedProbeId]);
+    });
+
+    await assert.rejects(withConnection(pool, connection => connection.query(
+      `INSERT INTO saved_query_role_families (query_id, role_family) VALUES (?, 'not-a-role-family')`,
+      [auburnId]
+    )), /constraint/i);
+    await assert.rejects(withTransaction(pool, async connection => {
+      const id = '50000000-0000-4000-8000-000000000001';
+      await connection.query(
+        `INSERT INTO saved_queries (id, name, keywords, location, max_age_days, enabled, preferred_radius_miles, maximum_radius_miles)
+         VALUES (?, 'Bad radius', '', '', 7, 1, 40, 20)`,
+        [id]
+      );
+    }), /constraint/i);
+    const anyListingQuery = await withConnection(pool, connection => connection.query('SELECT listing_id, query_id FROM listing_queries LIMIT 1'));
+    assert.equal(anyListingQuery.length, 1);
+    await assert.rejects(withConnection(pool, connection => connection.query(
+      `UPDATE listing_queries SET distance_band = 'far-away' WHERE listing_id = ? AND query_id = ?`,
+      [anyListingQuery[0].listing_id, anyListingQuery[0].query_id]
+    )), /constraint/i);
+    const probeRunId = '60000000-0000-4000-8000-000000000099';
+    await withConnection(pool, connection => connection.query(
+      `INSERT INTO scrape_runs (id, trigger_type, status, started_at) VALUES (?, 'manual', 'running', UTC_TIMESTAMP(3))`,
+      [probeRunId]
+    ));
+    await assert.rejects(withConnection(pool, connection => connection.query(
+      `INSERT INTO scrape_run_searches (id, run_id, query_id, role_family, status, started_at)
+       VALUES ('60000000-0000-4000-8000-000000000001', ?, ?, 'systems-administration', 'not-a-status', UTC_TIMESTAMP(3))`,
+      [probeRunId, auburnId]
+    )), /constraint/i);
+    await withConnection(pool, connection => connection.query('DELETE FROM scrape_runs WHERE id = ?', [probeRunId]));
+
+    const jobRows = await withConnection(pool, connection => connection.query('SELECT COUNT(*) AS count FROM jobs'));
+    assert.ok(Number(jobRows[0].count) >= 1);
+    const listingRows = await withConnection(pool, connection => connection.query('SELECT COUNT(*) AS count FROM listings'));
+    assert.ok(Number(listingRows[0].count) >= 1);
+    const stageEventRows = await withConnection(pool, connection => connection.query('SELECT COUNT(*) AS count FROM job_stage_events'));
+    assert.ok(Number(stageEventRows[0].count) >= 1);
+  } finally {
+    await pool.end();
+  }
+});

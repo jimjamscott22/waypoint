@@ -26,16 +26,46 @@ export function mapJob(row) {
   };
 }
 
-export function mapQuery(row) {
+function parseTerms(value) {
+  if (value == null) return [];
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+export function mapQuery(row, roleFamilies = []) {
+  const optionalTerms = parseTerms(row.optional_terms);
+  const center = {
+    displayName: row.center_display_name ?? null,
+    latitude: row.center_latitude == null ? null : Number(row.center_latitude),
+    longitude: row.center_longitude == null ? null : Number(row.center_longitude),
+    provider: row.geocoder_provider ?? null,
+    placeId: row.geocoder_place_id ?? null,
+  };
   return {
     id: row.id,
     name: row.name,
-    keywords: row.keywords,
-    location: row.location,
+    center,
+    preferredRadiusMiles: row.preferred_radius_miles == null ? null : Number(row.preferred_radius_miles),
+    maximumRadiusMiles: row.maximum_radius_miles == null ? null : Number(row.maximum_radius_miles),
+    roleFamilies,
+    requiredTerms: parseTerms(row.required_terms),
+    optionalTerms,
+    excludedTerms: parseTerms(row.excluded_terms),
     maxAgeDays: Number(row.max_age_days),
+    minimumSalary: row.minimum_salary == null ? null : Number(row.minimum_salary),
     enabled: Boolean(row.enabled),
     createdAt: toIso(row.created_at),
     updatedAt: toIso(row.updated_at),
+    keywords: optionalTerms.join(' '),
+    location: center.displayName,
   };
 }
 
