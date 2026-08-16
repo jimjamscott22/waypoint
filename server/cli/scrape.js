@@ -7,8 +7,8 @@ export async function runScheduledScrape(options) {
   const services = createServices(options);
   try {
     await verifyDatabase(services.pool);
-    if (!services.scraper) throw new Error('Adzuna credentials are not configured');
-    return await services.scraper.run('scheduled');
+    if (!services.discovery) throw new Error('Adzuna credentials are not configured');
+    return await services.discovery.runAll('scheduled');
   } finally {
     await services.pool.end();
   }

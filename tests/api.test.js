@@ -29,7 +29,7 @@ function fakeServices() {
         discovery: {},
       }),
     },
-    scraper: null,
+    discovery: null,
   };
 }
 

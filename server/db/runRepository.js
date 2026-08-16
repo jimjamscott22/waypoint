@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { withConnection } from './pool.js';
-import { mapRun } from './rows.js';
+import { mapRun, mapRunQuery, mapRunSearch } from './rows.js';
 
 export function createRunRepository(pool) {
   return {
@@ -31,14 +31,57 @@ export function createRunRepository(pool) {
       return id;
     },
 
-    async addQueryResult(connection, result) {
+    // One row per role family searched, written as each family finishes.
+    async addSearchResult(connection, result) {
+      await connection.query(
+        `INSERT INTO scrape_run_searches
+          (id, run_id, query_id, role_family, status, provider_result_count, pages_requested,
+           records_received, accepted_matches, truncated, error_message, started_at, finished_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [randomUUID(), result.runId, result.queryId, result.roleFamily, result.status,
+          result.providerResultCount, result.pagesRequested, result.recordsReceived,
+          result.acceptedMatches, result.truncated ? 1 : 0, result.errorMessage,
+          result.startedAt, result.finishedAt]
+      );
+    },
+
+    // One aggregate row per saved search, written after all of its families finish.
+    async finishQuery(connection, result) {
       await connection.query(
         `INSERT INTO scrape_run_queries
-          (id, run_id, query_id, query_name, status, listings_fetched, new_matches, error_message, started_at, finished_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [randomUUID(), result.runId, result.queryId, result.queryName, result.status, result.listingsFetched,
-          result.newMatches, result.errorMessage, result.startedAt, result.finishedAt]
+          (id, run_id, query_id, query_name, status, listings_fetched, new_matches, error_message,
+           started_at, finished_at, provider_result_count, pages_requested, records_received,
+           duplicates, previously_saved, previously_dismissed, rejected_age, rejected_distance,
+           rejected_terms, rejected_salary, rejected_remote_only, malformed_records,
+           unsearched_requests, truncated)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [randomUUID(), result.runId, result.queryId, result.queryName, result.status,
+          result.listingsFetched, result.newMatches, result.errorMessage,
+          result.startedAt, result.finishedAt,
+          result.providerResultCount, result.pagesRequested, result.recordsReceived,
+          result.duplicates, result.previouslySaved, result.previouslyDismissed,
+          result.rejectedAge, result.rejectedDistance, result.rejectedTerms, result.rejectedSalary,
+          result.rejectedRemoteOnly, result.malformedRecords, result.unsearchedRequests,
+          result.truncated ? 1 : 0]
       );
+    },
+
+    detail(runId) {
+      return withConnection(pool, async connection => {
+        const runs = await connection.query('SELECT * FROM scrape_runs WHERE id = ?', [runId]);
+        if (!runs.length) return null;
+        const queries = await connection.query(
+          'SELECT * FROM scrape_run_queries WHERE run_id = ? ORDER BY started_at, query_name', [runId]
+        );
+        const searches = await connection.query(
+          'SELECT * FROM scrape_run_searches WHERE run_id = ? ORDER BY started_at, role_family', [runId]
+        );
+        return {
+          run: mapRun(runs[0]),
+          queries: queries.map(mapRunQuery),
+          searches: searches.map(mapRunSearch),
+        };
+      });
     },
 
     async finish(connection, id, summary) {

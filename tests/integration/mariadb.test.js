@@ -6,6 +6,7 @@ import { withTransaction } from '../../server/db/pool.js';
 import { createJobRepository } from '../../server/db/jobRepository.js';
 import { createListingRepository, upsertListingMatch } from '../../server/db/listingRepository.js';
 import { createQueryRepository } from '../../server/db/queryRepository.js';
+import { persistMatch } from '../../server/db/discoveryRepository.js';
 import { createInsightsRepository } from '../../server/db/insightsRepository.js';
 import { createInsightsService } from '../../server/insights/service.js';
 import { normalizeAdzunaJob } from '../../server/scraper/adzuna.js';
@@ -425,6 +426,110 @@ test('round-trips structured saved searches and preserves decided attribution', 
     for (const id of created) {
       await queries.remove(id).catch(() => {});
     }
+    await pool.end();
+  }
+});
+
+test('classifies rediscovery outcomes without overwriting listing decisions', { skip: !enabled }, async () => {
+  const env = {
+    ...process.env,
+    DB_NAME: process.env.TEST_DB_NAME || 'waypoint_test',
+    DB_USER: process.env.TEST_DB_USER || 'waypoint_test_app',
+    DB_PASSWORD: process.env.TEST_DB_PASSWORD,
+    MIGRATION_DB_USER: process.env.TEST_MIGRATION_DB_USER || 'waypoint_test_migrate',
+    MIGRATION_DB_PASSWORD: process.env.TEST_MIGRATION_DB_PASSWORD,
+  };
+  await runMigrations(env);
+
+  const connection = env.DB_HOST
+    ? { host: env.DB_HOST, port: Number(env.DB_PORT || 3306) }
+    : { socketPath: env.DB_SOCKET || '/run/mysqld/mysqld.sock' };
+  const pool = createPool({
+    ...connection, database: env.DB_NAME, user: env.DB_USER, password: env.DB_PASSWORD, connectionLimit: 2,
+  });
+  const queries = createQueryRepository(pool);
+  const listings = createListingRepository(pool);
+  let queryId;
+
+  try {
+    const query = await queries.create({
+      name: 'Rediscovery outcomes',
+      center: { displayName: 'Auburn, New York', latitude: 42.9317, longitude: -76.5661, provider: 'nominatim', placeId: '9100' },
+      preferredRadiusMiles: 20,
+      maximumRadiusMiles: 40,
+      roleFamilies: ['it-support', 'systems-administration'],
+      maxAgeDays: 14,
+    });
+    queryId = query.id;
+
+    const provider = suffix => normalizeAdzunaJob({
+      id: `outcome-${suffix}`,
+      title: 'IT Support Specialist',
+      company: { display_name: 'Example' },
+      location: { display_name: 'Auburn, NY' },
+      description: 'Help desk',
+      redirect_url: `https://example.test/outcome-${suffix}`,
+      created: '2026-08-10T10:00:00.000Z',
+      latitude: 42.94,
+      longitude: -76.57,
+      category: { tag: 'it-jobs' },
+      contract_time: 'full_time',
+      contract_type: 'permanent',
+    });
+
+    const evaluation = {
+      score: 88,
+      distanceMiles: 0.72,
+      distanceBand: 'preferred',
+      matchFacts: { matchedSynonyms: ['IT support'], requiredTerms: [], optionalTerms: [], excludedTerms: [] },
+      matchedRoleFamilies: ['it-support'],
+    };
+    const persist = (listing, overrides = {}) => withTransaction(pool, c => persistMatch(c, {
+      listing, queryId, evaluation: { ...evaluation, ...overrides }, seenAt: '2026-08-12 12:00:00.000',
+    }));
+
+    const first = await persist(provider('a'));
+    assert.equal(first.outcome, 'new');
+    const again = await persist(provider('a'));
+    assert.equal(again.outcome, 'duplicate-new');
+    assert.equal(again.id, first.id);
+
+    // A second role family adds evidence to the same stored match rather than a new row.
+    await persist(provider('a'), { matchedRoleFamilies: ['systems-administration'] });
+    const families = await withConnection(pool, c => c.query(
+      'SELECT role_family FROM listing_query_role_families WHERE listing_id = ? AND query_id = ? ORDER BY role_family',
+      [first.id, queryId]
+    ));
+    assert.deepEqual(families.map(row => row.role_family), ['it-support', 'systems-administration']);
+
+    const stored = await withConnection(pool, c => c.query(
+      'SELECT distance_miles, distance_band, match_facts FROM listing_queries WHERE listing_id = ? AND query_id = ?',
+      [first.id, queryId]
+    ));
+    assert.equal(Number(stored[0].distance_miles), 0.72);
+    assert.equal(stored[0].distance_band, 'preferred');
+
+    const savedListing = await persist(provider('b'));
+    await listings.save(savedListing.id);
+    assert.equal((await persist(provider('b'))).outcome, 'previously-saved');
+
+    const dismissedListing = await persist(provider('c'));
+    await listings.dismiss(dismissedListing.id);
+    assert.equal((await persist(provider('c'))).outcome, 'previously-dismissed');
+
+    const finalStatuses = await withConnection(pool, c => c.query(
+      'SELECT id, status FROM listings WHERE id IN (?, ?)', [savedListing.id, dismissedListing.id]
+    ));
+    const byId = new Map(finalStatuses.map(row => [row.id, row.status]));
+    assert.equal(byId.get(savedListing.id), 'saved');
+    assert.equal(byId.get(dismissedListing.id), 'dismissed');
+
+    await withConnection(pool, c => c.query(
+      "UPDATE listings SET status = 'expired' WHERE id = ?", [first.id]
+    ));
+    assert.equal((await persist(provider('a'))).outcome, 'expired-reopened');
+  } finally {
+    if (queryId) await queries.remove(queryId).catch(() => {});
     await pool.end();
   }
 });
