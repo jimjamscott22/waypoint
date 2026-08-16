@@ -11,6 +11,13 @@ test('matches exact short terms and prefix-equivalent longer terms', () => {
   assert.equal(keywordCoverage('IT administrator', 'Information Technology Administrator'), 0.5);
 });
 
+test('treats administrator and admin forms as equivalent for role matching', () => {
+  assert.deepEqual(normalizeTokens('Systems Administrator'), ['system', 'administr']);
+  assert.deepEqual(normalizeTokens('Systems Administration'), ['system', 'administr']);
+  assert.equal(keywordCoverage('systems administrator', 'Systems Administration Lead'), 1);
+  assert.equal(keywordCoverage('sysadmin', 'Sysadmin (Linux)'), 1);
+});
+
 test('scores title, description, and recency with the documented weights', () => {
   const now = new Date('2026-07-16T12:00:00.000Z');
   const score = scoreListing(

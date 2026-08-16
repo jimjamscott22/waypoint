@@ -36,9 +36,23 @@ export function loadConfig(env = process.env, { migration = false } = {}) {
       appKey: env.ADZUNA_APP_KEY || '',
       configured: Boolean(env.ADZUNA_APP_ID && env.ADZUNA_APP_KEY),
     },
+    geocoder: {
+      baseUrl: env.GEOCODER_BASE_URL || 'https://nominatim.openstreetmap.org',
+      userAgent: env.GEOCODER_USER_AGENT || '',
+    },
+    discovery: {
+      runRequestBudget: integer(env.DISCOVERY_RUN_REQUEST_BUDGET, 20, 'DISCOVERY_RUN_REQUEST_BUDGET'),
+      queryRequestBudget: integer(env.DISCOVERY_QUERY_REQUEST_BUDGET, 12, 'DISCOVERY_QUERY_REQUEST_BUDGET'),
+      previewRequestBudget: integer(env.DISCOVERY_PREVIEW_REQUEST_BUDGET, 8, 'DISCOVERY_PREVIEW_REQUEST_BUDGET'),
+      maxPagesPerFamily: integer(env.DISCOVERY_MAX_PAGES_PER_FAMILY, 3, 'DISCOVERY_MAX_PAGES_PER_FAMILY'),
+      persistedMatchTarget: integer(env.DISCOVERY_PERSISTED_MATCH_TARGET, 50, 'DISCOVERY_PERSISTED_MATCH_TARGET'),
+    },
   };
 }
 
 export function publicConfig(config) {
-  return { providerConfigured: config.adzuna.configured };
+  return {
+    providerConfigured: config.adzuna.configured,
+    locationResolutionConfigured: Boolean(config.geocoder.userAgent),
+  };
 }

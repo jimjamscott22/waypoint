@@ -7,10 +7,18 @@ import { createRunRepository } from './db/runRepository.js';
 import { createInsightsRepository } from './db/insightsRepository.js';
 import { createInsightsService } from './insights/service.js';
 import { createAdzunaClient } from './scraper/adzuna.js';
-import { createScrapeService } from './scraper/service.js';
+import { createDiscoveryRepository } from './db/discoveryRepository.js';
+import { createDiscoveryService } from './discovery/service.js';
+import { createNominatimClient } from './geocoding/nominatim.js';
 import { createLogger } from './logger.js';
 
-export function createServices({ env = process.env, pool: suppliedPool, adzunaClient: suppliedClient, logger = createLogger() } = {}) {
+export function createServices({
+  env = process.env,
+  pool: suppliedPool,
+  adzunaClient: suppliedClient,
+  geocoder: suppliedGeocoder,
+  logger = createLogger(),
+} = {}) {
   const config = loadConfig(env);
   const pool = suppliedPool ?? createPool(config.database);
   const jobs = createJobRepository(pool);
@@ -19,9 +27,13 @@ export function createServices({ env = process.env, pool: suppliedPool, adzunaCl
   const runs = createRunRepository(pool);
   const insightsRepository = createInsightsRepository(pool);
   const insights = createInsightsService({ repository: insightsRepository });
+  const discoveryRepository = createDiscoveryRepository(pool);
   const adzunaClient = suppliedClient ?? (config.adzuna.configured ? createAdzunaClient(config.adzuna) : null);
-  const scraper = adzunaClient ? createScrapeService({
-    pool, queryRepository: queries, listingRepository: listings, runRepository: runs, adzunaClient, logger,
+  const discovery = adzunaClient ? createDiscoveryService({
+    pool, queryRepository: queries, listingRepository: listings, runRepository: runs,
+    discoveryRepository, adzunaClient, logger, discovery: config.discovery,
   }) : null;
-  return { config, pool, jobs, queries, listings, runs, insights, scraper, logger };
+  // Nominatim requires a contact identity, so location lookup stays off until it is configured.
+  const geocoder = suppliedGeocoder ?? (config.geocoder.userAgent ? createNominatimClient(config.geocoder) : null);
+  return { config, pool, jobs, queries, listings, runs, insights, discovery, discoveryRepository, geocoder, logger };
 }

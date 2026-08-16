@@ -4,6 +4,14 @@ export function toIso(value) {
   return normalized.endsWith('Z') ? normalized : `${normalized}Z`;
 }
 
+export function formatSalary(row) {
+  const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: row.currency || 'USD', maximumFractionDigits: 0 });
+  if (row.salary_min != null && row.salary_max != null) return `${formatter.format(row.salary_min)}–${formatter.format(row.salary_max)}`;
+  if (row.salary_min != null) return `From ${formatter.format(row.salary_min)}`;
+  if (row.salary_max != null) return `Up to ${formatter.format(row.salary_max)}`;
+  return '';
+}
+
 export function mapJob(row) {
   return {
     id: row.id,
@@ -66,6 +74,53 @@ export function mapQuery(row, roleFamilies = []) {
     updatedAt: toIso(row.updated_at),
     keywords: optionalTerms.join(' '),
     location: center.displayName,
+  };
+}
+
+export function mapRunQuery(row) {
+  return {
+    id: row.id,
+    runId: row.run_id,
+    queryId: row.query_id,
+    queryName: row.query_name,
+    status: row.status,
+    listingsFetched: Number(row.listings_fetched),
+    newMatches: Number(row.new_matches),
+    providerResultCount: Number(row.provider_result_count),
+    pagesRequested: Number(row.pages_requested),
+    recordsReceived: Number(row.records_received),
+    duplicates: Number(row.duplicates),
+    previouslySaved: Number(row.previously_saved),
+    previouslyDismissed: Number(row.previously_dismissed),
+    rejectedAge: Number(row.rejected_age),
+    rejectedDistance: Number(row.rejected_distance),
+    rejectedTerms: Number(row.rejected_terms),
+    rejectedSalary: Number(row.rejected_salary),
+    rejectedRemoteOnly: Number(row.rejected_remote_only),
+    malformedRecords: Number(row.malformed_records),
+    unsearchedRequests: Number(row.unsearched_requests),
+    truncated: Boolean(row.truncated),
+    errorMessage: row.error_message,
+    startedAt: toIso(row.started_at),
+    finishedAt: toIso(row.finished_at),
+  };
+}
+
+export function mapRunSearch(row) {
+  return {
+    id: row.id,
+    runId: row.run_id,
+    queryId: row.query_id,
+    roleFamily: row.role_family,
+    status: row.status,
+    providerResultCount: Number(row.provider_result_count),
+    pagesRequested: Number(row.pages_requested),
+    recordsReceived: Number(row.records_received),
+    acceptedMatches: Number(row.accepted_matches),
+    truncated: Boolean(row.truncated),
+    errorMessage: row.error_message,
+    startedAt: toIso(row.started_at),
+    finishedAt: toIso(row.finished_at),
   };
 }
 

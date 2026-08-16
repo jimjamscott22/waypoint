@@ -1,16 +1,10 @@
-import { randomUUID } from 'node:crypto';
 import { AppError } from '../errors.js';
 import { withConnection, withTransaction } from './pool.js';
 import { insertJob } from './jobRepository.js';
-import { mapJob, toIso } from './rows.js';
+import { persistMatch } from './discoveryRepository.js';
+import { formatSalary, mapJob, toIso } from './rows.js';
 
-export function formatSalary(row) {
-  const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: row.currency || 'USD', maximumFractionDigits: 0 });
-  if (row.salary_min != null && row.salary_max != null) return `${formatter.format(row.salary_min)}–${formatter.format(row.salary_max)}`;
-  if (row.salary_min != null) return `From ${formatter.format(row.salary_min)}`;
-  if (row.salary_max != null) return `Up to ${formatter.format(row.salary_max)}`;
-  return '';
-}
+export { formatSalary };
 
 function mapMatch(row, matchedQueries = []) {
   return {
@@ -33,40 +27,17 @@ function mapMatch(row, matchedQueries = []) {
   };
 }
 
-function databaseTimestamp(value) {
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) throw new Error('Listing timestamp is invalid');
-  return date.toISOString().replace('T', ' ').replace('Z', '');
-}
+const REOPENING_OUTCOMES = new Set(['new', 'expired-reopened']);
 
+// Score-only compatibility wrapper over the shared persistence path.
 export async function upsertListingMatch(connection, listing, queryId, score, seenAt) {
-  const existing = await connection.query(
-    'SELECT id, status FROM listings WHERE provider = ? AND provider_job_id = ?',
-    [listing.provider, listing.providerJobId]
-  );
-  const id = existing[0]?.id ?? randomUUID();
-  const wasNew = !existing.length || existing[0].status === 'expired';
-  await connection.query(
-    `INSERT INTO listings
-      (id, provider, provider_job_id, title, company, location, salary_min, salary_max, currency,
-       description, url, published_at, first_seen_at, last_seen_at, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')
-     ON DUPLICATE KEY UPDATE title = VALUES(title), company = VALUES(company), location = VALUES(location),
-       salary_min = VALUES(salary_min), salary_max = VALUES(salary_max), currency = VALUES(currency),
-       description = VALUES(description), url = VALUES(url), published_at = VALUES(published_at),
-       last_seen_at = VALUES(last_seen_at), status = IF(status = 'expired', 'new', status),
-       updated_at = UTC_TIMESTAMP(3)`,
-    [id, listing.provider, listing.providerJobId, listing.title, listing.company, listing.location,
-      listing.salaryMin, listing.salaryMax, listing.currency, listing.description, listing.url,
-      databaseTimestamp(listing.publishedAt), seenAt, seenAt]
-  );
-  await connection.query(
-    `INSERT INTO listing_queries (listing_id, query_id, score, first_matched_at, last_matched_at)
-     VALUES (?, ?, ?, ?, ?)
-     ON DUPLICATE KEY UPDATE score = VALUES(score), last_matched_at = VALUES(last_matched_at)`,
-    [id, queryId, score, seenAt, seenAt]
-  );
-  return { id, isNew: wasNew };
+  const { id, outcome } = await persistMatch(connection, {
+    listing,
+    queryId,
+    evaluation: { score, distanceMiles: null, distanceBand: null, matchFacts: null, matchedRoleFamilies: [] },
+    seenAt,
+  });
+  return { id, isNew: REOPENING_OUTCOMES.has(outcome) };
 }
 
 export function createListingRepository(pool) {

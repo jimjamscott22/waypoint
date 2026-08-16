@@ -3,6 +3,7 @@ import fastifyStatic from '@fastify/static';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { AppError } from './errors.js';
+import { publicConfig } from './config.js';
 import { verifyDatabase } from './db/pool.js';
 import { jobRoutes } from './routes/jobs.js';
 import { queryRoutes } from './routes/queries.js';
@@ -29,7 +30,7 @@ export function buildApp({ services, logger = false, serveStatic = true, staticR
   app.get('/api/health', async () => ({
     status: 'ok',
     databaseVersion: await verifyDatabase(services.pool),
-    providerConfigured: services.config.adzuna.configured,
+    ...publicConfig(services.config),
   }));
 
   app.get('/api/bootstrap', async () => {
@@ -43,7 +44,7 @@ export function buildApp({ services, logger = false, serveStatic = true, staticR
       latestRun,
       serverJobsEmpty,
       provider: { name: 'Adzuna', attributionUrl: 'https://www.adzuna.com/' },
-      providerConfigured: services.config.adzuna.configured,
+      ...publicConfig(services.config),
     };
   });
 
