@@ -2,15 +2,9 @@ import { AppError } from '../errors.js';
 import { withConnection, withTransaction } from './pool.js';
 import { insertJob } from './jobRepository.js';
 import { persistMatch } from './discoveryRepository.js';
-import { mapJob, toIso } from './rows.js';
+import { formatSalary, mapJob, toIso } from './rows.js';
 
-export function formatSalary(row) {
-  const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: row.currency || 'USD', maximumFractionDigits: 0 });
-  if (row.salary_min != null && row.salary_max != null) return `${formatter.format(row.salary_min)}–${formatter.format(row.salary_max)}`;
-  if (row.salary_min != null) return `From ${formatter.format(row.salary_min)}`;
-  if (row.salary_max != null) return `Up to ${formatter.format(row.salary_max)}`;
-  return '';
-}
+export { formatSalary };
 
 function mapMatch(row, matchedQueries = []) {
   return {

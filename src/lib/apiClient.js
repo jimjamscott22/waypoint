@@ -1,3 +1,5 @@
+import { toDiscoverySearchParams } from './discoveryFilters.js';
+
 async function request(path, options = {}) {
   const response = await fetch(path, {
     ...options,
@@ -23,11 +25,20 @@ export const api = {
   restoreJob: id => request(`/api/jobs/${id}/restore`, { method: 'POST' }),
   reorderJobs: orderedIds => request('/api/jobs/reorder', { method: 'POST', body: body({ orderedIds }) }),
   importJobs: jobs => request('/api/jobs/import', { method: 'POST', body: body({ jobs }) }),
+  listQueries: () => request('/api/queries'),
   createQuery: query => request('/api/queries', { method: 'POST', body: body(query) }),
   updateQuery: (id, changes) => request(`/api/queries/${id}`, { method: 'PATCH', body: body(changes) }),
   deleteQuery: id => request(`/api/queries/${id}`, { method: 'DELETE' }),
+  resolveQueryLocation: query => request('/api/queries/resolve-location', { method: 'POST', body: body({ query }) }),
+  previewQuery: criteria => request('/api/queries/preview', { method: 'POST', body: body(criteria) }),
+  runQuery: id => request(`/api/queries/${id}/runs`, { method: 'POST' }),
+  listListings: (filters = {}) => {
+    const search = toDiscoverySearchParams(filters).toString();
+    return request(search ? `/api/listings?${search}` : '/api/listings');
+  },
   saveListing: id => request(`/api/listings/${id}/save`, { method: 'POST' }),
   dismissListing: id => request(`/api/listings/${id}/dismiss`, { method: 'POST' }),
   runScrape: () => request('/api/scrape-runs', { method: 'POST' }),
+  runDetail: id => request(`/api/scrape-runs/${id}`),
   insights: (range = '90d') => request(`/api/insights?range=${encodeURIComponent(range)}`),
 };

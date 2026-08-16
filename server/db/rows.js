@@ -4,6 +4,14 @@ export function toIso(value) {
   return normalized.endsWith('Z') ? normalized : `${normalized}Z`;
 }
 
+export function formatSalary(row) {
+  const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: row.currency || 'USD', maximumFractionDigits: 0 });
+  if (row.salary_min != null && row.salary_max != null) return `${formatter.format(row.salary_min)}–${formatter.format(row.salary_max)}`;
+  if (row.salary_min != null) return `From ${formatter.format(row.salary_min)}`;
+  if (row.salary_max != null) return `Up to ${formatter.format(row.salary_max)}`;
+  return '';
+}
+
 export function mapJob(row) {
   return {
     id: row.id,

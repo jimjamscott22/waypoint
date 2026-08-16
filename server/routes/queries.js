@@ -83,7 +83,19 @@ function assertRadiusRange(payload) {
   }
 }
 
-export async function queryRoutes(app, { queries, geocoder }) {
+const previewBody = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['center', 'roleFamilies', 'preferredRadiusMiles', 'maximumRadiusMiles', 'maxAgeDays'],
+  properties: structuredProperties,
+};
+
+function requireDiscovery(discovery) {
+  if (!discovery) throw new AppError(503, 'PROVIDER_NOT_CONFIGURED', 'Adzuna credentials are not configured');
+  return discovery;
+}
+
+export async function queryRoutes(app, { queries, geocoder, discovery }) {
   app.get('/api/queries', async () => ({ queries: await queries.list() }));
 
   app.post('/api/queries', { schema: { body: createBody } }, async (request, reply) => {
@@ -97,6 +109,15 @@ export async function queryRoutes(app, { queries, geocoder }) {
   });
 
   app.delete('/api/queries/:id', async request => ({ query: await queries.remove(request.params.id) }));
+
+  app.post('/api/queries/preview', { schema: { body: previewBody } }, async request => {
+    assertRadiusRange(request.body);
+    return requireDiscovery(discovery).preview(request.body);
+  });
+
+  app.post('/api/queries/:id/runs', async request => ({
+    run: await requireDiscovery(discovery).runQuery(request.params.id, 'manual'),
+  }));
 
   app.post('/api/queries/resolve-location', {
     schema: {
