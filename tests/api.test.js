@@ -10,9 +10,15 @@ function fakeServices() {
     config: { adzuna: { configured: false } },
     pool: {},
     jobs: { list: async () => [], isEmpty: async () => true, create: async input => ({ id: 'job-1', ...input }) },
-    queries: { list: async () => [] },
+    queries: {
+      list: async () => [],
+      create: async input => ({ id: 'query-1', ...input }),
+      update: async (id, input) => ({ id, ...input }),
+      remove: async id => ({ id }),
+    },
     listings: { listNew: async () => [] },
     runs: { latest: async () => null },
+    geocoder: null,
     insights: {
       get: async range => ({
         range,
@@ -75,6 +81,137 @@ test('returns Insights with a default or selected reporting range', async t => {
   assert.deepEqual(requested, ['90d', '30d']);
   assert.equal(invalidResponse.statusCode, 400);
   assert.equal(invalidResponse.json().error.code, 'VALIDATION_ERROR');
+});
+
+const auburnCriteria = {
+  name: 'Auburn IT infrastructure',
+  center: {
+    displayName: 'Auburn, Cayuga County, New York, United States',
+    latitude: 42.9317,
+    longitude: -76.5661,
+    provider: 'nominatim',
+    placeId: '1234',
+  },
+  preferredRadiusMiles: 20,
+  maximumRadiusMiles: 40,
+  roleFamilies: ['systems-administration', 'it-support'],
+  requiredTerms: [],
+  optionalTerms: ['windows'],
+  excludedTerms: ['sales'],
+  maxAgeDays: 14,
+  minimumSalary: null,
+  enabled: true,
+};
+
+test('lists saved searches and accepts structured criteria', async t => {
+  const services = fakeServices();
+  const created = [];
+  services.queries.list = async () => [{ id: 'query-1', name: 'Auburn IT infrastructure' }];
+  services.queries.create = async input => { created.push(input); return { id: 'query-1', ...input }; };
+  const app = buildApp({ services, serveStatic: false });
+  t.after(() => app.close());
+
+  const listed = await app.inject({ method: 'GET', url: '/api/queries' });
+  assert.equal(listed.statusCode, 200);
+  assert.deepEqual(listed.json().queries, [{ id: 'query-1', name: 'Auburn IT infrastructure' }]);
+
+  const response = await app.inject({ method: 'POST', url: '/api/queries', payload: auburnCriteria });
+  assert.equal(response.statusCode, 201);
+  assert.deepEqual(created, [auburnCriteria]);
+});
+
+test('keeps the legacy saved-search request shape working', async t => {
+  const services = fakeServices();
+  const created = [];
+  services.queries.create = async input => { created.push(input); return { id: 'query-1', ...input }; };
+  const app = buildApp({ services, serveStatic: false });
+  t.after(() => app.close());
+
+  const response = await app.inject({
+    method: 'POST',
+    url: '/api/queries',
+    payload: { name: 'Legacy', keywords: 'systems administrator', location: 'Auburn NY', maxAgeDays: 7 },
+  });
+
+  assert.equal(response.statusCode, 201);
+  assert.deepEqual(created, [{ name: 'Legacy', keywords: 'systems administrator', location: 'Auburn NY', maxAgeDays: 7 }]);
+});
+
+test('rejects saved searches with unusable structured criteria', async t => {
+  const app = buildApp({ services: fakeServices(), serveStatic: false });
+  t.after(() => app.close());
+
+  const cases = [
+    ['no role families', { ...auburnCriteria, roleFamilies: [] }, 'VALIDATION_ERROR'],
+    ['unknown role family', { ...auburnCriteria, roleFamilies: ['data-science'] }, 'VALIDATION_ERROR'],
+    ['duplicate role families', { ...auburnCriteria, roleFamilies: ['it-support', 'it-support'] }, 'VALIDATION_ERROR'],
+    ['out of range latitude', { ...auburnCriteria, center: { ...auburnCriteria.center, latitude: 120 } }, 'VALIDATION_ERROR'],
+    ['out of range longitude', { ...auburnCriteria, center: { ...auburnCriteria.center, longitude: -200 } }, 'VALIDATION_ERROR'],
+    ['zero radius', { ...auburnCriteria, preferredRadiusMiles: 0 }, 'VALIDATION_ERROR'],
+    ['radius beyond the maximum', { ...auburnCriteria, maximumRadiusMiles: 60 }, 'VALIDATION_ERROR'],
+    ['unsupported age', { ...auburnCriteria, maxAgeDays: 21 }, 'VALIDATION_ERROR'],
+    ['negative salary', { ...auburnCriteria, minimumSalary: -1 }, 'VALIDATION_ERROR'],
+    ['duplicate terms', { ...auburnCriteria, excludedTerms: ['sales', 'sales'] }, 'VALIDATION_ERROR'],
+    ['inverted radii', { ...auburnCriteria, preferredRadiusMiles: 40, maximumRadiusMiles: 20 }, 'INVALID_RADIUS_RANGE'],
+  ];
+
+  for (const [label, payload, code] of cases) {
+    const response = await app.inject({ method: 'POST', url: '/api/queries', payload });
+    assert.equal(response.statusCode, 400, label);
+    assert.equal(response.json().error.code, code, label);
+  }
+});
+
+test('accepts a partial saved-search edit and rejects an empty one', async t => {
+  const services = fakeServices();
+  const updates = [];
+  services.queries.update = async (id, input) => { updates.push([id, input]); return { id, ...input }; };
+  const app = buildApp({ services, serveStatic: false });
+  t.after(() => app.close());
+
+  const patched = await app.inject({
+    method: 'PATCH',
+    url: '/api/queries/query-1',
+    payload: { enabled: false, roleFamilies: ['cloud-support'] },
+  });
+  assert.equal(patched.statusCode, 200);
+  assert.deepEqual(updates, [['query-1', { enabled: false, roleFamilies: ['cloud-support'] }]]);
+
+  const empty = await app.inject({ method: 'PATCH', url: '/api/queries/query-1', payload: {} });
+  assert.equal(empty.statusCode, 400);
+  assert.equal(empty.json().error.code, 'VALIDATION_ERROR');
+});
+
+test('resolves a search location only when the geocoder is configured', async t => {
+  const unconfigured = buildApp({ services: fakeServices(), serveStatic: false });
+  t.after(() => unconfigured.close());
+  const disabled = await unconfigured.inject({
+    method: 'POST', url: '/api/queries/resolve-location', payload: { query: 'Auburn NY' },
+  });
+  assert.equal(disabled.statusCode, 503);
+  assert.equal(disabled.json().error.code, 'GEOCODER_NOT_CONFIGURED');
+
+  const services = fakeServices();
+  const asked = [];
+  services.geocoder = {
+    resolve: async query => {
+      asked.push(query);
+      return [{ displayName: 'Auburn, New York', latitude: 42.9, longitude: -76.5, provider: 'nominatim', placeId: '1' }];
+    },
+  };
+  const app = buildApp({ services, serveStatic: false });
+  t.after(() => app.close());
+
+  const resolved = await app.inject({
+    method: 'POST', url: '/api/queries/resolve-location', payload: { query: 'Auburn NY' },
+  });
+  assert.equal(resolved.statusCode, 200);
+  assert.equal(resolved.json().candidates.length, 1);
+  assert.deepEqual(asked, ['Auburn NY']);
+
+  const blank = await app.inject({ method: 'POST', url: '/api/queries/resolve-location', payload: { query: '' } });
+  assert.equal(blank.statusCode, 400);
+  assert.equal(blank.json().error.code, 'VALIDATION_ERROR');
 });
 
 test('serves the built SPA while keeping unknown API routes JSON-only', async t => {

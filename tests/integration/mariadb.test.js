@@ -299,3 +299,132 @@ test('applies the structured discovery migration with Auburn defaults and safe s
     await pool.end();
   }
 });
+
+test('round-trips structured saved searches and preserves decided attribution', { skip: !enabled }, async () => {
+  const env = {
+    ...process.env,
+    DB_NAME: process.env.TEST_DB_NAME || 'waypoint_test',
+    DB_USER: process.env.TEST_DB_USER || 'waypoint_test_app',
+    DB_PASSWORD: process.env.TEST_DB_PASSWORD,
+    MIGRATION_DB_USER: process.env.TEST_MIGRATION_DB_USER || 'waypoint_test_migrate',
+    MIGRATION_DB_PASSWORD: process.env.TEST_MIGRATION_DB_PASSWORD,
+  };
+  await runMigrations(env);
+
+  const connection = env.DB_HOST
+    ? { host: env.DB_HOST, port: Number(env.DB_PORT || 3306) }
+    : { socketPath: env.DB_SOCKET || '/run/mysqld/mysqld.sock' };
+  const pool = createPool({
+    ...connection, database: env.DB_NAME, user: env.DB_USER, password: env.DB_PASSWORD, connectionLimit: 2,
+  });
+  const queries = createQueryRepository(pool);
+  const listings = createListingRepository(pool);
+  const created = [];
+
+  try {
+    const structured = await queries.create({
+      name: 'Structured Auburn',
+      center: {
+        displayName: 'Auburn, Cayuga County, New York, United States',
+        latitude: 42.9317,
+        longitude: -76.5661,
+        provider: 'nominatim',
+        placeId: '9001',
+      },
+      preferredRadiusMiles: 20,
+      maximumRadiusMiles: 40,
+      roleFamilies: ['it-support', 'systems-administration'],
+      requiredTerms: ['  Windows  ', 'windows', 'Active   Directory'],
+      optionalTerms: ['powershell'],
+      excludedTerms: ['sales'],
+      maxAgeDays: 14,
+      minimumSalary: 55000,
+      enabled: true,
+    });
+    created.push(structured.id);
+
+    assert.equal(structured.center.displayName, 'Auburn, Cayuga County, New York, United States');
+    assert.equal(structured.center.latitude, 42.9317);
+    assert.equal(structured.center.longitude, -76.5661);
+    assert.equal(structured.center.provider, 'nominatim');
+    assert.equal(structured.center.placeId, '9001');
+    assert.equal(structured.preferredRadiusMiles, 20);
+    assert.equal(structured.maximumRadiusMiles, 40);
+    assert.deepEqual(structured.roleFamilies, ['it-support', 'systems-administration']);
+    // Blank, whitespace-collapsed, and case-insensitive duplicate terms are normalized away.
+    assert.deepEqual(structured.requiredTerms, ['Windows', 'Active Directory']);
+    assert.deepEqual(structured.optionalTerms, ['powershell']);
+    assert.deepEqual(structured.excludedTerms, ['sales']);
+    assert.equal(structured.minimumSalary, 55000);
+    assert.equal(structured.enabled, true);
+
+    const reloaded = (await queries.list()).find(query => query.id === structured.id);
+    assert.deepEqual(reloaded.roleFamilies, ['it-support', 'systems-administration']);
+    assert.deepEqual(reloaded.requiredTerms, ['Windows', 'Active Directory']);
+
+    const relabelled = await queries.update(structured.id, {
+      roleFamilies: ['cloud-support'],
+      minimumSalary: null,
+      enabled: false,
+    });
+    assert.deepEqual(relabelled.roleFamilies, ['cloud-support']);
+    assert.equal(relabelled.minimumSalary, null);
+    assert.equal(relabelled.enabled, false);
+
+    await assert.rejects(
+      queries.update(structured.id, { preferredRadiusMiles: 40, maximumRadiusMiles: 20 }),
+      error => error.code === 'INVALID_RADIUS_RANGE'
+    );
+    await assert.rejects(
+      queries.update(structured.id, { roleFamilies: [] }),
+      error => error.code === 'ROLE_FAMILY_REQUIRED'
+    );
+
+    const attribution = await queries.create({
+      name: 'Attribution retention',
+      center: { displayName: 'Auburn, New York', latitude: 42.9317, longitude: -76.5661, provider: 'nominatim', placeId: '9002' },
+      preferredRadiusMiles: 20,
+      maximumRadiusMiles: 40,
+      roleFamilies: ['it-support'],
+      maxAgeDays: 14,
+    });
+    created.push(attribution.id);
+
+    const listingFor = suffix => normalizeAdzunaJob({
+      id: `structured-${suffix}`,
+      title: 'IT Support Specialist',
+      company: { display_name: 'Example' },
+      location: { display_name: 'Auburn, NY' },
+      description: 'Help desk',
+      redirect_url: `https://example.test/structured-${suffix}`,
+      created: '2026-07-16T10:00:00.000Z',
+    });
+
+    const pending = await withTransaction(pool, c => upsertListingMatch(c, listingFor('pending'), attribution.id, 70, '2026-07-16 12:00:00.000'));
+    const kept = await withTransaction(pool, c => upsertListingMatch(c, listingFor('saved'), attribution.id, 80, '2026-07-16 12:00:00.000'));
+    const refused = await withTransaction(pool, c => upsertListingMatch(c, listingFor('dismissed'), attribution.id, 60, '2026-07-16 12:00:00.000'));
+    await listings.save(kept.id);
+    await listings.dismiss(refused.id);
+
+    await queries.update(attribution.id, { roleFamilies: ['network-administration'] });
+
+    const survivors = await withConnection(pool, c => c.query(
+      'SELECT listing_id FROM listing_queries WHERE query_id = ? ORDER BY listing_id', [attribution.id]
+    ));
+    const survivingIds = survivors.map(row => row.listing_id).sort();
+    assert.deepEqual(survivingIds, [kept.id, refused.id].sort());
+
+    const statuses = await withConnection(pool, c => c.query(
+      'SELECT id, status FROM listings WHERE id IN (?, ?, ?)', [pending.id, kept.id, refused.id]
+    ));
+    const byId = new Map(statuses.map(row => [row.id, row.status]));
+    assert.equal(byId.get(kept.id), 'saved');
+    assert.equal(byId.get(refused.id), 'dismissed');
+    assert.equal(byId.get(pending.id), 'expired');
+  } finally {
+    for (const id of created) {
+      await queries.remove(id).catch(() => {});
+    }
+    await pool.end();
+  }
+});
