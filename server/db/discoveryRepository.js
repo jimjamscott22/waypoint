@@ -127,17 +127,6 @@ function buildConditions(filters) {
   const where = [];
   const having = [];
   const params = [];
-  const joinParams = [];
-
-  // Scoping the join to the selected query keeps role-family, distance-band, and
-  // score aggregates describing that one query association rather than any of the
-  // listing's other matches — a listing preferred for one query and expanded for
-  // another must not satisfy both independently once a query is selected.
-  let joinSql = '';
-  if (filters.queryId) {
-    joinSql = 'AND lq.query_id = ?';
-    joinParams.push(filters.queryId);
-  }
 
   if (filters.status) {
     where.push('l.status = ?');
@@ -148,21 +137,17 @@ function buildConditions(filters) {
     where.push("(l.title LIKE ? ESCAPE '\\\\' OR l.company LIKE ? ESCAPE '\\\\')");
     params.push(pattern, pattern);
   }
+  if (filters.queryId) {
+    where.push('EXISTS (SELECT 1 FROM listing_queries f WHERE f.listing_id = l.id AND f.query_id = ?)');
+    params.push(filters.queryId);
+  }
   if (filters.roleFamily) {
-    const scope = filters.queryId ? 'AND f.query_id = ?' : '';
-    where.push(`EXISTS (SELECT 1 FROM listing_query_role_families f WHERE f.listing_id = l.id ${scope} AND f.role_family = ?)`);
-    if (filters.queryId) params.push(filters.queryId);
+    where.push('EXISTS (SELECT 1 FROM listing_query_role_families f WHERE f.listing_id = l.id AND f.role_family = ?)');
     params.push(filters.roleFamily);
   }
   if (filters.distanceBand) {
-    if (filters.queryId) {
-      // lq is already scoped to the selected query by the join.
-      where.push('lq.distance_band = ?');
-      params.push(filters.distanceBand);
-    } else {
-      where.push('EXISTS (SELECT 1 FROM listing_queries f WHERE f.listing_id = l.id AND f.distance_band = ?)');
-      params.push(filters.distanceBand);
-    }
+    where.push('EXISTS (SELECT 1 FROM listing_queries f WHERE f.listing_id = l.id AND f.distance_band = ?)');
+    params.push(filters.distanceBand);
   }
   if (filters.maxAgeDays != null) {
     where.push('l.published_at >= DATE_SUB(UTC_TIMESTAMP(3), INTERVAL ? DAY)');
@@ -184,7 +169,7 @@ function buildConditions(filters) {
     having.push('score <= ?');
   }
 
-  return { joinSql, joinParams, where, having, params };
+  return { where, having, params };
 }
 
 export function createDiscoveryRepository(pool) {
@@ -194,8 +179,7 @@ export function createDiscoveryRepository(pool) {
     search(filters = {}) {
       const page = filters.page ?? 1;
       const pageSize = filters.pageSize ?? 25;
-      const { joinSql, joinParams, where, having, params: whereParams } = buildConditions(filters);
-      const params = [...joinParams, ...whereParams];
+      const { where, having, params } = buildConditions(filters);
       const havingParams = [filters.minScore, filters.maxScore].filter(value => value != null);
       const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
       const havingSql = having.length ? `HAVING ${having.join(' AND ')}` : '';
@@ -203,7 +187,7 @@ export function createDiscoveryRepository(pool) {
 
       const groupedSql = `
         FROM listings l
-        JOIN listing_queries lq ON lq.listing_id = l.id ${joinSql}
+        JOIN listing_queries lq ON lq.listing_id = l.id
         ${whereSql}
         GROUP BY l.id
         ${havingSql}`;
