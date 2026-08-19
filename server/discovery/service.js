@@ -95,7 +95,9 @@ export function createDiscoveryService({
       familyCounters.providerResultCount = Math.max(familyCounters.providerResultCount, response.providerCount ?? 0);
       counters.recordsReceived += response.results.length;
       familyCounters.recordsReceived += response.results.length;
-      counters.malformedRecords += response.malformedCount ?? 0;
+      const malformedCount = response.malformedCount ?? 0;
+      counters.malformedRecords += malformedCount;
+      const rawResultCount = response.results.length + malformedCount;
 
       for (const listing of response.results) {
         const evaluation = evaluateListing({ query, listing, roleFamily, now: at });
@@ -112,7 +114,7 @@ export function createDiscoveryService({
         truncated = true;
         break;
       }
-      if (response.results.length < (response.pageSize ?? response.results.length)) break;
+      if (rawResultCount < (response.pageSize ?? rawResultCount)) break;
       if (page === limits.maxPagesPerFamily) truncated = true;
     }
 
@@ -161,12 +163,16 @@ export function createDiscoveryService({
 
         // Preview never writes, so duplicate and decision counts come from a read-only lookup.
         const statuses = await discoveryRepository.statusesByProviderId('adzuna', [...accepted.keys()]);
+        let reopened = 0;
         for (const status of statuses.values()) {
           if (status === 'new') counters.duplicates += 1;
           else if (status === 'saved') counters.previouslySaved += 1;
           else if (status === 'dismissed') counters.previouslyDismissed += 1;
+          // The persisted path reopens an expired listing and counts it as new;
+          // preview must agree so its diagnostics match the run that follows.
+          else if (status === 'expired') reopened += 1;
         }
-        counters.newMatches = accepted.size - statuses.size;
+        counters.newMatches = accepted.size - statuses.size + reopened;
 
         const results = [...accepted.values()]
           .sort((left, right) => right.evaluation.score - left.evaluation.score

@@ -83,6 +83,22 @@ function normalizeCenter(center) {
   };
 }
 
+function hasResolvedCenter(center) {
+  return Number.isFinite(center.latitude) && Number.isFinite(center.longitude);
+}
+
+// The legacy form has no geocoding UI, so it can only confirm a center that already
+// matches what is stored. Any other text yields an unresolved center rather than
+// silently discarding coordinates the structured flow previously confirmed.
+function resolveLegacyCenter(location, current, row) {
+  const displayName = String(location ?? '').trim() || null;
+  if (current) {
+    const existing = centerFromRow(row);
+    if (existing.displayName === displayName) return existing;
+  }
+  return { displayName, latitude: null, longitude: null, provider: null, placeId: null };
+}
+
 function centerFromRow(row) {
   return {
     displayName: row.center_display_name ?? null,
@@ -105,7 +121,7 @@ function resolveRecord(input, current, currentFamilies) {
 
   const center = legacy
     ? (Object.hasOwn(input, 'location')
-      ? { displayName: String(input.location ?? '').trim() || null, latitude: null, longitude: null, provider: null, placeId: null }
+      ? resolveLegacyCenter(input.location, current, row)
       : (current ? centerFromRow(row) : normalizeCenter(null)))
     : normalizeCenter(pick(input, 'center', current ? centerFromRow(row) : null));
 
@@ -155,7 +171,10 @@ function resolveRecord(input, current, currentFamilies) {
       : normalizeTerms(pick(input, 'excludedTerms', parseStoredTerms(row.excluded_terms))),
     maxAgeDays: Number(pick(input, 'maxAgeDays', row.max_age_days)),
     minimumSalary: minimumSalary == null ? null : Number(minimumSalary),
-    enabled: Boolean(pick(input, 'enabled', current ? Boolean(row.enabled) : true)),
+    // A search with an unresolved center must never be stored as enabled — it
+    // would otherwise fail every scheduled run with QUERY_LOCATION_UNRESOLVED.
+    enabled: hasResolvedCenter(center)
+      && Boolean(pick(input, 'enabled', current ? Boolean(row.enabled) : true)),
     // Only the legacy compatibility path still writes the legacy keywords column.
     keywords: legacy && Object.hasOwn(input, 'keywords')
       ? String(input.keywords)
