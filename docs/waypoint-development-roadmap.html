@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <meta name="description" content="Waypoint development findings and prioritized roadmap as of August 22, 2026." />
+  <title>Waypoint — Development Roadmap</title>
+  <style>
+    :root {
+      --page: #eef1f5;
+      --paper: #ffffff;
+      --ink: #1c2734;
+      --body: #3d4c5d;
+      --muted: #5c6b7c;
+      --faint: #93a1b1;
+      --line: #e3e8ee;
+      --line-strong: #c4cdd8;
+      --accent: #2f6fdb;
+      --accent-soft: #e8effc;
+      --warning: #a65d00;
+      --warning-soft: #fdf1df;
+      --danger: #b3423a;
+      --danger-soft: #fff0ee;
+      --success: #1f7a52;
+      --success-soft: #e3f4ec;
+      --sidebar: #1c2734;
+      --sidebar-text: #c8d2dd;
+      --sidebar-muted: #9fb0c2;
+      --display: "Aptos Display", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+      --sans: "Public Sans", "Aptos", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+      --mono: "SFMono-Regular", "Cascadia Code", "Liberation Mono", Consolas, monospace;
+      --shadow: 0 24px 70px rgba(28, 39, 52, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; }
+    a:focus-visible, button:focus-visible {
+      outline: 3px solid rgba(47, 111, 219, 0.35);
+      outline-offset: 3px;
+    }
+
+    .skip-link {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 20;
+      transform: translateY(-150%);
+      border-radius: 7px;
+      background: var(--paper);
+      color: var(--ink);
+      padding: 9px 13px;
+      font-weight: 700;
+      box-shadow: var(--shadow);
+      transition: transform 140ms ease;
+    }
+    .skip-link:focus { transform: translateY(0); }
+
+    .progress {
+      position: fixed;
+      inset: 0 auto auto 0;
+      z-index: 30;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent) var(--read-progress, 0%), transparent 0);
+      pointer-events: none;
+    }
+
+    .page {
+      display: grid;
+      grid-template-columns: 264px minmax(0, 1fr);
+      min-width: 0;
+      min-height: 100vh;
+    }
+    .page > * { min-width: 0; }
+
+    .rail {
+      position: relative;
+      background: var(--sidebar);
+      color: var(--sidebar-text);
+    }
+
+    .rail-inner {
+      position: sticky;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      padding: 30px 26px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      margin-bottom: 58px;
+      color: #fff;
+      font: 700 17px/1 var(--display);
+      letter-spacing: -0.01em;
+    }
+    .brand-mark {
+      display: grid;
+      width: 31px;
+      height: 31px;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--accent);
+      font-size: 14px;
+    }
+
+    .rail-label,
+    .eyebrow,
+    .section-index,
+    .meta-label,
+    .table-label {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .rail-label { color: var(--sidebar-muted); }
+    .rail nav { margin-top: 12px; }
+    .rail nav a {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      border-radius: 7px;
+      padding: 8px 9px;
+      color: var(--sidebar-muted);
+      font-size: 12.5px;
+      text-decoration: none;
+      transition: color 140ms ease, background 140ms ease, transform 140ms ease;
+    }
+    .rail nav a::before {
+      width: 6px;
+      height: 6px;
+      border: 1px solid #6b7a8c;
+      border-radius: 50%;
+      content: "";
+      transition: background 140ms ease, border-color 140ms ease, border-radius 140ms ease;
+    }
+    .rail nav a:hover,
+    .rail nav a[aria-current="true"] {
+      background: rgba(255, 255, 255, 0.07);
+      color: #fff;
+      transform: translateX(2px);
+    }
+    .rail nav a[aria-current="true"]::before {
+      border-color: var(--accent);
+      border-radius: 2px;
+      background: var(--accent);
+    }
+
+    .rail-note {
+      margin-top: auto;
+      border-top: 1px solid rgba(255, 255, 255, 0.11);
+      padding-top: 18px;
+      color: var(--sidebar-muted);
+      font-size: 11px;
+      line-height: 1.55;
+    }
+    .rail-note strong { display: block; margin-bottom: 4px; color: #fff; font-size: 12px; }
+
+    main {
+      width: min(1120px, 100%);
+      min-width: 0;
+      margin: 0 auto;
+      padding: 58px clamp(28px, 6vw, 88px) 100px;
+    }
+
+    .masthead {
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid var(--line-strong);
+      padding-bottom: 42px;
+    }
+    .masthead::after {
+      position: absolute;
+      right: -30px;
+      bottom: -118px;
+      width: 310px;
+      height: 310px;
+      border: 62px solid rgba(47, 111, 219, 0.07);
+      border-radius: 50%;
+      content: "";
+      pointer-events: none;
+    }
+
+    .eyebrow { margin: 0 0 18px; color: var(--accent); }
+    h1, h2, h3 { font-family: var(--display); }
+    h1 {
+      max-width: 820px;
+      margin: 0;
+      font-size: clamp(46px, 7vw, 86px);
+      font-weight: 710;
+      letter-spacing: -0.055em;
+      line-height: 0.95;
+    }
+    .lede {
+      max-width: 670px;
+      margin: 25px 0 0;
+      color: var(--body);
+      font-size: clamp(17px, 2vw, 22px);
+      line-height: 1.5;
+    }
+
+    .snapshot {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px 24px;
+      margin-top: 34px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .snapshot span { display: inline-flex; align-items: center; gap: 7px; }
+    .snapshot span::before {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      content: "";
+    }
+    .snapshot code {
+      font-family: var(--mono);
+      color: var(--ink);
+      font-size: 0.95em;
+    }
+
+    .status-line {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 28px;
+      border-bottom: 1px solid var(--line);
+      padding: 42px 0 44px;
+    }
+    .status-kicker { color: var(--muted); font-size: 13px; font-weight: 700; }
+    .status-line h2 {
+      max-width: 700px;
+      margin: 6px 0 0;
+      font-size: clamp(28px, 4vw, 48px);
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+    }
+    .status-score {
+      display: grid;
+      min-width: 138px;
+      justify-items: end;
+      color: var(--muted);
+      font-size: 11px;
+      text-align: right;
+    }
+    .status-score strong {
+      color: var(--accent);
+      font: 720 54px/1 var(--display);
+      letter-spacing: -0.06em;
+    }
+
+    .section {
+      border-bottom: 1px solid var(--line-strong);
+      padding: 64px 0;
+      scroll-margin-top: 24px;
+    }
+    .section-heading {
+      display: grid;
+      grid-template-columns: 76px minmax(0, 1fr);
+      gap: 18px;
+      margin-bottom: 34px;
+    }
+    .section-index { padding-top: 9px; color: var(--faint); }
+    .section h2 {
+      margin: 0;
+      font-size: clamp(27px, 4vw, 43px);
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+    }
+    .section-intro {
+      max-width: 700px;
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .priority {
+      display: grid;
+      grid-template-columns: 76px minmax(0, 1fr) minmax(170px, 0.36fr);
+      gap: 18px;
+      border-top: 1px solid var(--line);
+      padding: 27px 0 29px;
+    }
+    .priority:last-child { padding-bottom: 0; }
+    .priority-number {
+      color: var(--faint);
+      font: 650 25px/1 var(--display);
+      letter-spacing: -0.03em;
+    }
+    .priority h3 {
+      margin: -3px 0 7px;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+    }
+    .priority p { margin: 0; color: var(--body); font-size: 13.5px; }
+    .priority ul { margin: 12px 0 0; padding-left: 17px; color: var(--body); font-size: 13px; }
+    .priority li { margin: 4px 0; }
+    .priority-meta { color: var(--muted); font-size: 11.5px; }
+    .priority-meta strong { display: block; margin-bottom: 4px; color: var(--ink); font-size: 12px; }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      width: fit-content;
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .tag::before { width: 5px; height: 5px; border-radius: 50%; content: ""; }
+    .tag-danger { background: var(--danger-soft); color: var(--danger); }
+    .tag-danger::before { background: var(--danger); }
+    .tag-build { background: var(--accent-soft); color: var(--accent); }
+    .tag-build::before { background: var(--accent); }
+    .tag-later { background: #f3f5f7; color: var(--muted); }
+    .tag-later::before { background: var(--faint); }
+
+    .advisories {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 28px;
+      border-top: 1px solid var(--line-strong);
+      border-left: 1px solid var(--line-strong);
+    }
+    .advisory {
+      min-height: 138px;
+      border-right: 1px solid var(--line-strong);
+      border-bottom: 1px solid var(--line-strong);
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.58);
+      transition: background 150ms ease, transform 150ms ease;
+    }
+    .advisory:hover { background: var(--paper); transform: translateY(-2px); }
+    .advisory code { font: 700 12px var(--mono); }
+    .advisory p { margin: 10px 0 0; color: var(--muted); font-size: 12px; }
+    .advisory a { color: var(--accent); text-underline-offset: 3px; }
+
+    .incident-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border-top: 1px solid var(--line-strong);
+      border-left: 1px solid var(--line-strong);
+      margin-bottom: 28px;
+    }
+    .incident-metric {
+      border-right: 1px solid var(--line-strong);
+      border-bottom: 1px solid var(--line-strong);
+      padding: 17px 18px;
+    }
+    .incident-metric strong {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--danger);
+      font: 720 27px/1 var(--display);
+      letter-spacing: -0.04em;
+    }
+    .incident-metric span { color: var(--muted); font-size: 11px; }
+    .root-cause {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 34px;
+      border-left: 3px solid var(--danger);
+      background: linear-gradient(90deg, var(--danger-soft), rgba(255, 240, 238, 0.15));
+      padding: 22px 24px;
+    }
+    .root-cause h3 { margin: 0 0 8px; font-size: 17px; }
+    .root-cause p { margin: 0; color: var(--body); font-size: 12.5px; }
+    .root-cause ul { margin: 9px 0 0; padding-left: 17px; color: var(--body); font-size: 12px; }
+
+    .matrix { max-width: 100%; overflow-x: auto; border-top: 1px solid var(--line-strong); }
+    table { width: 100%; border-collapse: collapse; min-width: 680px; }
+    th, td { border-bottom: 1px solid var(--line); padding: 16px 14px; text-align: left; vertical-align: top; }
+    th { color: var(--faint); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+    td { color: var(--body); font-size: 12.5px; }
+    td:first-child { width: 22%; color: var(--ink); font-weight: 750; }
+    td:nth-child(2), td:nth-child(3) { width: 39%; }
+    .done { color: var(--success); font-weight: 750; }
+    .open { color: var(--danger); font-weight: 750; }
+
+    .horizon {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 54px;
+      align-items: start;
+    }
+    .horizon h3 { margin: 0 0 12px; font-size: 25px; letter-spacing: -0.03em; }
+    .horizon p { margin: 0; color: var(--body); }
+    .horizon-list { border-top: 1px solid var(--line-strong); }
+    .horizon-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      border-bottom: 1px solid var(--line);
+      padding: 13px 0;
+      color: var(--body);
+      font-size: 12.5px;
+    }
+    .horizon-item span:last-child { color: var(--faint); }
+
+    .constraints {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0 38px;
+      border-top: 1px solid var(--line-strong);
+    }
+    .constraint { border-bottom: 1px solid var(--line); padding: 20px 0; }
+    .constraint strong { display: block; margin-bottom: 5px; font-size: 13px; }
+    .constraint p { margin: 0; color: var(--muted); font-size: 12px; }
+
+    .evidence-list { border-top: 1px solid var(--line-strong); }
+    .evidence-link {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      padding: 14px 0;
+      color: var(--body);
+      text-decoration: none;
+      transition: color 140ms ease, padding-left 140ms ease;
+    }
+    .evidence-link:hover { padding-left: 5px; color: var(--accent); }
+    .evidence-link code { color: inherit; font: 600 11.5px var(--mono); }
+    .evidence-link span { color: var(--faint); font-size: 11px; }
+
+    .scope-note {
+      margin-top: 30px;
+      border-left: 3px solid var(--accent);
+      padding: 2px 0 2px 18px;
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+    .scope-note strong { color: var(--ink); }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      padding-top: 28px;
+      color: var(--faint);
+      font-size: 10.5px;
+    }
+
+    .reveal {
+      opacity: 1;
+      transform: none;
+    }
+    .masthead.reveal { animation: rise-in 480ms cubic-bezier(.2, .8, .2, 1) both; }
+    .status-line.reveal { animation: rise-in 480ms 90ms cubic-bezier(.2, .8, .2, 1) both; }
+    @keyframes rise-in {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 900px) {
+      .page { grid-template-columns: minmax(0, 1fr); }
+      .rail { position: static; }
+      .rail-inner { position: static; min-height: auto; padding: 18px 22px; }
+      .brand { margin: 0; }
+      .rail-label, .rail nav, .rail-note { display: none; }
+      main { padding-top: 38px; }
+      .status-line { grid-template-columns: 1fr; }
+      .status-score { justify-items: start; text-align: left; }
+      .priority { grid-template-columns: 52px minmax(0, 1fr); }
+      .priority-meta { grid-column: 2; }
+      .horizon { grid-template-columns: 1fr; gap: 30px; }
+    }
+
+    @media (max-width: 620px) {
+      main { padding-inline: 20px; padding-bottom: 70px; }
+      h1 { font-size: clamp(42px, 15vw, 62px); }
+      .masthead { padding-bottom: 32px; }
+      .masthead::after { display: none; }
+      .section { padding: 48px 0; }
+      .section-heading { grid-template-columns: 1fr; gap: 5px; }
+      .priority { grid-template-columns: 40px minmax(0, 1fr); gap: 12px; }
+      .advisories, .constraints { grid-template-columns: 1fr; }
+      .incident-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .root-cause { grid-template-columns: 1fr; }
+      footer { flex-direction: column; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+    }
+
+    @media print {
+      @page { margin: 16mm; }
+      body { background: #fff; font-size: 10pt; }
+      .page { display: block; }
+      .rail, .progress, .skip-link { display: none; }
+      main { width: 100%; max-width: none; padding: 0; }
+      .masthead::after { display: none; }
+      .section { break-inside: avoid; padding: 9mm 0; }
+      .priority, .advisory, .constraint { break-inside: avoid; }
+      a { text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to roadmap</a>
+  <div class="progress" aria-hidden="true"></div>
+
+  <div class="page">
+    <aside class="rail" aria-label="Document navigation">
+      <div class="rail-inner">
+        <div class="brand"><span class="brand-mark">W</span> Waypoint</div>
+        <div class="rail-label">Development brief</div>
+        <nav>
+          <a href="#overview" aria-current="true">Overview</a>
+          <a href="#live-blocker">Live blocker</a>
+          <a href="#security">Security first</a>
+          <a href="#release">Release scope</a>
+          <a href="#matrix">Current state</a>
+          <a href="#horizon">Next horizon</a>
+          <a href="#constraints">Constraints</a>
+          <a href="#evidence">Evidence</a>
+        </nav>
+        <div class="rail-note">
+          <strong>Snapshot</strong>
+          22 August 2026<br />
+          master · 5d9d5e1
+        </div>
+      </div>
+    </aside>
+
+    <main id="content">
+      <header class="masthead reveal" id="overview">
+        <p class="eyebrow">Repository findings · prioritized roadmap</p>
+        <h1>Waypoint is stable at the core. The product surface is next.</h1>
+        <p class="lede">Structured discovery and Insights are in place. One live search blocker and four focused development slices remain before the current release vision is complete.</p>
+        <div class="snapshot" aria-label="Repository snapshot">
+          <span>Branch <code>master</code></span>
+          <span>Commit <code>5d9d5e1</code></span>
+          <span>React + Fastify + MariaDB</span>
+          <span>Private Tailscale deployment</span>
+        </div>
+      </header>
+
+      <div class="status-line reveal" aria-label="Overall status">
+        <div>
+          <div class="status-kicker">Overall assessment</div>
+          <h2>Backend discovery ready.<br />Frontend workflow incomplete.</h2>
+        </div>
+        <div class="status-score"><strong>1+4</strong>live blocker · planned slices</div>
+      </div>
+
+      <section class="section reveal" id="live-blocker">
+        <div class="section-heading">
+          <div class="section-index">Live finding</div>
+          <div>
+            <h2>Saved-search locations must be confirmed before discovery can run.</h2>
+            <p class="section-intro">The latest production run failed before making any provider requests. This is a saved-query data-state problem, not an Adzuna or geocoder-configuration failure.</p>
+          </div>
+        </div>
+
+        <div class="incident-strip" aria-label="Latest production run summary">
+          <div class="incident-metric"><strong>failed</strong><span>latest run status</span></div>
+          <div class="incident-metric"><strong>0 / 2</strong><span>successful searches</span></div>
+          <div class="incident-metric"><strong>0</strong><span>provider listings fetched</span></div>
+          <div class="incident-metric"><strong>227</strong><span>retained review backlog</span></div>
+        </div>
+
+        <div class="root-cause">
+          <div>
+            <h3>Confirmed root cause</h3>
+            <p>The searches <strong>08/06/26</strong> and <strong>IT Help Desk</strong> had location labels but no confirmed latitude, longitude, provider, or place ID. The discovery service rejected both with <em>Search location is not confirmed</em>.</p>
+            <ul>
+              <li>Location resolution is configured and healthy.</li>
+              <li>No role-family provider searches were attempted.</li>
+              <li>The failed run produced zero new matches.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Development implication</h3>
+            <p>The missing Capture &amp; queries workspace is now an operational blocker: the current legacy editor cannot resolve a place and require explicit candidate confirmation. The recovery flow must confirm coordinates before enabling or running a search.</p>
+            <ul>
+              <li>Separate “latest run output” from “existing review backlog” in the UI.</li>
+              <li>Explain unresolved-center failures beside the affected search.</li>
+              <li>Prevent enabled searches from remaining unresolved.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="section reveal" id="security">
+        <div class="section-heading">
+          <div class="section-index">Priority 00</div>
+          <div>
+            <h2>Patch production dependencies before feature expansion.</h2>
+            <p class="section-intro">The current production audit reports four high-severity vulnerable packages. Tailscale narrows exposure; it does not remove the need to upgrade and regression-test the server stack.</p>
+          </div>
+        </div>
+
+        <div class="priority">
+          <div class="priority-number">00</div>
+          <div>
+            <span class="tag tag-danger">Security maintenance</span>
+            <h3>Controlled dependency upgrade</h3>
+            <p>Update the lockfile deliberately, run the complete API and integration suite, rebuild the production bundle, and redeploy only after the routing and static-file behavior is verified.</p>
+          </div>
+          <div class="priority-meta"><strong>Why first</strong>A direct static-serving advisory includes path traversal; the remaining findings affect routing, URI parsing, and expansion behavior.</div>
+        </div>
+
+        <div class="advisories" aria-label="Current npm audit findings">
+          <article class="advisory">
+            <code>@fastify/static</code>
+            <p>Direct dependency. Non-canonical path authorization bypass and path-traversal route-guard bypass. Fix available.</p>
+            <a href="https://github.com/advisories/GHSA-83w8-p2f5-377r">View high-severity advisory</a>
+          </article>
+          <article class="advisory">
+            <code>find-my-way</code>
+            <p>Transitive Fastify router dependency. HTTP/2 denial-of-service advisory. Fix available.</p>
+            <a href="https://github.com/advisories/GHSA-c96f-x56v-gq3h">View advisory</a>
+          </article>
+          <article class="advisory">
+            <code>fast-uri</code>
+            <p>Transitive URI parser. Host-confusion findings involving backslash authority delimiters. Fix available.</p>
+            <a href="https://github.com/advisories/GHSA-7p8r-x3mc-p8w7">View advisory</a>
+          </article>
+          <article class="advisory">
+            <code>brace-expansion</code>
+            <p>Transitive dependency. Unbounded expansion can exhaust memory and terminate the process. Fix available.</p>
+            <a href="https://github.com/advisories/GHSA-rgw5-rvv9-x895">View advisory</a>
+          </article>
+        </div>
+      </section>
+
+      <section class="section reveal" id="release">
+        <div class="section-heading">
+          <div class="section-index">Priorities 01–04</div>
+          <div>
+            <h2>Complete the release from the user’s point of view.</h2>
+            <p class="section-intro">The remaining work is concentrated at the product boundary: expose the discovery engine, replace sample Pipeline claims, make URL capture real, and close the verification loop.</p>
+          </div>
+        </div>
+
+        <article class="priority">
+          <div class="priority-number">01</div>
+          <div>
+            <span class="tag tag-build">Build now</span>
+            <h3>Activate Capture &amp; queries</h3>
+            <p>The server already provides structured search CRUD, location resolution, previews, per-query runs, diagnostics, listing filters, sorting, and pagination. Build the React workspace that makes those capabilities usable.</p>
+            <ul>
+              <li>Structured search builder with confirmed OpenStreetMap location candidates</li>
+              <li>Preview, save, duplicate, enable/disable, delete, run-one, and run-all actions</li>
+              <li>Run diagnostics and a filterable, sortable, paginated discovery result table</li>
+              <li>Compact Pipeline links into the full management workspace</li>
+            </ul>
+          </div>
+          <div class="priority-meta"><strong>Confirmed gap</strong>The sidebar still disables this destination, while the visible editor only exposes legacy keywords and location fields.</div>
+        </article>
+
+        <article class="priority">
+          <div class="priority-number">02</div>
+          <div>
+            <span class="tag tag-build">Build now</span>
+            <h3>Add real Pipeline intelligence</h3>
+            <p>Replace the sample header values with MariaDB-backed activity metrics and introduce composable filters without breaking the visible-only reorder invariant.</p>
+            <ul>
+              <li>Applied-this-week, active-interview, response-rate, and overdue-follow-up metrics</li>
+              <li>Text, location, urgency, follow-up, contact, and activity-date filters</li>
+              <li>Neutral empty states and a live oldest-overdue summary in the sidebar</li>
+            </ul>
+          </div>
+          <div class="priority-meta"><strong>Confirmed gap</strong>The Pipeline currently presents fixed values: 4 applied, 2 interviews, and a 38% response rate.</div>
+        </article>
+
+        <article class="priority">
+          <div class="priority-number">03</div>
+          <div>
+            <span class="tag tag-build">Build now</span>
+            <h3>Replace the URL-capture stub</h3>
+            <p>Move URL extraction to a bounded server endpoint. Parse JobPosting JSON-LD first, then metadata fallbacks, and always return an editable draft with safe warnings.</p>
+            <ul>
+              <li>Block private, loopback, link-local, reserved, and credential-bearing targets</li>
+              <li>Pin DNS resolution and revalidate redirects to prevent rebinding</li>
+              <li>Enforce redirect, timeout, response-size, and content-type limits</li>
+              <li>Extract role, company, location, and salary when available</li>
+            </ul>
+          </div>
+          <div class="priority-meta"><strong>Confirmed gap</strong>Pasting a URL currently creates an empty draft; every field must be entered manually.</div>
+        </article>
+
+        <article class="priority">
+          <div class="priority-number">04</div>
+          <div>
+            <span class="tag tag-build">Close the release</span>
+            <h3>Verify the whole workflow and synchronize documentation</h3>
+            <p>Treat the feature set as complete only after deterministic tests, supported-viewport browser checks, live provider evidence, and repository documentation all agree.</p>
+            <ul>
+              <li>Unit, API, MariaDB integration, production build, and whitespace checks</li>
+              <li>Browser validation at the 1280-pixel supported minimum</li>
+              <li>Credentialed Auburn-area Adzuna smoke run with sanitized evidence</li>
+              <li>README, project summary, HTML summary, and deployment runbook updates</li>
+            </ul>
+          </div>
+          <div class="priority-meta"><strong>Release rule</strong>Skipped integration, browser, or provider checks must be reported rather than treated as passing.</div>
+        </article>
+      </section>
+
+      <section class="section reveal" id="matrix">
+        <div class="section-heading">
+          <div class="section-index">State map</div>
+          <div>
+            <h2>What exists now versus what remains.</h2>
+            <p class="section-intro">Most infrastructure is not waiting to be invented. The strongest path is to finish the planned product layers on top of the working server contracts.</p>
+          </div>
+        </div>
+
+        <div class="matrix">
+          <table>
+            <thead><tr><th>Area</th><th>Available now</th><th>Remaining work</th></tr></thead>
+            <tbody>
+              <tr><td>Discovery</td><td><span class="done">Ready:</span> structured schema, geocoding, planning, filtering, scoring, request budgets, diagnostics, preview and run APIs.</td><td><span class="open">Open:</span> confirm migrated search centers, complete Capture &amp; queries, and separate run output from retained queue inventory.</td></tr>
+              <tr><td>Pipeline</td><td><span class="done">Ready:</span> job CRUD, stages, details, next-action dates, drag reorder, undo delete, MariaDB persistence.</td><td><span class="open">Open:</span> real header metrics, follow-up summary, and composable filters.</td></tr>
+              <tr><td>Insights</td><td><span class="done">Ready:</span> range metrics, cohort funnel, weekly activity, recommendations, and history-coverage disclosure.</td><td>Refine only as real usage exposes gaps; no primary build slice identified.</td></tr>
+              <tr><td>URL capture</td><td><span class="done">Ready:</span> editable draft, commit, and discard workflow.</td><td><span class="open">Open:</span> safe server fetch, metadata extraction, warnings, and failure handling.</td></tr>
+              <tr><td>Operations</td><td><span class="done">Ready:</span> immutable deployment, migrations, systemd services/timers, backup, and Tailscale Serve.</td><td><span class="open">Open:</span> dependency remediation, repeatable CI, and final release evidence.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section reveal" id="horizon">
+        <div class="section-heading">
+          <div class="section-index">After release</div>
+          <div>
+            <h2>Build relationships after discovery proves itself.</h2>
+          </div>
+        </div>
+
+        <div class="horizon">
+          <div>
+            <span class="tag tag-later">Next recommended release</span>
+            <h3>Contacts &amp; outreach</h3>
+            <p>Link people to jobs, keep interaction history, schedule follow-ups, track referrals, and reuse outreach notes. This turns Waypoint from a pipeline tracker into a lightweight relationship system without diluting the current release.</p>
+          </div>
+          <div class="horizon-list" aria-label="Later candidates">
+            <div class="horizon-item"><span>Contact records linked to jobs</span><span>Next</span></div>
+            <div class="horizon-item"><span>Interaction and referral history</span><span>Next</span></div>
+            <div class="horizon-item"><span>Reusable outreach notes</span><span>Next</span></div>
+            <div class="horizon-item"><span>Resume/document tracking</span><span>Evaluate</span></div>
+            <div class="horizon-item"><span>Second listing provider</span><span>Evaluate</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section reveal" id="constraints">
+        <div class="section-heading">
+          <div class="section-index">Technical debt</div>
+          <div>
+            <h2>Known constraints to manage deliberately.</h2>
+            <p class="section-intro">These are not all immediate feature blockers, but they define the safe operating boundary and the cost of future change.</p>
+          </div>
+        </div>
+
+        <div class="constraints">
+          <div class="constraint"><strong>No application authentication</strong><p>Tailscale is the only access boundary. Do not publicly bind or expose the server until authorization is designed.</p></div>
+          <div class="constraint"><strong>No continuous integration</strong><p>Tests and deployments are manual, increasing the chance that a dependency or feature regression reaches production.</p></div>
+          <div class="constraint"><strong>No component or hook tests</strong><p>The test suite exercises pure logic, services, and APIs, but no DOM environment is configured for React behavior.</p></div>
+          <div class="constraint"><strong>Forward-only migrations</strong><p>Application code can roll back to a prior release; database rollback requires a verified backup when explicitly necessary.</p></div>
+          <div class="constraint"><strong>Desktop-first layout</strong><p>The supported application shell has a 1280-pixel minimum width. Mobile behavior is not part of the current product contract.</p></div>
+          <div class="constraint"><strong>GitHub CLI authentication is stale</strong><p>The local checkout shows only master, but live issues and pull requests could not be inventoried until the CLI token is renewed.</p></div>
+        </div>
+      </section>
+
+      <section class="section reveal" id="evidence">
+        <div class="section-heading">
+          <div class="section-index">Evidence</div>
+          <div>
+            <h2>Repository sources behind this brief.</h2>
+            <p class="section-intro">Open these files from the repository to inspect the implementation evidence and the approved development sequence.</p>
+          </div>
+        </div>
+
+        <div class="evidence-list">
+          <a class="evidence-link" href="../src/components/Sidebar.jsx"><code>src/components/Sidebar.jsx</code><span>disabled destinations</span></a>
+          <a class="evidence-link" href="../src/components/Header.jsx"><code>src/components/Header.jsx</code><span>hard-coded Pipeline claims</span></a>
+          <a class="evidence-link" href="../src/components/SavedQueries.jsx"><code>src/components/SavedQueries.jsx</code><span>legacy compact query editor</span></a>
+          <a class="evidence-link" href="../src/components/ReviewQueue.jsx"><code>src/components/ReviewQueue.jsx</code><span>run summary beside retained queue count</span></a>
+          <a class="evidence-link" href="../src/lib/parseJobUrl.js"><code>src/lib/parseJobUrl.js</code><span>URL-capture stub</span></a>
+          <a class="evidence-link" href="superpowers/plans/2026-08-12-discovery-reliability.md"><code>docs/superpowers/plans/2026-08-12-discovery-reliability.md</code><span>tasks 7–10</span></a>
+          <a class="evidence-link" href="superpowers/specs/2026-08-12-discovery-reliability-design.md"><code>docs/superpowers/specs/2026-08-12-discovery-reliability-design.md</code><span>acceptance criteria and follow-up direction</span></a>
+          <a class="evidence-link" href="project-summary.md"><code>docs/project-summary.md</code><span>known gaps and operating rules</span></a>
+        </div>
+
+        <p class="scope-note"><strong>Scope note.</strong> This assessment reflects the checked-out repository at commit <code>5d9d5e1</code>, local Git references, the documented development plan, a live npm production audit, and filtered production API diagnostics on 22 August 2026. The GitHub CLI reported an invalid token, so online issues and pull requests were not included.</p>
+      </section>
+
+      <footer>
+        <span>Waypoint · Development Roadmap</span>
+        <span>Generated from repository evidence · 2026-08-22</span>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const links = [...document.querySelectorAll('.rail nav a')];
+      const sections = links.map(link => document.querySelector(link.getAttribute('href'))).filter(Boolean);
+      const updateProgress = () => {
+        const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+        const progress = scrollable > 0 ? Math.min(100, Math.max(0, (window.scrollY / scrollable) * 100)) : 0;
+        root.style.setProperty('--read-progress', `${progress}%`);
+      };
+
+      const updateNavigation = () => {
+        const marker = window.scrollY + Math.min(260, window.innerHeight * 0.34);
+        let current = sections[0];
+        for (const section of sections) {
+          if (section.offsetTop <= marker) current = section;
+        }
+        links.forEach(link => link.setAttribute('aria-current', String(link.getAttribute('href') === `#${current.id}`)));
+      };
+
+      window.addEventListener('scroll', () => {
+        updateProgress();
+        updateNavigation();
+      }, { passive: true });
+      window.addEventListener('resize', updateProgress, { passive: true });
+      updateProgress();
+      updateNavigation();
+    })();
+  </script>
+</body>
+</html>

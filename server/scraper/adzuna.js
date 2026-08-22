@@ -75,13 +75,12 @@ function buildUrl({ appId, appKey, parameters }) {
   searchParams.set('app_key', appKey);
   searchParams.set('results_per_page', String(parameters.resultsPerPage));
   searchParams.set('content-type', 'application/json');
-  searchParams.set('what_or', parameters.whatOr);
+  searchParams.set('what_phrase', parameters.whatPhrase);
   if (parameters.whatExclude) searchParams.set('what_exclude', parameters.whatExclude);
   if (parameters.where) searchParams.set('where', parameters.where);
   if (parameters.distanceKm != null) searchParams.set('distance', String(parameters.distanceKm));
   if (parameters.maxDaysOld != null) searchParams.set('max_days_old', String(parameters.maxDaysOld));
   if (parameters.sortBy) searchParams.set('sort_by', parameters.sortBy);
-  if (parameters.sortDirection) searchParams.set('sort_dir', parameters.sortDirection);
   if (parameters.salaryMin != null) searchParams.set('salary_min', String(parameters.salaryMin));
   if (parameters.includeUnknownSalary) searchParams.set('salary_include_unknown', '1');
   return url;

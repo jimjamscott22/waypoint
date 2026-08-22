@@ -79,13 +79,12 @@ test('translates a structured search into provider parameters', () => {
   assert.deepEqual(parameters, {
     page: 2,
     resultsPerPage: 50,
-    whatOr: 'systems administrator system administrator sysadmin',
+    whatPhrase: 'systems administrator',
     whatExclude: undefined,
     where: 'Auburn, Cayuga County, New York, United States',
     distanceKm: 65,
     maxDaysOld: 14,
     sortBy: 'date',
-    sortDirection: 'down',
     salaryMin: undefined,
     includeUnknownSalary: undefined,
   });
@@ -94,6 +93,7 @@ test('translates a structured search into provider parameters', () => {
   assert.equal(withSalary.salaryMin, 60000);
   assert.equal(withSalary.includeUnknownSalary, true);
   assert.equal(withSalary.whatExclude, 'sales');
+  assert.equal(withSalary.whatPhrase, 'IT support');
 });
 
 test('converts miles to kilometres and measures great-circle distance', () => {
@@ -258,6 +258,10 @@ test('covers every published role family with a usable synonym list', () => {
   for (const roleFamily of ROLE_FAMILY_IDS) {
     const plan = buildRoleFamilyPlan(query({ roleFamilies: [roleFamily] }));
     assert.ok(plan[0].synonyms.length > 0, roleFamily);
-    assert.ok(adzunaParameters(query({ roleFamilies: [roleFamily] }), roleFamily, 1).whatOr.length > 0, roleFamily);
+    assert.equal(
+      adzunaParameters(query({ roleFamilies: [roleFamily] }), roleFamily, 1).whatPhrase,
+      plan[0].synonyms[0],
+      roleFamily
+    );
   }
 });

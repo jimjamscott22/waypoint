@@ -18,13 +18,15 @@ export function adzunaParameters(query, roleFamily, page) {
   return {
     page,
     resultsPerPage: RESULTS_PER_PAGE,
-    whatOr: ROLE_FAMILIES[roleFamily].synonyms.join(' '),
+    // Adzuna treats what_or as individual tokens, which floods recent pages with
+    // unrelated records. The first curated synonym is the family's provider phrase;
+    // every synonym remains eligible during local title evaluation.
+    whatPhrase: ROLE_FAMILIES[roleFamily].synonyms[0],
     whatExclude: excluded || undefined,
     where: query.center.displayName,
     distanceKm: Math.ceil(milesToKilometres(query.maximumRadiusMiles)),
     maxDaysOld: query.maxAgeDays,
     sortBy: 'date',
-    sortDirection: 'down',
     salaryMin: minimumSalary ?? undefined,
     includeUnknownSalary: minimumSalary == null ? undefined : true,
   };

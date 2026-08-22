@@ -88,13 +88,16 @@ test('encodes the Auburn 40-mile request with date sorting and no empty paramete
 
   const url = calls[0].url;
   assert.equal(url.pathname, '/v1/api/jobs/us/search/1');
-  assert.equal(url.searchParams.get('what_or'), 'systems administrator system administrator sysadmin');
+  assert.equal(url.searchParams.get('what_phrase'), 'systems administrator');
+  assert.equal(url.searchParams.has('what_or'), false);
   assert.equal(url.searchParams.get('where'), 'Auburn, Cayuga County, New York, United States');
   // 40 miles inclusive rounds up to 65 km at the provider.
   assert.equal(url.searchParams.get('distance'), '65');
   assert.equal(url.searchParams.get('max_days_old'), '14');
   assert.equal(url.searchParams.get('sort_by'), 'date');
-  assert.equal(url.searchParams.get('sort_dir'), 'down');
+  // The live Adzuna US endpoint rejects sort_dir with HTTP 400 even though its
+  // published schema lists the parameter. sort_by=date already returns newest first.
+  assert.equal(url.searchParams.has('sort_dir'), false);
   assert.equal(url.searchParams.get('results_per_page'), '50');
   assert.equal(url.searchParams.has('what_exclude'), false);
   assert.equal(url.searchParams.has('salary_min'), false);
@@ -110,7 +113,8 @@ test('encodes exclusions and salary floors when the search defines them', async 
 
   const url = calls[0].url;
   assert.equal(url.searchParams.get('what_exclude'), 'sales intern');
-  assert.equal(url.searchParams.get('what_or'), 'IT support help desk service desk technical support');
+  assert.equal(url.searchParams.get('what_phrase'), 'IT support');
+  assert.equal(url.searchParams.has('what_or'), false);
   assert.equal(url.searchParams.get('salary_min'), '55000');
   assert.equal(url.searchParams.get('salary_include_unknown'), '1');
 });
