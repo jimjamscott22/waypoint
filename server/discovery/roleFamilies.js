@@ -27,6 +27,18 @@ export const ROLE_FAMILIES = Object.freeze({
     label: 'Junior systems engineering',
     synonyms: ['junior systems engineer', 'systems engineer I', 'associate systems engineer'],
   },
+  'internet-service-installation': {
+    label: 'Internet service installation',
+    synonyms: [
+      'cable installer',
+      'internet service installer',
+      'broadband technician',
+      'fiber technician',
+      'cable technician',
+      'telecommunications installer',
+      'telecom installer',
+    ],
+  },
 });
 
 export const ROLE_FAMILY_IDS = Object.freeze(Object.keys(ROLE_FAMILIES));

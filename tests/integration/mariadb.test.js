@@ -217,6 +217,23 @@ test('applies the structured discovery migration with Auburn defaults and safe s
     ]);
 
     const queryRepository = createQueryRepository(pool);
+    const installerQuery = await queryRepository.create({
+      name: 'Installer constraint probe',
+      center: {
+        displayName: 'Auburn, New York',
+        latitude: 42.9317,
+        longitude: -76.5661,
+        provider: 'nominatim',
+        placeId: 'installer-probe',
+      },
+      preferredRadiusMiles: 20,
+      maximumRadiusMiles: 40,
+      roleFamilies: ['internet-service-installation'],
+      maxAgeDays: 30,
+    });
+    assert.deepEqual(installerQuery.roleFamilies, ['internet-service-installation']);
+    await queryRepository.remove(installerQuery.id);
+
     const legacyQuery = await queryRepository.create({ name: 'Legacy sysadmin', keywords: 'systems administrator', location: 'Syracuse, NY', maxAgeDays: 7 });
     const legacyRow = await withConnection(pool, connection => connection.query('SELECT * FROM saved_queries WHERE id = ?', [legacyQuery.id]));
     assert.equal(legacyRow[0].name, 'Legacy sysadmin');

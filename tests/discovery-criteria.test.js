@@ -254,6 +254,27 @@ test('reports every role family whose synonyms appear in the title', () => {
   assert.deepEqual(result.matchedRoleFamilies, ['systems-administration', 'it-support']);
 });
 
+test('supports internet service installation searches and related technician titles', () => {
+  const roleFamily = 'internet-service-installation';
+  const plan = buildRoleFamilyPlan(query({ roleFamilies: [roleFamily] }));
+
+  assert.ok(ROLE_FAMILY_IDS.includes(roleFamily));
+  assert.equal(plan[0].synonyms[0], 'cable installer');
+  assert.equal(
+    adzunaParameters(query({ roleFamilies: [roleFamily] }), roleFamily, 1).whatPhrase,
+    'cable installer'
+  );
+
+  const result = evaluateListing({
+    query: query({ roleFamilies: [roleFamily] }),
+    listing: listing({ title: 'Entry-Level Broadband Technician' }),
+    roleFamily,
+    now: NOW,
+  });
+  assert.equal(result.accepted, true);
+  assert.deepEqual(result.matchedRoleFamilies, [roleFamily]);
+});
+
 test('covers every published role family with a usable synonym list', () => {
   for (const roleFamily of ROLE_FAMILY_IDS) {
     const plan = buildRoleFamilyPlan(query({ roleFamilies: [roleFamily] }));
