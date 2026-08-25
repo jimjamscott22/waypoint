@@ -300,6 +300,18 @@ test('applies the structured discovery migration with Auburn defaults and safe s
       `INSERT INTO scrape_runs (id, trigger_type, status, started_at) VALUES (?, 'manual', 'running', UTC_TIMESTAMP(3))`,
       [probeRunId]
     ));
+    await withConnection(pool, connection => connection.query(
+      `INSERT INTO scrape_run_queries
+        (id, run_id, query_id, query_name, status, started_at, finished_at)
+       VALUES ('60000000-0000-4000-8000-000000000002', ?, ?, 'Partial query probe', 'partial',
+         UTC_TIMESTAMP(3), UTC_TIMESTAMP(3))`,
+      [probeRunId, queryId]
+    ));
+    const partialQuery = await withConnection(pool, connection => connection.query(
+      `SELECT status FROM scrape_run_queries
+       WHERE id = '60000000-0000-4000-8000-000000000002'`
+    ));
+    assert.equal(partialQuery[0].status, 'partial');
     await assert.rejects(withConnection(pool, connection => connection.query(
       `INSERT INTO scrape_run_searches (id, run_id, query_id, role_family, status, started_at)
        VALUES ('60000000-0000-4000-8000-000000000001', ?, ?, 'systems-administration', 'not-a-status', UTC_TIMESTAMP(3))`,
