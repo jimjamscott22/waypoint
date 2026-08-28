@@ -439,7 +439,7 @@ test('searches every provider phrase for a role family and deduplicates across t
 
   assert.deepEqual(requested, [
     'systems administrator:1',
-    'sysadmin:1',
+    'system administrator:1',
     'IT administrator:1',
   ]);
 });
@@ -455,7 +455,7 @@ test('stops searching later phrases once the request budget runs out', async () 
 
   await service.runAll('scheduled');
 
-  assert.deepEqual(requested, ['systems administrator', 'sysadmin']);
+  assert.deepEqual(requested, ['systems administrator', 'system administrator']);
   assert.equal(finishedQueries[0].truncated, true);
   assert.ok(finishedQueries[0].unsearchedRequests >= 1);
 });

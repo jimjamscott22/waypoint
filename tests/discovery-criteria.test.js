@@ -299,11 +299,11 @@ test('matches the local technician titles this market actually posts', () => {
   const cases = [
     ['it-support', 'IT Technician'],
     ['it-support', 'Technical Support Specialist'],
-    ['desktop-support', 'Field Service Technician'],
+    ['desktop-support', 'Desktop Technician'],
     ['network-administration', 'Network Technician'],
     ['it-operations', 'Data Center Technician'],
     ['cloud-support', 'Cloud Engineer'],
-    ['junior-systems-engineering', 'Systems Engineer'],
+    ['junior-systems-engineering', 'Junior Systems Engineer'],
     ['internet-service-installation', 'Installation Technician'],
   ];
   for (const [roleFamily, title] of cases) {
@@ -317,8 +317,27 @@ test('matches the local technician titles this market actually posts', () => {
   }
 });
 
+test('rejects off-domain titles that only superficially resemble the family', () => {
+  const cases = [
+    ['junior-systems-engineering', 'Principal Systems Engineer - Radar'],
+    ['junior-systems-engineering', 'Mechanical Systems Engineer'],
+    ['junior-systems-engineering', 'Systems Engineering Manager'],
+    ['desktop-support', 'Field Service Technician - Medical Imaging'],
+    ['it-support', 'Client Support Associate - Wealth Management'],
+  ];
+  for (const [rf, title] of cases) {
+    const result = evaluateListing({
+      query: query({ roleFamilies: [rf] }),
+      listing: listing({ title }),
+      roleFamily: rf,
+      now: NOW,
+    });
+    assert.equal(result.accepted, false, `${rf} accepted "${title}"`);
+  }
+});
+
 test('exposes at most three provider phrases per role family', () => {
-  assert.deepEqual(providerPhrases('it-support'), ['IT support', 'help desk', 'IT technician']);
+  assert.deepEqual(providerPhrases('it-support'), ['IT support', 'help desk', 'technical support']);
   assert.deepEqual(
     providerPhrases('internet-service-installation'),
     ['cable installer', 'broadband technician', 'fiber technician']

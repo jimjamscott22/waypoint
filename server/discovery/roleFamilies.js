@@ -3,9 +3,9 @@ export const ROLE_FAMILIES = Object.freeze({
     label: 'Systems administration',
     synonyms: [
       'systems administrator',
-      'sysadmin',
-      'IT administrator',
       'system administrator',
+      'IT administrator',
+      'sysadmin',
       'infrastructure administrator',
     ],
   },
@@ -14,12 +14,11 @@ export const ROLE_FAMILIES = Object.freeze({
     synonyms: [
       'IT support',
       'help desk',
-      'IT technician',
-      'service desk',
       'technical support',
+      'service desk',
+      'IT technician',
       'support technician',
       'computer technician',
-      'client support',
       'IT specialist',
     ],
   },
@@ -61,7 +60,6 @@ export const ROLE_FAMILIES = Object.freeze({
     synonyms: [
       'desktop support',
       'desktop technician',
-      'field service technician',
       'deskside support',
       'endpoint support',
       'PC technician',
@@ -70,12 +68,11 @@ export const ROLE_FAMILIES = Object.freeze({
   'junior-systems-engineering': {
     label: 'Junior systems engineering',
     synonyms: [
-      'systems engineer',
-      'IT engineer',
-      'infrastructure engineer',
       'junior systems engineer',
       'associate systems engineer',
+      'IT engineer',
       'systems engineer I',
+      'infrastructure engineer',
     ],
   },
   'internet-service-installation': {
