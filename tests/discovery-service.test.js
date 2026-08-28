@@ -302,6 +302,28 @@ test('isolates one role family failure and keeps later families running', async 
   assert.equal(run().queriesSucceeded, 1);
 });
 
+test('reports a partial search with real counters when a later phrase fails after earlier phrases succeeded', async () => {
+  const { pool } = fakePool();
+  const { service, searches } = harness({
+    pool,
+    queries: [query({ roleFamilies: ['systems-administration'] })],
+    search: async ({ phrase }) => {
+      if (phrase === 'system administrator') throw new Error('upstream hiccup');
+      return page([listing(1)]);
+    },
+  });
+
+  await service.runAll('scheduled');
+
+  // The first phrase ('systems administrator') succeeded and fetched a page before the
+  // second phrase ('system administrator') threw; the recorded result must reflect that
+  // real work instead of being erased to a zeroed-out 'failed' row.
+  assert.equal(searches[0].status, 'partial');
+  assert.ok(searches[0].pagesRequested > 0, `expected pagesRequested > 0, got ${searches[0].pagesRequested}`);
+  assert.ok(searches[0].recordsReceived > 0, `expected recordsReceived > 0, got ${searches[0].recordsReceived}`);
+  assert.match(searches[0].errorMessage, /upstream hiccup/);
+});
+
 test('marks a query failed when every role family fails', async () => {
   const { pool } = fakePool();
   const { service, finishedQueries } = harness({
