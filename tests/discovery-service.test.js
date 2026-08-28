@@ -252,10 +252,32 @@ test('persists a cross-family duplicate once while recording every family as evi
   // and the 5 later encounters are all recorded as duplicates.
   assert.equal(finishedQueries[0].newMatches, 1);
   assert.equal(finishedQueries[0].duplicates, 5);
-  // Six upserts happen (one per phrase per family), but they collapse onto one row by provider job id.
-  assert.equal(listingInserts.length, 6);
-  // Each pass records both matched families, so evidence survives for either one.
-  assert.equal(familyInserts.length, 12);
+  // Only the first of the 6 encounters is new and reaches the database; the other 5 are
+  // recognized as duplicates before any write is attempted.
+  assert.equal(listingInserts.length, 1);
+  // That single persisted pass records both matched families as evidence.
+  assert.equal(familyInserts.length, 2);
+});
+
+test('persists a listing matched by multiple phrases in one family only once, still counting every repeat as a duplicate', async () => {
+  const { pool, statements } = fakePool();
+  const { service, finishedQueries } = harness({
+    pool,
+    queries: [query({ roleFamilies: ['systems-administration'] })],
+    search: async () => page([listing(1)]),
+  });
+
+  await service.runAll('scheduled');
+
+  const listingInserts = statements.filter(sql => sql.includes('INSERT INTO listings'));
+  const familyInserts = statements.filter(sql => sql.includes('INSERT IGNORE INTO listing_query_role_families'));
+  // The single family searches 3 phrases and every phrase returns the same short page,
+  // so the listing is accepted 3 times. Only the first encounter is new; the other 2 are
+  // in-run duplicates and must be skipped before any database write is attempted.
+  assert.equal(finishedQueries[0].newMatches, 1);
+  assert.equal(finishedQueries[0].duplicates, 2);
+  assert.equal(listingInserts.length, 1);
+  assert.equal(familyInserts.length, 1);
 });
 
 test('isolates one role family failure and keeps later families running', async () => {

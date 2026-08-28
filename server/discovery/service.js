@@ -229,13 +229,13 @@ export function createDiscoveryService({
           matchTarget: limits.persistedMatchTarget,
           at,
           onAccepted: async (listing, evaluation) => {
-            const { outcome } = await withTransaction(pool, connection => persistMatch(connection, {
-              listing, queryId: query.id, evaluation, seenAt: sqlDate(at),
-            }));
             if (accepted.has(listing.providerJobId)) {
               counters.duplicates += 1;
               return;
             }
+            const { outcome } = await withTransaction(pool, connection => persistMatch(connection, {
+              listing, queryId: query.id, evaluation, seenAt: sqlDate(at),
+            }));
             accepted.add(listing.providerJobId);
             if (REOPENING_OUTCOMES.has(outcome)) counters.newMatches += 1;
             else counters[OUTCOME_COUNTERS[outcome]] += 1;
