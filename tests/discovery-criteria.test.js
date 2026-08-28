@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ROLE_FAMILY_IDS, ROLE_FAMILIES, normalizeTerms } from '../server/discovery/roleFamilies.js';
-import { adzunaParameters, buildRoleFamilyPlan } from '../server/discovery/criteria.js';
+import { adzunaParameters, buildRoleFamilyPlan, providerPhrases } from '../server/discovery/criteria.js';
 import { classifyDistance, haversineMiles, milesToKilometres } from '../server/discovery/distance.js';
 import { evaluateListing } from '../server/discovery/evaluateListing.js';
 
@@ -315,4 +315,22 @@ test('matches the local technician titles this market actually posts', () => {
     });
     assert.equal(result.accepted, true, `${roleFamily} rejected "${title}"`);
   }
+});
+
+test('exposes at most three provider phrases per role family', () => {
+  assert.deepEqual(providerPhrases('it-support'), ['IT support', 'help desk', 'IT technician']);
+  assert.deepEqual(
+    providerPhrases('internet-service-installation'),
+    ['cable installer', 'broadband technician', 'fiber technician']
+  );
+  for (const roleFamily of ROLE_FAMILY_IDS) {
+    const phrases = providerPhrases(roleFamily);
+    assert.ok(phrases.length > 0 && phrases.length <= 3, roleFamily);
+    assert.deepEqual(phrases, ROLE_FAMILIES[roleFamily].synonyms.slice(0, phrases.length));
+  }
+});
+
+test('accepts an explicit provider phrase and defaults to the first one', () => {
+  assert.equal(adzunaParameters(query(), 'it-support', 1).whatPhrase, 'IT support');
+  assert.equal(adzunaParameters(query(), 'it-support', 1, 'help desk').whatPhrase, 'help desk');
 });

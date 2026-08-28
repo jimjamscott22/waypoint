@@ -169,3 +169,11 @@ test('times out stalled requests and stops after two retries', async () => {
   );
   assert.equal(attempts, 3);
 });
+
+test('sends the requested provider phrase rather than the family default', async () => {
+  const { client, calls } = capturingClient();
+  await client.search({ query: auburnQuery, roleFamily: 'it-support', phrase: 'help desk' });
+
+  assert.equal(calls[0].url.searchParams.get('what_phrase'), 'help desk');
+  assert.equal(calls[0].url.searchParams.has('what_or'), false);
+});
