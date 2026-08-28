@@ -1,7 +1,7 @@
 import { AppError, sanitizeError } from '../errors.js';
 import { withConnection, withTransaction } from '../db/pool.js';
 import { persistMatch } from '../db/discoveryRepository.js';
-import { buildRoleFamilyPlan } from './criteria.js';
+import { buildRoleFamilyPlan, providerPhrases } from './criteria.js';
 import { evaluateListing } from './evaluateListing.js';
 
 const MINUTE = 60_000;
@@ -76,44 +76,53 @@ export function createDiscoveryService({
 
   // One page loop drives both preview and persisted runs. `onAccepted` decides what
   // happens with a match; everything else — budgets, paging, diagnostics — is shared.
+  // Phrases are searched in sequence because Adzuna returns only records matching the
+  // one phrase per request; they share the family's budget rather than multiplying it.
   async function searchRoleFamily({ query, roleFamily, budget, counters, accepted, matchTarget, at, onAccepted }) {
     const familyCounters = { providerResultCount: 0, pagesRequested: 0, recordsReceived: 0, acceptedMatches: 0 };
     let truncated = false;
+    let exhausted = false;
 
-    for (let page = 1; page <= limits.maxPagesPerFamily; page += 1) {
-      if (budget.remaining <= 0) {
-        counters.unsearchedRequests += 1;
-        truncated = true;
-        break;
-      }
-      budget.remaining -= 1;
-      counters.pagesRequested += 1;
-      familyCounters.pagesRequested += 1;
+    for (const phrase of providerPhrases(roleFamily)) {
+      if (exhausted) break;
 
-      const response = await adzunaClient.search({ query, roleFamily, page });
-      counters.providerResultCount = Math.max(counters.providerResultCount, response.providerCount ?? 0);
-      familyCounters.providerResultCount = Math.max(familyCounters.providerResultCount, response.providerCount ?? 0);
-      counters.recordsReceived += response.results.length;
-      familyCounters.recordsReceived += response.results.length;
-      counters.malformedRecords += response.malformedCount ?? 0;
-
-      for (const listing of response.results) {
-        const evaluation = evaluateListing({ query, listing, roleFamily, now: at });
-        if (!evaluation.accepted) {
-          counters[REJECT_COUNTERS[evaluation.rejectReason] ?? 'malformedRecords'] += 1;
-          continue;
+      for (let page = 1; page <= limits.maxPagesPerFamily; page += 1) {
+        if (budget.remaining <= 0) {
+          counters.unsearchedRequests += 1;
+          truncated = true;
+          exhausted = true;
+          break;
         }
-        familyCounters.acceptedMatches += 1;
-        await onAccepted(listing, evaluation);
-      }
+        budget.remaining -= 1;
+        counters.pagesRequested += 1;
+        familyCounters.pagesRequested += 1;
 
-      if (accepted.size >= matchTarget) {
-        // Stopping on target still leaves provider results unseen.
-        truncated = true;
-        break;
+        const response = await adzunaClient.search({ query, roleFamily, phrase, page });
+        counters.providerResultCount = Math.max(counters.providerResultCount, response.providerCount ?? 0);
+        familyCounters.providerResultCount = Math.max(familyCounters.providerResultCount, response.providerCount ?? 0);
+        counters.recordsReceived += response.results.length;
+        familyCounters.recordsReceived += response.results.length;
+        counters.malformedRecords += response.malformedCount ?? 0;
+
+        for (const listing of response.results) {
+          const evaluation = evaluateListing({ query, listing, roleFamily, now: at });
+          if (!evaluation.accepted) {
+            counters[REJECT_COUNTERS[evaluation.rejectReason] ?? 'malformedRecords'] += 1;
+            continue;
+          }
+          familyCounters.acceptedMatches += 1;
+          await onAccepted(listing, evaluation);
+        }
+
+        if (accepted.size >= matchTarget) {
+          // Stopping on target still leaves provider results unseen.
+          truncated = true;
+          exhausted = true;
+          break;
+        }
+        if (response.results.length < (response.pageSize ?? response.results.length)) break;
+        if (page === limits.maxPagesPerFamily) truncated = true;
       }
-      if (response.results.length < (response.pageSize ?? response.results.length)) break;
-      if (page === limits.maxPagesPerFamily) truncated = true;
     }
 
     if (truncated) counters.truncated = true;

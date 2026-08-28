@@ -129,9 +129,9 @@ test('preview returns ranked samples, writes nothing, and reports diagnostics', 
 
   assert.equal(result.results.length, 1);
   assert.equal(result.results[0].title, 'Systems Administrator');
-  assert.equal(result.diagnostics.recordsReceived, 3);
-  assert.equal(result.diagnostics.rejectedTerms, 1);
-  assert.equal(result.diagnostics.rejectedAge, 1);
+  assert.equal(result.diagnostics.recordsReceived, 9);
+  assert.equal(result.diagnostics.rejectedTerms, 3);
+  assert.equal(result.diagnostics.rejectedAge, 3);
   assert.equal(result.diagnostics.newMatches, 1);
 
   assert.equal(statements.some(sql => sql.includes('INSERT INTO listings')), false);
@@ -196,7 +196,7 @@ test('requests the next page after a full page and stops after a short one', asy
   });
 
   await service.runAll('scheduled');
-  assert.deepEqual(requested, [1, 2]);
+  assert.deepEqual(requested, [1, 2, 1, 2, 1, 2]);
 });
 
 test('stops at the per-family page cap and reports truncation', async () => {
@@ -209,7 +209,7 @@ test('stops at the per-family page cap and reports truncation', async () => {
   });
 
   await service.runAll('scheduled');
-  assert.deepEqual(requested, [1, 2, 3]);
+  assert.deepEqual(requested, [1, 2, 3, 1, 2, 3, 1, 2, 3]);
   assert.equal(searches[0].truncated, true);
   assert.equal(searches[0].status, 'partial');
 });
@@ -247,13 +247,15 @@ test('persists a cross-family duplicate once while recording every family as evi
 
   const listingInserts = statements.filter(sql => sql.includes('INSERT INTO listings'));
   const familyInserts = statements.filter(sql => sql.includes('INSERT IGNORE INTO listing_query_role_families'));
-  // Both families matched the same posting: it is counted once as new and once as a duplicate.
+  // Both families matched the same posting: it is counted once as new. Each family now
+  // searches 3 phrases, so the same short-page listing is re-encountered 6 times total,
+  // and the 5 later encounters are all recorded as duplicates.
   assert.equal(finishedQueries[0].newMatches, 1);
-  assert.equal(finishedQueries[0].duplicates, 1);
-  // Two upserts happen, but they collapse onto one row by provider job id.
-  assert.equal(listingInserts.length, 2);
+  assert.equal(finishedQueries[0].duplicates, 5);
+  // Six upserts happen (one per phrase per family), but they collapse onto one row by provider job id.
+  assert.equal(listingInserts.length, 6);
   // Each pass records both matched families, so evidence survives for either one.
-  assert.equal(familyInserts.length, 4);
+  assert.equal(familyInserts.length, 12);
 });
 
 test('isolates one role family failure and keeps later families running', async () => {
@@ -382,7 +384,10 @@ test('retains committed counters when a fatal bookkeeping error ends a run', asy
   await assert.rejects(service.runAll('scheduled'), /finish failed/);
   assert.equal(failureSummary.status, 'partial');
   assert.equal(failureSummary.queriesSucceeded, 1);
-  assert.equal(failureSummary.listingsFetched, 1);
+  // The single family now searches 3 phrases, each returning the same short page,
+  // so recordsReceived (and therefore listingsFetched) triples even though only one
+  // listing is ever persisted as new.
+  assert.equal(failureSummary.listingsFetched, 3);
 });
 
 test('releases the scrape lock after a failed run', async () => {
@@ -394,4 +399,41 @@ test('releases the scrape lock after a failed run', async () => {
 
   await service.runAll('scheduled');
   assert.ok(statements.some(sql => sql.includes("RELEASE_LOCK('waypoint:scrape')")));
+});
+
+test('searches every provider phrase for a role family and deduplicates across them', async () => {
+  const { pool } = fakePool();
+  const requested = [];
+  const { service } = harness({
+    pool,
+    search: async ({ phrase, page: requestedPage }) => {
+      requested.push(`${phrase}:${requestedPage}`);
+      return page([listing(1)]);
+    },
+    discovery: { runRequestBudget: 20, maxPagesPerFamily: 3, persistedMatchTarget: 500 },
+  });
+
+  await service.runAll('scheduled');
+
+  assert.deepEqual(requested, [
+    'systems administrator:1',
+    'sysadmin:1',
+    'IT administrator:1',
+  ]);
+});
+
+test('stops searching later phrases once the request budget runs out', async () => {
+  const { pool } = fakePool();
+  const requested = [];
+  const { service, finishedQueries } = harness({
+    pool,
+    search: async ({ phrase }) => { requested.push(phrase); return page([]); },
+    discovery: { runRequestBudget: 2, maxPagesPerFamily: 3, persistedMatchTarget: 500 },
+  });
+
+  await service.runAll('scheduled');
+
+  assert.deepEqual(requested, ['systems administrator', 'sysadmin']);
+  assert.equal(finishedQueries[0].truncated, true);
+  assert.ok(finishedQueries[0].unsearchedRequests >= 1);
 });
