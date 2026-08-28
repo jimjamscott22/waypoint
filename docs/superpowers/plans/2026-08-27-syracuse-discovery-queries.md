@@ -37,7 +37,7 @@ Adzuna only returns postings matching the phrase we send, and `evaluateListing` 
 
 **Interfaces:**
 - Consumes: nothing from earlier tasks.
-- Produces: `ROLE_FAMILIES[id].synonyms` — a `string[]` of length >= 3 for every id in `ROLE_FAMILY_IDS`. `synonyms[0]` is unchanged for every existing family, so `adzunaParameters(...).whatPhrase` keeps its current value and existing assertions keep passing.
+- Produces: `ROLE_FAMILIES[id].synonyms` — a `string[]` of length >= 3 for every id in `ROLE_FAMILY_IDS`. `synonyms[0]` is unchanged for the three families existing tests assert on (`systems-administration`, `it-support`, `internet-service-installation`), so those `whatPhrase` assertions keep passing. `junior-systems-engineering[0]` deliberately changes from `'junior systems engineer'` to `'systems engineer'` — see Step 3. No test asserts that family's phrase directly.
 
 - [ ] **Step 1: Write the failing test**
 
