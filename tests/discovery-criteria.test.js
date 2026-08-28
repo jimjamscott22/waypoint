@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ROLE_FAMILY_IDS, normalizeTerms } from '../server/discovery/roleFamilies.js';
+import { ROLE_FAMILY_IDS, ROLE_FAMILIES, normalizeTerms } from '../server/discovery/roleFamilies.js';
 import { adzunaParameters, buildRoleFamilyPlan } from '../server/discovery/criteria.js';
 import { classifyDistance, haversineMiles, milesToKilometres } from '../server/discovery/distance.js';
 import { evaluateListing } from '../server/discovery/evaluateListing.js';
@@ -71,7 +71,7 @@ test('normalizes terms by trimming, collapsing, and removing case-insensitive du
 test('plans one provider request group per selected role family', () => {
   const plan = buildRoleFamilyPlan(query({ roleFamilies: ['it-support', 'cloud-support'] }));
   assert.deepEqual(plan.map(entry => entry.roleFamily), ['it-support', 'cloud-support']);
-  assert.deepEqual(plan[1].synonyms, ['cloud support', 'cloud operations']);
+  assert.deepEqual(plan[1].synonyms, ['cloud support', 'cloud engineer', 'cloud administrator', 'cloud operations', 'Azure administrator', 'AWS administrator']);
 });
 
 test('translates a structured search into provider parameters', () => {
@@ -284,5 +284,35 @@ test('covers every published role family with a usable synonym list', () => {
       plan[0].synonyms[0],
       roleFamily
     );
+  }
+});
+
+test('gives every role family at least three distinct provider-ready synonyms', () => {
+  for (const roleFamily of ROLE_FAMILY_IDS) {
+    const { synonyms } = ROLE_FAMILIES[roleFamily];
+    assert.ok(synonyms.length >= 3, `${roleFamily} has ${synonyms.length} synonyms`);
+    assert.equal(new Set(synonyms.map(term => term.toLowerCase())).size, synonyms.length, roleFamily);
+  }
+});
+
+test('matches the local technician titles this market actually posts', () => {
+  const cases = [
+    ['it-support', 'IT Technician'],
+    ['it-support', 'Technical Support Specialist'],
+    ['desktop-support', 'Field Service Technician'],
+    ['network-administration', 'Network Technician'],
+    ['it-operations', 'Data Center Technician'],
+    ['cloud-support', 'Cloud Engineer'],
+    ['junior-systems-engineering', 'Systems Engineer'],
+    ['internet-service-installation', 'Installation Technician'],
+  ];
+  for (const [roleFamily, title] of cases) {
+    const result = evaluateListing({
+      query: query({ roleFamilies: [roleFamily] }),
+      listing: listing({ title }),
+      roleFamily,
+      now: NOW,
+    });
+    assert.equal(result.accepted, true, `${roleFamily} rejected "${title}"`);
   }
 });
