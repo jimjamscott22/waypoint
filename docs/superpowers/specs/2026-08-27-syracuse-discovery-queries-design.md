@@ -192,10 +192,44 @@ This is the change that surfaces jobs the current configuration cannot see at al
 
 ## Operator Follow-Up
 
-Widening from one phrase to three raises a full run from roughly 8 provider requests to
-roughly 24. `DISCOVERY_RUN_REQUEST_BUDGET` is 20 and `DISCOVERY_QUERY_REQUEST_BUDGET` is 12,
-and both live in `/etc/waypoint/waypoint.env`, which this session cannot read or write.
+All three settings below live in `/etc/waypoint/waypoint.env`, which this session cannot
+read or write. The operator must apply them.
 
-The operator must raise them — 48 and 16 are the suggested values — or runs will report
-`truncated: true` and silently skip role families. Resulting daily volume is about 25-30
-Adzuna calls, well inside the free tier.
+Widening from one phrase to three changes the per-run cost from 8 requests to **24 at
+minimum and 72 at maximum** — four queries across eight role families, three phrases each,
+up to `DISCOVERY_MAX_PAGES_PER_FAMILY` (3) pages per phrase. An earlier estimate of
+"roughly 24" counted only the minimum and was wrong.
+
+| Setting | Current | Required | Why |
+|---|---|---|---|
+| `DISCOVERY_RUN_REQUEST_BUDGET` | 20 | 72 | Single greedy counter shared across all queries in list order. Broad phrases that fill pages exhaust it early, and the last query in the list can receive zero requests on every run, permanently. |
+| `DISCOVERY_QUERY_REQUEST_BUDGET` | 12 | 18 | Per-query ceiling: three families x three phrases x two pages. |
+| `DISCOVERY_PREVIEW_REQUEST_BUDGET` | 8 | 27 | Preview shares the same phrase loop. At 8 a three-family query truncates before the third family gets any request at all, even when every page returns empty. |
+
+Lowering `DISCOVERY_MAX_PAGES_PER_FAMILY` to 2 is a reasonable alternative to the largest
+budget, bounding per-family cost at six requests. Adzuna's free tier accommodates either;
+provider quota is not the binding constraint at these volumes.
+
+Starvation is silent. Neither `truncated` nor `unsearchedRequests` is surfaced in the UI or
+any route — both are written to `scrape_run_searches` / `scrape_run_queries` and are
+reachable only through `GET /api/scrape-runs/:id`. The only symptom an operator sees is a
+thin feed.
+
+## Known Follow-Ups
+
+Deliberately out of scope for this change, recorded so they are not lost:
+
+- **Persisted score for multi-family listings.** `evaluation.score` depends on the
+  `roleFamily` argument through `bestSynonymCoverage(roleFamily, description)`. For a
+  listing whose title matches several families in one query, the persisted
+  `listing_queries.score` was last-family-wins before this change and is first-family-wins
+  after it. Both are arbitrary and deterministic; divergence is bounded at 15 points
+  because the 50-point title term saturates at coverage 1.0 for any accepted family. The
+  proper fix is to persist the highest score across matching families.
+- **Counter semantics drifted.** `recordsReceived` sums across phrases, so a listing
+  returned by all three phrases counts three times; `ReviewQueue.jsx` renders this directly
+  as "N fetched". `providerResultCount` is a `Math.max` across three different searches.
+  `duplicates` is now dominated by intra-run phrase overlap rather than by prior database
+  state. Nothing breaks; the numbers mean something different and should be relabelled.
+- **`unsearchedRequests` under-counts.** When the budget runs out mid-family it increments
+  once and breaks out of both loops, so three skipped phrases record 1.
