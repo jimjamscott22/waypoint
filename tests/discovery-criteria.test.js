@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ROLE_FAMILY_IDS, normalizeTerms } from '../server/discovery/roleFamilies.js';
-import { adzunaParameters, buildRoleFamilyPlan } from '../server/discovery/criteria.js';
+import { ROLE_FAMILY_IDS, ROLE_FAMILIES, normalizeTerms } from '../server/discovery/roleFamilies.js';
+import { adzunaParameters, buildRoleFamilyPlan, providerPhrases } from '../server/discovery/criteria.js';
 import { classifyDistance, haversineMiles, milesToKilometres } from '../server/discovery/distance.js';
 import { evaluateListing } from '../server/discovery/evaluateListing.js';
 
@@ -71,7 +71,7 @@ test('normalizes terms by trimming, collapsing, and removing case-insensitive du
 test('plans one provider request group per selected role family', () => {
   const plan = buildRoleFamilyPlan(query({ roleFamilies: ['it-support', 'cloud-support'] }));
   assert.deepEqual(plan.map(entry => entry.roleFamily), ['it-support', 'cloud-support']);
-  assert.deepEqual(plan[1].synonyms, ['cloud support', 'cloud operations']);
+  assert.deepEqual(plan[1].synonyms, ['cloud support', 'cloud engineer', 'cloud administrator', 'cloud operations', 'Azure administrator', 'AWS administrator']);
 });
 
 test('translates a structured search into provider parameters', () => {
@@ -285,4 +285,71 @@ test('covers every published role family with a usable synonym list', () => {
       roleFamily
     );
   }
+});
+
+test('gives every role family at least three distinct provider-ready synonyms', () => {
+  for (const roleFamily of ROLE_FAMILY_IDS) {
+    const { synonyms } = ROLE_FAMILIES[roleFamily];
+    assert.ok(synonyms.length >= 3, `${roleFamily} has ${synonyms.length} synonyms`);
+    assert.equal(new Set(synonyms.map(term => term.toLowerCase())).size, synonyms.length, roleFamily);
+  }
+});
+
+test('matches the local technician titles this market actually posts', () => {
+  const cases = [
+    ['it-support', 'IT Technician'],
+    ['it-support', 'Technical Support Specialist'],
+    ['desktop-support', 'Desktop Technician'],
+    ['network-administration', 'Network Technician'],
+    ['it-operations', 'Data Center Technician'],
+    ['cloud-support', 'Cloud Engineer'],
+    ['junior-systems-engineering', 'Junior Systems Engineer'],
+    ['internet-service-installation', 'Installation Technician'],
+  ];
+  for (const [roleFamily, title] of cases) {
+    const result = evaluateListing({
+      query: query({ roleFamilies: [roleFamily] }),
+      listing: listing({ title }),
+      roleFamily,
+      now: NOW,
+    });
+    assert.equal(result.accepted, true, `${roleFamily} rejected "${title}"`);
+  }
+});
+
+test('rejects off-domain titles that only superficially resemble the family', () => {
+  const cases = [
+    ['junior-systems-engineering', 'Principal Systems Engineer - Radar'],
+    ['junior-systems-engineering', 'Mechanical Systems Engineer'],
+    ['junior-systems-engineering', 'Systems Engineering Manager'],
+    ['desktop-support', 'Field Service Technician - Medical Imaging'],
+    ['it-support', 'Client Support Associate - Wealth Management'],
+  ];
+  for (const [rf, title] of cases) {
+    const result = evaluateListing({
+      query: query({ roleFamilies: [rf] }),
+      listing: listing({ title }),
+      roleFamily: rf,
+      now: NOW,
+    });
+    assert.equal(result.accepted, false, `${rf} accepted "${title}"`);
+  }
+});
+
+test('exposes at most three provider phrases per role family', () => {
+  assert.deepEqual(providerPhrases('it-support'), ['IT support', 'help desk', 'technical support']);
+  assert.deepEqual(
+    providerPhrases('internet-service-installation'),
+    ['cable installer', 'broadband technician', 'fiber technician']
+  );
+  for (const roleFamily of ROLE_FAMILY_IDS) {
+    const phrases = providerPhrases(roleFamily);
+    assert.ok(phrases.length > 0 && phrases.length <= 3, roleFamily);
+    assert.deepEqual(phrases, ROLE_FAMILIES[roleFamily].synonyms.slice(0, phrases.length));
+  }
+});
+
+test('accepts an explicit provider phrase and defaults to the first one', () => {
+  assert.equal(adzunaParameters(query(), 'it-support', 1).whatPhrase, 'IT support');
+  assert.equal(adzunaParameters(query(), 'it-support', 1, 'help desk').whatPhrase, 'help desk');
 });

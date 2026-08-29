@@ -95,8 +95,8 @@ export function createAdzunaClient({
 }) {
   if (!appId || !appKey) throw new Error('Adzuna credentials are not configured');
   return {
-    async search({ query, roleFamily, page = 1 }) {
-      const parameters = adzunaParameters(query, roleFamily, page);
+    async search({ query, roleFamily, phrase, page = 1 }) {
+      const parameters = adzunaParameters(query, roleFamily, page, phrase);
       const url = buildUrl({ appId, appKey, parameters });
 
       let lastError;
