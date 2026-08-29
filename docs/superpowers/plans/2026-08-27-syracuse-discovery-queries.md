@@ -10,6 +10,11 @@
 
 **Spec:** `docs/superpowers/specs/2026-08-27-syracuse-discovery-queries-design.md`
 
+**Status (2026-08-29):** Tasks 1-3 (code) are complete, committed, and green — `npm test`
+passes 114/114. Tasks 4-6 remain: they are data and operations against the running
+instance and the operator-owned `/etc/waypoint/waypoint.env`, not code, so they cannot be
+finished by editing this repository.
+
 ## Global Constraints
 
 - Test runner is built-in `node:test`. No Jest, no Vitest. Test files import source modules directly and **must use explicit `.js` extensions** in import paths.
@@ -39,7 +44,7 @@ Adzuna only returns postings matching the phrase we send, and `evaluateListing` 
 - Consumes: nothing from earlier tasks.
 - Produces: `ROLE_FAMILIES[id].synonyms` — a `string[]` of length >= 3 for every id in `ROLE_FAMILY_IDS`. `synonyms[0]` is unchanged for the three families existing tests assert on (`systems-administration`, `it-support`, `internet-service-installation`), so those `whatPhrase` assertions keep passing. `junior-systems-engineering[0]` deliberately changes from `'junior systems engineer'` to `'systems engineer'` — see Step 3. No test asserts that family's phrase directly.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `tests/discovery-criteria.test.js`:
 
@@ -77,12 +82,12 @@ test('matches the local technician titles this market actually posts', () => {
 
 `ROLE_FAMILIES` may not be imported in that file yet. Check the import line at the top and extend it so both `ROLE_FAMILIES` and `ROLE_FAMILY_IDS` come from `'../server/discovery/roleFamilies.js'`.
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `node --test tests/discovery-criteria.test.js`
 Expected: FAIL. `cloud-support has 2 synonyms`, and several of the title cases assert `accepted` was `false`.
 
-- [ ] **Step 3: Replace the synonym lists**
+- [x] **Step 3: Replace the synonym lists**
 
 In `server/discovery/roleFamilies.js`, replace the `synonyms` array of each family:
 
@@ -190,7 +195,7 @@ Two ordering constraints that existing tests depend on — do not violate them:
 
 Note that `junior-systems-engineering` now leads with the broad `'systems engineer'` rather than `'junior systems engineer'`. That is deliberate: the narrow phrase returns a strict subset of the broad one's results, so spending a provider request on it is wasted. Seniority is handled by the query's `entry level` / `junior` / `associate` optional terms feeding the score, not by the search phrase.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `node --test tests/discovery-criteria.test.js`
 Expected: PASS, including the pre-existing `covers every published role family with a usable synonym list` and `accepts a local listing whose title matches the planned role family` (whose `matchedSynonyms` assertion of `['systems administrator', 'system administrator']` still holds, because `filter` preserves list order and neither `'sysadmin'` nor `'IT administrator'` tokenizes into the title `Systems Administrator`).
@@ -198,7 +203,7 @@ Expected: PASS, including the pre-existing `covers every published role family w
 Run: `npm test`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/discovery/roleFamilies.js tests/discovery-criteria.test.js
@@ -223,7 +228,7 @@ git commit -m "Widen role-family synonyms for the Syracuse market"
   - `adzunaParameters(query, roleFamily, page, phrase?)` — `phrase` defaults to `providerPhrases(roleFamily)[0]`; the returned object's `whatPhrase` is that phrase.
   - `adzunaClient.search({ query, roleFamily, phrase, page })` — `phrase` is optional and forwarded to `adzunaParameters`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `tests/discovery-criteria.test.js`:
 
@@ -261,12 +266,12 @@ test('sends the requested provider phrase rather than the family default', async
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `node --test tests/discovery-criteria.test.js tests/adzuna.test.js`
 Expected: FAIL with `providerPhrases is not defined` (or an import error), and the Adzuna case sending `IT support` instead of `help desk`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `server/discovery/criteria.js`, add the constant and helper, and take the new parameter:
 
@@ -303,7 +308,7 @@ In `server/scraper/adzuna.js`, change the `search` method:
 
 `adzunaParameters` applies its own default when `phrase` is `undefined`, so existing callers are unaffected.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `node --test tests/discovery-criteria.test.js tests/adzuna.test.js`
 Expected: PASS, including the untouched assertions `what_phrase === 'systems administrator'` and `what_phrase === 'IT support'`.
@@ -311,7 +316,7 @@ Expected: PASS, including the untouched assertions `what_phrase === 'systems adm
 Run: `npm test`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/discovery/criteria.js server/scraper/adzuna.js tests/discovery-criteria.test.js tests/adzuna.test.js
@@ -332,7 +337,7 @@ Wrap the existing page loop in a phrase loop. All phrases for one family share t
 - Consumes: `providerPhrases` from Task 2; `adzunaClient.search({ query, roleFamily, phrase, page })`.
 - Produces: no signature change. `searchRoleFamily` still returns `{ providerResultCount, pagesRequested, recordsReceived, acceptedMatches, truncated }`. `pagesRequested` now counts pages across all phrases for the family.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `tests/discovery-service.test.js`:
 
@@ -375,12 +380,12 @@ test('stops searching later phrases once the request budget runs out', async () 
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `node --test tests/discovery-service.test.js`
 Expected: FAIL. The first new test sees `requested` as `['undefined:1']` because `phrase` is not yet forwarded.
 
-- [ ] **Step 3: Implement the phrase loop**
+- [x] **Step 3: Implement the phrase loop**
 
 Add `providerPhrases` to the existing import from `'./criteria.js'` at the top of `server/discovery/service.js`, then replace the body of `searchRoleFamily` with:
 
@@ -443,7 +448,7 @@ Add `providerPhrases` to the existing import from `'./criteria.js'` at the top o
 
 Deduplication needs no new code: `onAccepted` keys on `listing.providerJobId` in both the preview `Map` and the run `Set`, so a posting returned by two phrases is recorded once.
 
-- [ ] **Step 4: Update the three existing tests that count requests**
+- [x] **Step 4: Update the three existing tests that count requests**
 
 Three pre-existing tests assert request counts that were written when one family meant one phrase. Their intent is unchanged; only the expected counts move.
 
@@ -472,12 +477,12 @@ In `stops at the per-family page cap and reports truncation`, each phrase hits t
 
 Leave `shares one request budget across role families and records unsearched work` and `runs a single enabled search under the per-query budget` alone — both assert `requested.length` against a budget of 2 and 1 respectively, which the phrase loop does not change.
 
-- [ ] **Step 5: Run the full suite**
+- [x] **Step 5: Run the full suite**
 
 Run: `npm test`
 Expected: PASS. If another test fails on a request count, read its stub and expected value and apply the same reasoning — phrase count multiplies requests, deduplication keeps persisted matches flat.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add server/discovery/service.js tests/discovery-service.test.js
@@ -679,16 +684,21 @@ Nothing to commit — data only. Skip.
 
 - [ ] **Step 1: Raise the budgets**
 
-Tasks 1-3 take a full run from roughly 8 provider requests to roughly 24. `DISCOVERY_RUN_REQUEST_BUDGET` is `20` and `DISCOVERY_QUERY_REQUEST_BUDGET` is `12`.
+Tasks 1-3 take a full run from 8 provider requests to **24 at minimum and 72 at maximum** — eight role families, three phrases each, up to `DISCOVERY_MAX_PAGES_PER_FAMILY` (3) pages per phrase. An earlier draft of this step said "roughly 24"; that counted only the minimum and was wrong.
 
-**This step must be done by the user.** `/etc/waypoint/waypoint.env` is not readable or writable from this session. Ask them to set:
+**This step must be done by the user.** `/etc/waypoint/waypoint.env` is not readable or writable from this session. Ask them to set all three:
 
 ```
-DISCOVERY_RUN_REQUEST_BUDGET=48
-DISCOVERY_QUERY_REQUEST_BUDGET=16
+DISCOVERY_RUN_REQUEST_BUDGET=72
+DISCOVERY_QUERY_REQUEST_BUDGET=18
+DISCOVERY_PREVIEW_REQUEST_BUDGET=27
 ```
 
-Without this, runs report `truncated: true` and silently skip role families. Resulting daily volume is roughly 25-30 Adzuna calls.
+Current defaults are `20`, `12`, and `8` (`server/config.js`). The preview budget matters as much as the other two: the preview shares the same phrase loop, and at `8` a three-family query truncates before the third family gets a single request.
+
+Without these, runs report `truncated: true` and silently skip role families. Starvation is silent — neither `truncated` nor `unsearchedRequests` is surfaced in the UI or any route, so the only symptom is a thin feed. Lowering `DISCOVERY_MAX_PAGES_PER_FAMILY` to `2` is a reasonable alternative to the largest budget, bounding per-family cost at six requests. Adzuna's free tier accommodates either.
+
+See "Operator Follow-Up" in the spec for the full table and rationale.
 
 - [ ] **Step 2: Confirm the suite and build are green**
 
@@ -752,8 +762,9 @@ Those are data changes against the running instance, not code.
 
 ## Operator note
 
-`DISCOVERY_RUN_REQUEST_BUDGET` and `DISCOVERY_QUERY_REQUEST_BUDGET` in
-`/etc/waypoint/waypoint.env` must be raised to 48 and 16, or runs will truncate.
+`DISCOVERY_RUN_REQUEST_BUDGET`, `DISCOVERY_QUERY_REQUEST_BUDGET`, and
+`DISCOVERY_PREVIEW_REQUEST_BUDGET` in `/etc/waypoint/waypoint.env` must be raised to
+72, 18, and 27, or runs will truncate and silently skip role families.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 BODY
