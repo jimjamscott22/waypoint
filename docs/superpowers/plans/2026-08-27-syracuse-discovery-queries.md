@@ -557,7 +557,16 @@ for s in saved dismissed; do
 done
 ```
 
-Expected: the same totals as before Step 2. Record them beforehand if you want a strict comparison.
+Expected, per the original plan: the same totals as before Step 2.
+
+**This expectation is wrong — it does not hold.** Executing this step on 2026-08-29 took
+saved from 15 to 0 and dismissed from 89 to 0. `discoveryRepository.search` INNER JOINs
+`listing_queries`, so deleting a query hides every listing whose only association was that
+query, at *every* status, not just `new`. The `listings` rows and their statuses survive
+(a known-saved id still answers `409 LISTING_NOT_NEW`, not `404`), and dismissal memory
+survives re-discovery, but the review queue will show zero until the listings are found
+again by a live query. See "Known Follow-Ups" in the spec. Do not run this deletion
+expecting saved and dismissed to stay visible.
 
 - [ ] **Step 5: Commit**
 

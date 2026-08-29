@@ -219,6 +219,25 @@ thin feed.
 
 Deliberately out of scope for this change, recorded so they are not lost:
 
+- **Deleting a saved query hides its saved and dismissed listings.** Found by executing
+  Task 4 on 2026-08-29. `discoveryRepository.search` INNER JOINs `listing_queries`, so a
+  listing with no surviving query association is invisible at *every* status filter, not
+  just `new`. Deleting a query cascades its `listing_queries` rows, so any listing whose
+  only association was that query drops out of the review queue even when it is `saved`
+  or `dismissed`. Observed: deleting the last two dead seed queries took the saved count
+  from 15 to 0 and dismissed from 89 to 0.
+
+  Nothing is deleted from `listings` — the rows and their statuses survive, confirmed by
+  probing a known-saved id and getting `409 LISTING_NOT_NEW` rather than `404`. Dismissal
+  memory also survives: `persistMatch` dedupes on `provider_job_id` and its
+  `ON DUPLICATE KEY UPDATE` uses `status = IF(status = 'expired', 'new', status)`, so a
+  re-discovered listing keeps `dismissed` and regains a `listing_queries` row. Visibility
+  therefore self-heals for any listing still being posted, and only for those.
+
+  `expireOrphanedListings` is not the culprit — its `WHERE l.status = 'new'` correctly
+  spares saved and dismissed. The INNER JOIN is the defect. The fix is to LEFT JOIN in
+  `search` so a listing without associations is still listable by status.
+
 - **Persisted score for multi-family listings.** `evaluation.score` depends on the
   `roleFamily` argument through `bestSynonymCoverage(roleFamily, description)`. For a
   listing whose title matches several families in one query, the persisted
