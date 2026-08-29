@@ -235,8 +235,27 @@ Deliberately out of scope for this change, recorded so they are not lost:
   therefore self-heals for any listing still being posted, and only for those.
 
   `expireOrphanedListings` is not the culprit — its `WHERE l.status = 'new'` correctly
-  spares saved and dismissed. The INNER JOIN is the defect. The fix is to LEFT JOIN in
-  `search` so a listing without associations is still listable by status.
+  spares saved and dismissed. The INNER JOIN is the defect.
+
+  **Fixed 2026-08-29:** `search` now LEFT JOINs `listing_queries`. The surrounding code
+  already tolerated the resulting NULLs — `mapDiscoveryItem` coerces a NULL score to 0 and
+  an absent distance rank to the `unknown` band, and the `matchedQueries` / `roleFamilies`
+  hydration defaults to `[]` — and every association-dependent filter (`queryId`,
+  `roleFamily`, `distanceBand`) uses an EXISTS subquery rather than a `WHERE lq.*` clause,
+  so none of them changed meaning. A `minScore` or `maxScore` bound still excludes these
+  rows, because their aggregate score is NULL rather than zero.
+
+  Shipped without a test. The behavior is SQL-level, so the only honest test is an
+  integration test in `tests/integration/mariadb.test.js`, and every test there skips
+  without `TEST_DB_PASSWORD` / `TEST_MIGRATION_DB_PASSWORD`. **This fix has not been
+  executed against a database.** It needs a regression test asserting that a listing whose
+  query associations were deleted is still returned by `search` under
+  `status: 'saved'`.
+
+- **`insightsRepository` INNER JOINs `listing_queries` too**, and was deliberately left
+  alone. Insights measure per-query attribution, so a listing with no surviving
+  association has nothing to attribute and a LEFT JOIN would feed NULL `query_id` rows to
+  the funnel. Recorded only so the asymmetry with `search` is not read as an oversight.
 
 - **Persisted score for multi-family listings.** `evaluation.score` depends on the
   `roleFamily` argument through `bestSynonymCoverage(roleFamily, description)`. For a

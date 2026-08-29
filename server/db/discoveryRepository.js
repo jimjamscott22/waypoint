@@ -176,6 +176,14 @@ export function createDiscoveryRepository(pool) {
   return {
     // Grouping by listing id before pagination keeps multi-query and multi-family
     // joins from duplicating rows or inflating the total.
+    //
+    // The join is LEFT so a listing outlives its query associations. Deleting a saved
+    // query cascades its listing_queries rows, and under an inner join that hid the
+    // listing at every status filter — a saved or dismissed decision would vanish from
+    // the review queue even though the listings row was untouched. Filters that need an
+    // association (queryId, roleFamily, distanceBand) use EXISTS and still exclude these
+    // rows; a minScore or maxScore bound drops them too, because their aggregate score is
+    // NULL rather than zero.
     search(filters = {}) {
       const page = filters.page ?? 1;
       const pageSize = filters.pageSize ?? 25;
@@ -187,7 +195,7 @@ export function createDiscoveryRepository(pool) {
 
       const groupedSql = `
         FROM listings l
-        JOIN listing_queries lq ON lq.listing_id = l.id
+        LEFT JOIN listing_queries lq ON lq.listing_id = l.id
         ${whereSql}
         GROUP BY l.id
         ${havingSql}`;
