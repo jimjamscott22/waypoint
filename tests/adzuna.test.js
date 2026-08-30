@@ -90,7 +90,9 @@ test('encodes the Auburn 40-mile request with date sorting and no empty paramete
   assert.equal(url.pathname, '/v1/api/jobs/us/search/1');
   assert.equal(url.searchParams.get('what_phrase'), 'systems administrator');
   assert.equal(url.searchParams.has('what_or'), false);
-  assert.equal(url.searchParams.get('where'), 'Auburn, Cayuga County, New York, United States');
+  // Adzuna geocodes `where` itself and returns HTTP 200 with count 0 — never an error —
+  // for a string it cannot resolve, so the full Nominatim display name must not reach it.
+  assert.equal(url.searchParams.get('where'), 'Auburn, NY');
   // 40 miles inclusive rounds up to 65 km at the provider.
   assert.equal(url.searchParams.get('distance'), '65');
   assert.equal(url.searchParams.get('max_days_old'), '14');

@@ -81,7 +81,7 @@ test('translates a structured search into provider parameters', () => {
     resultsPerPage: 50,
     whatPhrase: 'systems administrator',
     whatExclude: undefined,
-    where: 'Auburn, Cayuga County, New York, United States',
+    where: 'Auburn, NY',
     distanceKm: 65,
     maxDaysOld: 14,
     sortBy: 'date',
@@ -352,4 +352,28 @@ test('exposes at most three provider phrases per role family', () => {
 test('accepts an explicit provider phrase and defaults to the first one', () => {
   assert.equal(adzunaParameters(query(), 'it-support', 1).whatPhrase, 'IT support');
   assert.equal(adzunaParameters(query(), 'it-support', 1, 'help desk').whatPhrase, 'help desk');
+});
+
+// Adzuna geocodes the `where` string itself and answers HTTP 200 with count 0 when it
+// cannot resolve one, so a verbose center name empties the feed silently.
+test('sends the provider a location it can geocode rather than the full display name', () => {
+  const cases = [
+    ['City of Syracuse, Onondaga County, New York, United States', 'Syracuse, NY'],
+    ['Auburn, Cayuga County, New York, United States', 'Auburn, NY'],
+    ['Town of DeWitt, Onondaga County, New York, United States', 'DeWitt, NY'],
+    ['Village of Liverpool, Onondaga County, New York, 13088, United States', 'Liverpool, NY'],
+    ['Madison, Dane County, Wisconsin, United States', 'Madison, WI'],
+  ];
+  for (const [displayName, expected] of cases) {
+    const parameters = adzunaParameters(query({ center: { displayName, ...AUBURN } }), 'it-support', 1);
+    assert.equal(parameters.where, expected, `for ${displayName}`);
+  }
+});
+
+test('leaves an already-compact location and an unparseable one alone', () => {
+  const unchanged = ['Syracuse, NY', 'Madison, WI', 'Remote'];
+  for (const displayName of unchanged) {
+    const parameters = adzunaParameters(query({ center: { displayName, ...AUBURN } }), 'it-support', 1);
+    assert.equal(parameters.where, displayName, `for ${displayName}`);
+  }
 });
