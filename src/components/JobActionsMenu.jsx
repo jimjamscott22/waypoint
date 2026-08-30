@@ -52,8 +52,8 @@ export default function JobActionsMenu({ onEdit, onDuplicate, onMoveUp, onMoveDo
           setOpen(value => !value);
         }}
         style={{
-          width: 28,
-          height: 28,
+          width: 40,
+          height: 40,
           border: `1px solid ${open ? color.inputBorder : 'transparent'}`,
           borderRadius: radius.badge,
           background: open ? color.inputBg : 'transparent',
@@ -72,7 +72,7 @@ export default function JobActionsMenu({ onEdit, onDuplicate, onMoveUp, onMoveDo
           style={{
             position: 'absolute',
             zIndex: 5,
-            top: 32,
+            top: 42,
             right: 0,
             width: 150,
             background: color.cardBg,

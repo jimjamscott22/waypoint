@@ -3,6 +3,7 @@ import { color, font, radius } from '../theme';
 import SavedQueries from './SavedQueries';
 
 export default function CaptureBar({
+  layoutMode,
   onCapture,
   queries,
   onCreateQuery,
@@ -14,6 +15,7 @@ export default function CaptureBar({
   const [url, setUrl] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
   const [buttonHovered, setButtonHovered] = useState(false);
+  const mobile = layoutMode === 'mobile';
 
   const handleCapture = () => {
     const trimmed = url.trim();
@@ -28,13 +30,13 @@ export default function CaptureBar({
         background: color.cardBg,
         border: `1px solid ${color.cardBorder}`,
         borderRadius: radius.card,
-        padding: '14px 16px',
+        padding: mobile ? 13 : '15px 16px',
         display: 'flex',
         flexDirection: 'column',
         gap: 10,
       }}
     >
-      <div style={{ display: 'flex', gap: 10 }}>
+      <div style={{ display: 'flex', flexDirection: mobile ? 'column' : 'row', gap: 10 }}>
         <input
           value={url}
           onChange={e => setUrl(e.target.value)}
@@ -48,10 +50,11 @@ export default function CaptureBar({
             flex: 1,
             border: `1px solid ${inputFocused ? color.accent : color.inputBorder}`,
             borderRadius: radius.input,
+            minHeight: 44,
             padding: '10px 14px',
             font: `400 13px ${font.body}`,
             color: color.ink,
-            background: inputFocused ? '#fff' : color.inputBg,
+            background: inputFocused ? color.cardBg : color.inputBg,
             outline: 'none',
             transition: 'border-color 120ms ease, background 120ms ease',
           }}
@@ -67,6 +70,7 @@ export default function CaptureBar({
             background: color.accent,
             color: '#fff',
             font: `600 13px ${font.body}`,
+            minHeight: 44,
             padding: '0 18px',
             cursor: 'pointer',
             filter: buttonHovered ? 'brightness(1.08)' : 'none',
@@ -77,6 +81,7 @@ export default function CaptureBar({
         </button>
       </div>
       <SavedQueries
+        layoutMode={layoutMode}
         queries={queries}
         onCreate={onCreateQuery}
         onUpdate={onUpdateQuery}

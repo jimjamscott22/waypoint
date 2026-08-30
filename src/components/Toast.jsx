@@ -1,7 +1,8 @@
 import { color, font, radius } from '../theme';
 
-export default function Toast({ toast, onUndo, onDismiss, drawerOpen = false }) {
+export default function Toast({ toast, onUndo, onDismiss, drawerOpen = false, layoutMode }) {
   if (!toast) return null;
+  const mobile = layoutMode === 'mobile';
 
   return (
     <div
@@ -10,9 +11,10 @@ export default function Toast({ toast, onUndo, onDismiss, drawerOpen = false }) 
       style={{
         position: 'fixed',
         zIndex: 30,
-        right: drawerOpen ? 434 : 24,
-        bottom: 24,
-        maxWidth: 390,
+        left: mobile ? 16 : 'auto',
+        right: mobile ? 16 : drawerOpen ? 444 : 24,
+        bottom: mobile ? 84 : 24,
+        maxWidth: mobile ? 'none' : 390,
         display: 'flex',
         alignItems: 'center',
         gap: 12,

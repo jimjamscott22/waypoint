@@ -1,6 +1,6 @@
 import { useJobsStore } from './hooks/useJobsStore';
 import Sidebar from './components/Sidebar';
-import Header from './components/Header';
+import PipelineRoute from './components/PipelineRoute';
 import CaptureBar from './components/CaptureBar';
 import PipelineTable from './components/PipelineTable';
 import JobDetailPanel from './components/JobDetailPanel';
@@ -12,21 +12,26 @@ import { color, font } from './theme';
 
 export default function App() {
   const store = useJobsStore();
+  const mobile = store.layoutMode === 'mobile';
+  const wide = store.layoutMode === 'wide';
+  const showPipeline = store.activeView === 'Pipeline' || (wide && store.activeView === 'Review');
+  const showReviewPage = !wide && store.activeView === 'Review';
 
   if (store.loading) {
     return <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', color: color.textSecondary, font: `500 14px ${font.body}` }}>Connecting to Waypoint…</div>;
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', minWidth: 1280 }}>
-      <Sidebar activeView={store.activeView} onSelectView={store.setActiveView} />
+    <div style={{ display: 'flex', flexDirection: mobile ? 'column' : 'row', minHeight: '100vh', background: color.pageBg }}>
+      <Sidebar activeView={store.activeView} onSelectView={store.setActiveView} layoutMode={store.layoutMode} reviewCount={store.queue.length} />
 
-      <main style={{ flex: 1, minWidth: 0, padding: '28px 32px 40px', display: 'flex', flexDirection: 'column', gap: 20 }}>
-        {store.activeView === 'Pipeline' ? (
+      <main style={{ flex: 1, minWidth: 0, width: mobile ? '100%' : 'auto', padding: mobile ? '20px 16px 96px' : store.layoutMode === 'compact' ? '28px 24px 44px' : '32px 28px 48px', display: 'flex', flexDirection: 'column', gap: mobile ? 16 : 20 }}>
+        {showPipeline ? (
           <>
-            <Header />
+            <PipelineRoute tabs={store.tabs} stageFilter={store.stageFilter} onSelectStage={store.setStageFilter} layoutMode={store.layoutMode} />
             {store.migration ? <MigrationBanner count={store.migration.jobs.length} error={store.migration.error} onImport={store.importLocalJobs} onDiscard={store.discardLocalJobs} /> : null}
             <CaptureBar
+              layoutMode={store.layoutMode}
               onCapture={store.captureJob}
               queries={store.queries}
               onCreateQuery={store.createQuery}
@@ -38,9 +43,8 @@ export default function App() {
             <PipelineTable
               jobs={store.jobs}
               totalCount={store.totalCount}
-              tabs={store.tabs}
               stageFilter={store.stageFilter}
-              onSelectStage={store.setStageFilter}
+              layoutMode={store.layoutMode}
               onSelectJob={store.selectJob}
               onEditJob={store.editJob}
               onDuplicateJob={store.duplicateJob}
@@ -53,6 +57,18 @@ export default function App() {
               onDiscardDraft={store.discardDraft}
             />
           </>
+        ) : showReviewPage ? (
+          <ReviewQueue
+            queue={store.queue}
+            latestRun={store.latestRun}
+            provider={store.provider}
+            providerConfigured={store.providerConfigured}
+            running={store.running}
+            onRun={store.runScrape}
+            onSave={store.saveToPipeline}
+            onDismiss={store.dismissMatch}
+            layoutMode={store.layoutMode}
+          />
         ) : (
           <InsightsView
             data={store.insights}
@@ -63,11 +79,12 @@ export default function App() {
             onRetry={store.retryInsights}
             onOpenJob={store.openInsightJob}
             onOpenQuery={store.openInsightQuery}
+            layoutMode={store.layoutMode}
           />
         )}
       </main>
 
-      {store.activeView === 'Pipeline' ? (
+      {wide && showPipeline ? (
         <ReviewQueue
           queue={store.queue}
           latestRun={store.latestRun}
@@ -77,6 +94,7 @@ export default function App() {
           onRun={store.runScrape}
           onSave={store.saveToPipeline}
           onDismiss={store.dismissMatch}
+          layoutMode={store.layoutMode}
         />
       ) : null}
 
@@ -89,10 +107,11 @@ export default function App() {
           onSave={store.updateJob}
           onDuplicate={store.duplicateJob}
           onDelete={store.deleteJob}
+          layoutMode={store.layoutMode}
         />
       ) : null}
 
-      <Toast toast={store.toast} onUndo={store.undoDelete} onDismiss={store.dismissToast} drawerOpen={Boolean(store.selectedJob)} />
+      <Toast toast={store.toast} onUndo={store.undoDelete} onDismiss={store.dismissToast} drawerOpen={Boolean(store.selectedJob)} layoutMode={store.layoutMode} />
     </div>
   );
 }

@@ -22,21 +22,23 @@ function formatCoverage(value) {
   }).format(new Date(value));
 }
 
-export default function InsightsHeader({ range, onChangeRange, data, loading, headingRef }) {
+export default function InsightsHeader({ range, onChangeRange, data, loading, headingRef, layoutMode }) {
   const coverageDate = formatCoverage(data?.historyCoverageStartsAt);
+  const mobile = layoutMode === 'mobile';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20 }}>
+      <div style={{ display: 'flex', flexDirection: mobile ? 'column' : 'row', alignItems: mobile ? 'stretch' : 'flex-end', justifyContent: 'space-between', gap: 20 }}>
         <div>
-          <h1 ref={headingRef} tabIndex={-1} id="insights-title" style={{ margin: 0, font: `600 26px ${font.heading}`, letterSpacing: '-0.2px', outline: 'none' }}>
+          <div style={{ color: color.accent, font: `600 10px ${font.utility}`, letterSpacing: '1.1px', textTransform: 'uppercase' }}>Search signals</div>
+          <h1 ref={headingRef} tabIndex={-1} id="insights-title" style={{ margin: '5px 0 0', font: `650 ${mobile ? 29 : 36}px ${font.heading}`, letterSpacing: '-0.8px', outline: 'none' }}>
             Insights
           </h1>
           <p style={{ margin: '5px 0 0', color: color.textSecondary, fontSize: 13.5 }}>
             {RANGE_COPY[range]}{loading && data ? ' Refreshing…' : ''}
           </p>
         </div>
-        <div role="group" aria-label="Insights reporting range" style={{ display: 'flex', gap: 4, background: color.cardBg, border: `1px solid ${color.cardBorder}`, borderRadius: radius.input, padding: 4 }}>
+        <div role="group" aria-label="Insights reporting range" style={{ display: 'flex', alignSelf: mobile ? 'flex-start' : 'auto', gap: 4, background: color.cardBg, border: `1px solid ${color.cardBorder}`, borderRadius: radius.input, padding: 4 }}>
           {RANGE_OPTIONS.map(option => (
             <button
               key={option.value}

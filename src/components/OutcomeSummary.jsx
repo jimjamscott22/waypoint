@@ -7,13 +7,14 @@ const METRICS = [
   { key: 'activeOpportunities', label: 'Active opportunities', note: 'Applied, interviewing, or offer' },
 ];
 
-export default function OutcomeSummary({ outcomes }) {
+export default function OutcomeSummary({ outcomes, layoutMode }) {
+  const mobile = layoutMode === 'mobile';
   return (
-    <section aria-label="Outcome summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 10 }}>
+    <section aria-label="Outcome summary" style={{ display: 'grid', gridTemplateColumns: mobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))', gap: 10 }}>
       {METRICS.map(metric => {
         const value = outcomes?.[metric.key];
         return (
-          <div key={metric.key} style={{ background: color.cardBg, border: `1px solid ${color.cardBorder}`, borderRadius: radius.statCard, padding: '15px 16px 14px', minWidth: 0 }}>
+            <div key={metric.key} style={{ background: color.cardBg, border: `1px solid ${color.cardBorder}`, borderRadius: radius.statCard, padding: mobile ? '13px 12px' : '15px 16px 14px', minWidth: 0 }}>
             <div style={{ font: `600 23px ${font.heading}`, color: color.ink, letterSpacing: '-0.2px' }}>
               {value == null ? '—' : `${value}${metric.suffix ?? ''}`}
             </div>

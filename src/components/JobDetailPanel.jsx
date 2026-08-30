@@ -55,6 +55,7 @@ function ActionButton({ children, onClick, primary = false, danger = false }) {
         color: primary ? '#fff' : danger ? color.urgent : color.textBodyMid,
         cursor: 'pointer',
         font: `600 12.5px ${font.body}`,
+        minHeight: 42,
         padding: '8px 12px',
       }}
     >
@@ -63,12 +64,13 @@ function ActionButton({ children, onClick, primary = false, danger = false }) {
   );
 }
 
-export default function JobDetailPanel({ job, initialMode, onClose, onSave, onDuplicate, onDelete }) {
+export default function JobDetailPanel({ job, initialMode, onClose, onSave, onDuplicate, onDelete, layoutMode }) {
   const [mode, setMode] = useState(initialMode ?? 'view');
   const [form, setForm] = useState(() => toForm(job));
   const [errors, setErrors] = useState({});
   const panelRef = useRef(null);
   const closeButtonRef = useRef(null);
+  const mobile = layoutMode === 'mobile';
 
   useEffect(() => {
     const returnFocusTo = document.activeElement;
@@ -131,6 +133,7 @@ export default function JobDetailPanel({ job, initialMode, onClose, onSave, onDu
 
   const fields = [
     ['Company', job.company],
+    ['Date saved', formatDateTime(job.createdAt)],
     ['Stage', job.stage],
     ['Location', job.location],
     ['Salary', job.salary],
@@ -143,25 +146,26 @@ export default function JobDetailPanel({ job, initialMode, onClose, onSave, onDu
   ];
 
   return (
-    <div onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }} style={{ position: 'fixed', inset: 0, background: 'rgba(28,39,52,0.35)', display: 'flex', justifyContent: 'flex-end', zIndex: 20 }}>
+    <div onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }} style={{ position: 'fixed', inset: 0, background: 'rgba(24,56,67,0.38)', display: 'flex', justifyContent: 'flex-end', zIndex: 20, backdropFilter: 'blur(2px)' }}>
       <section
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="job-panel-title"
         onKeyDown={handlePanelKeyDown}
-        style={{ width: 410, background: color.cardBg, height: '100%', padding: 28, display: 'flex', flexDirection: 'column', gap: 18, borderLeft: `1px solid ${color.cardBorder}`, boxShadow: '-18px 0 44px rgba(28,39,52,0.12)', overflowY: 'auto' }}
+        style={{ width: mobile ? '100%' : 420, maxWidth: '100vw', background: color.cardBg, height: '100%', padding: mobile ? '20px 18px 92px' : 28, display: 'flex', flexDirection: 'column', gap: 18, borderLeft: `1px solid ${color.cardBorder}`, boxShadow: '-18px 0 44px rgba(24,56,67,0.16)', overflowY: 'auto' }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 18 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
             <div id="job-panel-title" style={{ font: `600 18px ${font.heading}`, lineHeight: 1.25 }}>{mode === 'edit' ? 'Edit job' : job.role}</div>
             <div style={{ fontSize: 13, color: color.textSecondary }}>{mode === 'edit' ? 'Update the details that keep this application moving.' : job.company}</div>
           </div>
-          <button ref={closeButtonRef} type="button" aria-label="Close job details" onClick={onClose} style={{ border: 'none', background: 'transparent', fontSize: 20, color: color.textMuted, cursor: 'pointer', padding: 1 }}>×</button>
+          <button ref={closeButtonRef} type="button" aria-label="Close job details" onClick={onClose} style={{ border: 'none', borderRadius: radius.input, background: 'transparent', fontSize: 20, color: color.textMuted, cursor: 'pointer', width: 42, height: 42, flex: '0 0 auto' }}>×</button>
         </div>
 
         {mode === 'edit' ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
+            <div style={{ padding: '9px 10px', borderRadius: radius.input, background: color.tideglass, color: color.textSecondary, font: `500 10px ${font.utility}` }}>Saved {formatDateTime(job.createdAt)}</div>
             <label style={labelStyle}>Role
               <input autoFocus value={form.role} onChange={event => updateField('role', event.target.value)} style={{ ...inputStyle, borderColor: errors.role ? color.urgent : color.inputBorder }} />
               {errors.role ? <span style={{ color: color.urgent, fontSize: 11, fontWeight: 500, letterSpacing: 0, textTransform: 'none' }}>{errors.role}</span> : null}

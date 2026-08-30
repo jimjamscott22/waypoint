@@ -9,6 +9,7 @@ import {
 } from '../lib/jobListOperations';
 import { api } from '../lib/apiClient';
 import { parseLegacyJobs } from '../lib/legacyImport';
+import { layoutModeForWidth } from '../lib/responsiveLayout';
 
 const STORAGE_KEY = 'waypoint.jobs';
 const TOAST_DURATION_MS = 6000;
@@ -35,6 +36,7 @@ export function useJobsStore() {
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
   const [activeView, setActiveView] = useState('Pipeline');
+  const [layoutMode, setLayoutMode] = useState(() => layoutModeForWidth(window.innerWidth));
   const [insightsRange, setInsightsRange] = useState('90d');
   const [insights, setInsights] = useState(null);
   const [insightsLoading, setInsightsLoading] = useState(false);
@@ -76,6 +78,12 @@ export function useJobsStore() {
       .catch(error => notify(`Waypoint could not connect to the server: ${error.message}`, 'error'))
       .finally(() => setLoading(false));
   }, [refresh, notify]);
+
+  useEffect(() => {
+    const updateLayout = () => setLayoutMode(layoutModeForWidth(window.innerWidth));
+    window.addEventListener('resize', updateLayout);
+    return () => window.removeEventListener('resize', updateLayout);
+  }, []);
 
   const loadInsights = useCallback(async range => {
     setInsightsLoading(true);
@@ -266,7 +274,7 @@ export function useJobsStore() {
   return {
     jobs: visibleJobs, totalCount: jobs.length, stageFilter, setStageFilter, tabs, queue, queries,
     latestRun, provider, providerConfigured, running, loading, migration, selectedJob, selectedJobMode, toast,
-    activeView, setActiveView, insightsRange, setInsightsRange, insights, insightsLoading, insightsError,
+    activeView, setActiveView, layoutMode, insightsRange, setInsightsRange, insights, insightsLoading, insightsError,
     focusedQueryId,
     captureJob, updateDraftField, commitDraft, discardDraft, saveToPipeline, dismissMatch,
     selectJob: id => { setSelectedJobId(id); setSelectedJobMode('view'); },

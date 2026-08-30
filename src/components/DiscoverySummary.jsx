@@ -11,8 +11,9 @@ function display(value, suffix = '') {
   return value == null ? '—' : `${value}${suffix}`;
 }
 
-export default function DiscoverySummary({ discovery, onOpenQuery }) {
+export default function DiscoverySummary({ discovery, onOpenQuery, layoutMode }) {
   const queries = discovery?.queries ?? [];
+  const mobile = layoutMode === 'mobile';
 
   return (
     <section aria-labelledby="discovery-title" style={{ background: color.cardBg, border: `1px solid ${color.cardBorder}`, borderRadius: radius.card, overflow: 'hidden' }}>
@@ -20,9 +21,9 @@ export default function DiscoverySummary({ discovery, onOpenQuery }) {
         <h2 id="discovery-title" style={{ margin: 0, font: `600 15px ${font.heading}`, color: color.ink }}>Discovery quality</h2>
         <div style={{ marginTop: 3, color: color.textMuted, fontSize: 11 }}>How often saved searches surface results worth keeping.</div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderBottom: `1px solid ${color.rowDivider}` }}>
+      <div style={{ display: 'grid', gridTemplateColumns: mobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', borderBottom: `1px solid ${color.rowDivider}` }}>
         {METRICS.map((metric, index) => (
-          <div key={metric.key} style={{ padding: '13px 18px', borderRight: index === METRICS.length - 1 ? 'none' : `1px solid ${color.rowDivider}` }}>
+          <div key={metric.key} style={{ padding: mobile ? '12px 13px' : '13px 18px', borderRight: index === METRICS.length - 1 || (mobile && index % 2 === 1) ? 'none' : `1px solid ${color.rowDivider}`, borderTop: mobile && index > 1 ? `1px solid ${color.rowDivider}` : 'none' }}>
             <div style={{ font: `600 18px ${font.heading}`, color: color.ink }}>{display(discovery?.[metric.key], metric.suffix)}</div>
             <div style={{ marginTop: 3, color: color.textMuted, fontSize: 10.5 }}>{metric.label}</div>
           </div>

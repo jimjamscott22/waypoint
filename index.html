@@ -7,13 +7,26 @@
     <link rel="icon" href="data:," />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Public+Sans:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <style>
-      body { margin: 0; background: #eef1f5; font-family: 'Public Sans', system-ui, sans-serif; color: #1c2734; }
+      html { background: #f4f7f8; }
+      body { margin: 0; background: #f4f7f8; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #183843; }
       * { box-sizing: border-box; }
-      ::placeholder { color: #93a1b1; }
+      ::placeholder { color: #76898d; }
+      button, input, select, textarea { font: inherit; }
+      button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible, [tabindex]:focus-visible {
+        outline: 3px solid rgba(169, 85, 62, 0.35) !important;
+        outline-offset: 2px;
+      }
+      @keyframes route-in {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+      }
     </style>
   </head>
   <body>

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { color, font, radius } from '../theme';
 
 const emptyQuery = { name: '', keywords: '', location: '', maxAgeDays: 7, enabled: true };
-const fieldStyle = { border: `1px solid ${color.inputBorder}`, borderRadius: radius.badge, padding: '6px 8px', font: `400 12px ${font.body}`, color: color.ink, background: '#fff' };
+const fieldStyle = { border: `1px solid ${color.inputBorder}`, borderRadius: radius.badge, padding: '6px 8px', font: `400 12px ${font.body}`, color: color.ink, background: '#fff', width: '100%', minWidth: 0, minHeight: 40 };
 
 function QueryChip({ query, onEdit, onToggle, buttonRef }) {
   return (
@@ -13,10 +13,11 @@ function QueryChip({ query, onEdit, onToggle, buttonRef }) {
   );
 }
 
-export default function SavedQueries({ queries, onCreate, onUpdate, onDelete, focusQueryId, onFocusHandled }) {
+export default function SavedQueries({ queries, onCreate, onUpdate, onDelete, focusQueryId, onFocusHandled, layoutMode }) {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyQuery);
   const queryButtons = useRef(new Map());
+  const mobile = layoutMode === 'mobile';
 
   useEffect(() => {
     if (!focusQueryId) return;
@@ -41,7 +42,7 @@ export default function SavedQueries({ queries, onCreate, onUpdate, onDelete, fo
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ display: 'flex', flexDirection: mobile ? 'column' : 'row', alignItems: mobile ? 'flex-start' : 'center', gap: 8 }}>
         <span style={{ fontSize: 11, fontWeight: 600, color: color.textMuted, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Saved queries</span>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {queries.map(query => (
@@ -60,15 +61,15 @@ export default function SavedQueries({ queries, onCreate, onUpdate, onDelete, fo
         </div>
       </div>
       {editing ? (
-        <form onSubmit={submit} style={{ display: 'grid', gridTemplateColumns: '1.1fr 1.5fr 1fr 90px auto', gap: 7, alignItems: 'center', paddingTop: 3 }}>
-          <input aria-label="Query name" required maxLength={80} placeholder="Name" value={form.name} onChange={event => setForm(previous => ({ ...previous, name: event.target.value }))} style={fieldStyle} />
-          <input aria-label="Query keywords" required maxLength={120} placeholder="Keywords" value={form.keywords} onChange={event => setForm(previous => ({ ...previous, keywords: event.target.value }))} style={fieldStyle} />
+        <form onSubmit={submit} style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr 1fr' : '1.1fr 1.5fr 1fr 90px auto', gap: 7, alignItems: 'center', paddingTop: 3 }}>
+          <input aria-label="Query name" required maxLength={80} placeholder="Name" value={form.name} onChange={event => setForm(previous => ({ ...previous, name: event.target.value }))} style={{ ...fieldStyle, minWidth: 0, gridColumn: mobile ? '1 / -1' : 'auto' }} />
+          <input aria-label="Query keywords" required maxLength={120} placeholder="Keywords" value={form.keywords} onChange={event => setForm(previous => ({ ...previous, keywords: event.target.value }))} style={{ ...fieldStyle, minWidth: 0, gridColumn: mobile ? '1 / -1' : 'auto' }} />
           <input aria-label="Query location" maxLength={120} placeholder="Location (optional)" value={form.location} onChange={event => setForm(previous => ({ ...previous, location: event.target.value }))} style={fieldStyle} />
           <select aria-label="Maximum age" value={form.maxAgeDays} onChange={event => setForm(previous => ({ ...previous, maxAgeDays: Number(event.target.value) }))} style={fieldStyle}>{[1, 3, 7, 14, 30].map(days => <option key={days} value={days}>{days} days</option>)}</select>
-          <div style={{ display: 'flex', gap: 5 }}>
-            <button type="submit" style={{ border: 'none', borderRadius: radius.badge, background: color.accent, color: '#fff', padding: '6px 9px', font: `600 11px ${font.body}`, cursor: 'pointer' }}>Save</button>
-            <button type="button" onClick={() => setEditing(null)} style={{ border: `1px solid ${color.inputBorder}`, borderRadius: radius.badge, background: '#fff', color: color.textMuted, padding: '6px 8px', cursor: 'pointer' }}>Cancel</button>
-            {editing !== 'new' ? <button type="button" onClick={() => { onDelete(editing); setEditing(null); }} style={{ border: 'none', background: 'transparent', color: color.urgent, padding: '5px', cursor: 'pointer' }}>Delete</button> : null}
+          <div style={{ display: 'flex', gap: 5, gridColumn: mobile ? '1 / -1' : 'auto' }}>
+            <button type="submit" style={{ border: 'none', borderRadius: radius.badge, background: color.accent, color: '#fff', padding: '6px 11px', minHeight: 40, font: `600 11px ${font.body}`, cursor: 'pointer' }}>Save</button>
+            <button type="button" onClick={() => setEditing(null)} style={{ border: `1px solid ${color.inputBorder}`, borderRadius: radius.badge, background: '#fff', color: color.textMuted, padding: '6px 10px', minHeight: 40, cursor: 'pointer' }}>Cancel</button>
+            {editing !== 'new' ? <button type="button" onClick={() => { onDelete(editing); setEditing(null); }} style={{ border: 'none', background: 'transparent', color: color.urgent, padding: '5px 10px', minHeight: 40, cursor: 'pointer' }}>Delete</button> : null}
           </div>
         </form>
       ) : null}
