@@ -254,6 +254,50 @@ test('reports every role family whose synonyms appear in the title', () => {
   assert.deepEqual(result.matchedRoleFamilies, ['systems-administration', 'it-support']);
 });
 
+test('accepts the local title variants that the searched phrases alone would drop', () => {
+  // Real Syracuse postings the funnel was discarding: the city advertises its service
+  // desk as "Computer Consultant", and "IS" persists locally for IT.
+  for (const title of [
+    'Computer Consultant I',
+    'Temporary Computer Consultant I',
+    'Manager of IS Support',
+    'Support Services Engineer',
+    'IT Analyst',
+  ]) {
+    const result = evaluateListing({
+      query: query({ roleFamilies: ['it-support'] }),
+      listing: listing({ title }),
+      roleFamily: 'it-support',
+      now: NOW,
+    });
+    assert.equal(result.accepted, true, title);
+  }
+});
+
+test('widening the filter does not change what is asked of the provider', () => {
+  // The added synonyms sit after the provider phrase limit on purpose: recall improves
+  // without spending a single extra request. Guard that they never drift forward.
+  assert.deepEqual(providerPhrases('it-support'), ['IT support', 'help desk', 'technical support']);
+  assert.deepEqual(providerPhrases('systems-administration'),
+    ['systems administrator', 'system administrator', 'IT administrator']);
+  assert.deepEqual(providerPhrases('it-operations'), ['IT operations', 'data center technician', 'NOC technician']);
+});
+
+test('still rejects unrelated postings that only mention support in the description', () => {
+  // The provider matches its phrase against the whole posting, so most of what arrives is
+  // noise like this. Widening the title filter must not start letting it through.
+  for (const title of ['Retail Cashier', 'Nuclear Reactor Operator', 'Gas Station Attendant Part Time']) {
+    const result = evaluateListing({
+      query: query({ roleFamilies: ['it-support'] }),
+      listing: listing({ title, description: 'Occasional help desk and IT support duties' }),
+      roleFamily: 'it-support',
+      now: NOW,
+    });
+    assert.equal(result.accepted, false, title);
+    assert.equal(result.rejectReason, 'terms');
+  }
+});
+
 test('supports internet service installation searches and related technician titles', () => {
   const roleFamily = 'internet-service-installation';
   const plan = buildRoleFamilyPlan(query({ roleFamilies: [roleFamily] }));

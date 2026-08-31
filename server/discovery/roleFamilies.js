@@ -7,6 +7,7 @@ export const ROLE_FAMILIES = Object.freeze({
       'IT administrator',
       'sysadmin',
       'infrastructure administrator',
+      'applications administrator',
     ],
   },
   'it-support': {
@@ -20,6 +21,14 @@ export const ROLE_FAMILIES = Object.freeze({
       'support technician',
       'computer technician',
       'IT specialist',
+      // Observed in real Syracuse postings and previously dropped: the city posts its
+      // service-desk roles as "Computer Consultant", and "IS" is still common locally
+      // for what everyone else calls IT. Kept after the third entry so the phrases sent
+      // to the provider are unchanged — these widen the filter, not the search.
+      'IT analyst',
+      'computer consultant',
+      'IS support',
+      'support services',
     ],
   },
   'network-administration': {
@@ -53,6 +62,7 @@ export const ROLE_FAMILIES = Object.freeze({
       'infrastructure operations',
       'operations technician',
       'systems operations',
+      'technical operations',
     ],
   },
   'desktop-support': {
