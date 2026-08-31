@@ -1,8 +1,9 @@
 import { AppError, sanitizeError } from '../errors.js';
 import { withConnection, withTransaction } from '../db/pool.js';
 import { persistMatch } from '../db/discoveryRepository.js';
-import { buildRoleFamilyPlan, providerPhrases } from './criteria.js';
+import { buildRoleFamilyPlan } from './criteria.js';
 import { evaluateListing } from './evaluateListing.js';
+import { createRequestBudget } from './budget.js';
 
 const MINUTE = 60_000;
 const DAY = 86_400_000;
@@ -59,13 +60,20 @@ function hasResolvedCenter(query) {
   return Number.isFinite(query.center?.latitude) && Number.isFinite(query.center?.longitude);
 }
 
+// `provider_job_id` is unique only within a provider, so two providers may legitimately
+// issue the same id for unrelated postings. Everything that deduplicates accepted matches
+// keys on the pair.
+function listingKey(listing) {
+  return `${listing.provider}:${listing.providerJobId}`;
+}
+
 export function createDiscoveryService({
   pool,
   queryRepository,
   listingRepository,
   runRepository,
   discoveryRepository,
-  adzunaClient,
+  providers,
   logger,
   discovery,
   now = () => new Date(),
@@ -80,54 +88,61 @@ export function createDiscoveryService({
 
   // One page loop drives both preview and persisted runs. `onAccepted` decides what
   // happens with a match; everything else — budgets, paging, diagnostics — is shared.
-  // Phrases are searched in sequence because Adzuna returns only records matching the
-  // one phrase per request; they share the family's budget rather than multiplying it.
+  // Each provider supplies its own request plan for the family rather than being driven
+  // through a phrase list, because how a query decomposes into requests is the provider's
+  // concern; requests within a plan share the provider's budget rather than multiplying it.
   async function searchRoleFamily({ query, roleFamily, budget, counters, accepted, matchTarget, at, onAccepted, familyCounters }) {
     let truncated = false;
-    let exhausted = false;
 
-    for (const phrase of providerPhrases(roleFamily)) {
-      if (exhausted) break;
+    for (const provider of providers) {
+      let exhausted = false;
 
-      for (let page = 1; page <= limits.maxPagesPerFamily; page += 1) {
-        if (budget.remaining <= 0) {
-          counters.unsearchedRequests += 1;
-          truncated = true;
-          exhausted = true;
-          break;
-        }
-        budget.remaining -= 1;
+      for (const request of provider.planRoleFamily({ query, roleFamily })) {
+        if (exhausted) break;
 
-        // Counted only once the request actually completes, so a family that throws
-        // mid-request (see runOneQuery's catch) reports the work it truly finished.
-        const response = await adzunaClient.search({ query, roleFamily, phrase, page });
-        counters.pagesRequested += 1;
-        familyCounters.pagesRequested += 1;
-        counters.providerResultCount = Math.max(counters.providerResultCount, response.providerCount ?? 0);
-        familyCounters.providerResultCount = Math.max(familyCounters.providerResultCount, response.providerCount ?? 0);
-        counters.recordsReceived += response.results.length;
-        familyCounters.recordsReceived += response.results.length;
-        counters.malformedRecords += response.malformedCount ?? 0;
-
-        for (const listing of response.results) {
-          const evaluation = evaluateListing({ query, listing, roleFamily, now: at });
-          if (!evaluation.accepted) {
-            counters[REJECT_COUNTERS[evaluation.rejectReason] ?? 'malformedRecords'] += 1;
-            continue;
+        for (let page = 1; page <= limits.maxPagesPerFamily; page += 1) {
+          if (!budget.take(provider.id)) {
+            counters.unsearchedRequests += 1;
+            truncated = true;
+            exhausted = true;
+            break;
           }
-          familyCounters.acceptedMatches += 1;
-          await onAccepted(listing, evaluation);
-        }
 
-        if (accepted.size >= matchTarget) {
-          // Stopping on target still leaves provider results unseen.
-          truncated = true;
-          exhausted = true;
-          break;
+          // Counted only once the request actually completes, so a family that throws
+          // mid-request (see runOneQuery's catch) reports the work it truly finished.
+          const response = await provider.search({ query, roleFamily, page, ...request });
+          counters.pagesRequested += 1;
+          familyCounters.pagesRequested += 1;
+          counters.providerResultCount = Math.max(counters.providerResultCount, response.providerCount ?? 0);
+          familyCounters.providerResultCount = Math.max(familyCounters.providerResultCount, response.providerCount ?? 0);
+          counters.recordsReceived += response.results.length;
+          familyCounters.recordsReceived += response.results.length;
+          counters.malformedRecords += response.malformedCount ?? 0;
+
+          for (const listing of response.results) {
+            const evaluation = evaluateListing({ query, listing, roleFamily, now: at });
+            if (!evaluation.accepted) {
+              counters[REJECT_COUNTERS[evaluation.rejectReason] ?? 'malformedRecords'] += 1;
+              continue;
+            }
+            familyCounters.acceptedMatches += 1;
+            await onAccepted(listing, evaluation);
+          }
+
+          if (accepted.size >= matchTarget) {
+            // Stopping on target still leaves provider results unseen.
+            truncated = true;
+            exhausted = true;
+            break;
+          }
+          if (response.results.length < (response.pageSize ?? response.results.length)) break;
+          if (page === limits.maxPagesPerFamily) truncated = true;
         }
-        if (response.results.length < (response.pageSize ?? response.results.length)) break;
-        if (page === limits.maxPagesPerFamily) truncated = true;
       }
+
+      // Enough matches is enough regardless of which provider supplied them; the
+      // remaining providers keep their budget for a later family.
+      if (accepted.size >= matchTarget) break;
     }
 
     if (truncated) counters.truncated = true;
@@ -148,11 +163,11 @@ export function createDiscoveryService({
       await acquireLock(connection, 'A discovery run is already in progress');
       try {
         const counters = emptyCounters();
-        const budget = { remaining: limits.previewRequestBudget };
+        const budget = createRequestBudget(limits.previewRequestBudget, providers);
         const accepted = new Map();
 
         for (const { roleFamily } of buildRoleFamilyPlan(criteria)) {
-          if (accepted.size >= PREVIEW_SAMPLE_TARGET || budget.remaining <= 0) {
+          if (accepted.size >= PREVIEW_SAMPLE_TARGET || budget.exhausted()) {
             counters.unsearchedRequests += 1;
             counters.truncated = true;
             continue;
@@ -167,15 +182,27 @@ export function createDiscoveryService({
             at,
             familyCounters: emptyFamilyCounters(),
             onAccepted: (listing, evaluation) => {
-              if (!accepted.has(listing.providerJobId)) {
-                accepted.set(listing.providerJobId, { listing, evaluation });
+              if (!accepted.has(listingKey(listing))) {
+                accepted.set(listingKey(listing), { listing, evaluation });
               }
             },
           });
         }
 
-        // Preview never writes, so duplicate and decision counts come from a read-only lookup.
-        const statuses = await discoveryRepository.statusesByProviderId('adzuna', [...accepted.keys()]);
+        // Preview never writes, so duplicate and decision counts come from a read-only
+        // lookup. It is scoped per provider because `provider_job_id` is only unique
+        // within one — querying another provider's ids would match the wrong rows.
+        const statuses = new Map();
+        for (const provider of providers) {
+          const providerJobIds = [...accepted.values()]
+            .filter(({ listing }) => listing.provider === provider.id)
+            .map(({ listing }) => listing.providerJobId);
+          if (providerJobIds.length === 0) continue;
+          const found = await discoveryRepository.statusesByProviderId(provider.id, providerJobIds);
+          for (const [providerJobId, status] of found) {
+            statuses.set(`${provider.id}:${providerJobId}`, status);
+          }
+        }
         for (const status of statuses.values()) {
           if (status === 'new') counters.duplicates += 1;
           else if (status === 'saved') counters.previouslySaved += 1;
@@ -200,7 +227,7 @@ export function createDiscoveryService({
             distanceBand: evaluation.distanceBand,
             matchedRoleFamilies: evaluation.matchedRoleFamilies,
             matchFacts: evaluation.matchFacts,
-            status: statuses.get(listing.providerJobId) ?? null,
+            status: statuses.get(listingKey(listing)) ?? null,
           }));
 
         return { results, diagnostics: counters };
@@ -220,7 +247,7 @@ export function createDiscoveryService({
 
     for (const { roleFamily } of plan) {
       const familyStarted = now();
-      if (accepted.size >= limits.persistedMatchTarget || budget.remaining <= 0) {
+      if (accepted.size >= limits.persistedMatchTarget || budget.exhausted()) {
         counters.unsearchedRequests += 1;
         counters.truncated = true;
         continue;
@@ -239,14 +266,14 @@ export function createDiscoveryService({
           at,
           familyCounters,
           onAccepted: async (listing, evaluation) => {
-            if (accepted.has(listing.providerJobId)) {
+            if (accepted.has(listingKey(listing))) {
               counters.duplicates += 1;
               return;
             }
             const { outcome } = await withTransaction(pool, connection => persistMatch(connection, {
               listing, queryId: query.id, evaluation, seenAt: sqlDate(at),
             }));
-            accepted.add(listing.providerJobId);
+            accepted.add(listingKey(listing));
             if (REOPENING_OUTCOMES.has(outcome)) counters.newMatches += 1;
             else counters[OUTCOME_COUNTERS[outcome]] += 1;
           },
@@ -327,7 +354,7 @@ export function createDiscoveryService({
         runId = await runRepository.create(lockConnection, trigger, queries.length, sqlDate(started));
         logger.info('discovery.started', { runId, trigger, queries: queries.length });
 
-        const budget = { remaining: queryIds ? limits.queryRequestBudget : limits.runRequestBudget };
+        const budget = createRequestBudget(queryIds ? limits.queryRequestBudget : limits.runRequestBudget, providers);
 
         for (const query of queries) {
           // A scheduled run must not abandon later searches because one is unresolved.

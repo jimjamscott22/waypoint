@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createAdzunaClient, normalizeAdzunaJob } from '../server/scraper/adzuna.js';
+import { providerIds, providerLabel } from '../server/providers.js';
 
 const auburnQuery = {
   center: {
@@ -178,4 +179,31 @@ test('sends the requested provider phrase rather than the family default', async
 
   assert.equal(calls[0].url.searchParams.get('what_phrase'), 'help desk');
   assert.equal(calls[0].url.searchParams.has('what_or'), false);
+});
+
+test('reports an identity that matches both the registry and the listings it stamps', () => {
+  const { client } = capturingClient();
+
+  // These three must agree. If the client's id drifted from the provider its normalizer
+  // stamps on listings, per-provider budgets and duplicate lookups would silently key on
+  // the wrong provider, and stored rows would label their source wrongly.
+  assert.equal(client.id, 'adzuna');
+  const normalized = normalizeAdzunaJob({
+    id: 42, title: 'Systems Administrator', redirect_url: 'https://example.test/job/42',
+    created: '2026-07-16T10:00:00Z',
+  });
+  assert.equal(normalized.provider, client.id);
+  assert.ok(providerIds().includes(client.id), 'the client id must be a registered provider');
+  assert.equal(providerLabel(client.id), 'Adzuna');
+});
+
+test('plans one request per family synonym, which is how Adzuna reaches recall', () => {
+  const { client } = capturingClient();
+  const plan = client.planRoleFamily({ query: auburnQuery, roleFamily: 'systems-administration' });
+
+  assert.deepEqual(plan, [
+    { phrase: 'systems administrator' },
+    { phrase: 'system administrator' },
+    { phrase: 'IT administrator' },
+  ]);
 });

@@ -1,6 +1,11 @@
 # USAJOBS as a Second Discovery Provider
 
-**Status:** Scope only. Nothing implemented, no code written, no key obtained.
+**Status:** Groundwork implemented 2026-08-31. No USAJOBS code, no key obtained.
+
+The provider-agnostic seam described under "What actually blocks a second provider" is
+built and tested; see **Implementation status** at the end. The USAJOBS client itself is
+still unbuilt and still gated on the conditions in **Recommendation** — a key, and a real
+count of Syracuse-area series-2210 postings.
 
 **Why now:** The 2026-08-29 investigation showed Adzuna is not the constraint — a single
 Syracuse `it-support` search returns 149 provider results and 201 records. The case for a
@@ -120,3 +125,36 @@ Conditional, in this order:
 - **Indeed** no longer offers a public search API for this use case.
 - **Arbeitnow** and **Remotive** both answered `HTTP 200` without a key but are
   remote-focused, which is the opposite of this app's Syracuse-local goal.
+
+## Implementation status (2026-08-31)
+
+Done — the four blockers above, plus a bug the multi-provider path exposed:
+
+- **Per-provider budgets** (`server/discovery/budget.js`). The configured total is *split*
+  across configured providers rather than granted to each, so the run's overall request
+  ceiling is unchanged and a single-provider run behaves exactly as before. Verified by
+  reverting to the shared counter: Adzuna consumed all four requests of a two-provider
+  budget and the second provider was searched zero times — the documented starvation,
+  reproduced, and now caught by a test.
+- **Provider-agnostic interface.** A provider is `{ id, planRoleFamily, search }`.
+  `planRoleFamily` is where a provider decomposes a role family into requests: Adzuna
+  returns one request per synonym because `what_phrase` matches a single exact phrase;
+  a series-code provider would return one. `searchRoleFamily` iterates providers and
+  spreads each request descriptor into `search`, so a descriptor's fields stay the
+  provider's own vocabulary rather than becoming a shared schema.
+- **The hardcoded literals.** `source` now comes from `providerLabel(row.provider)` via a
+  registry at `server/providers.js`; preview's duplicate lookup is scoped per provider.
+- **Composite listing identity.** `provider_job_id` is unique only *within* a provider, so
+  the accepted-match sets in both `preview` and `runOneQuery` keyed on it would have
+  collapsed two providers' unrelated postings into one. They now key on
+  `provider:provider_job_id`.
+
+Not done, and deliberately so:
+
+- **No USAJOBS client, normalizer, or key.** Unchanged from the recommendation above.
+- **The per-query decomposition question is still open.** `planRoleFamily` is scoped to one
+  role family, so a provider whose single query subsumes all eight families would still be
+  asked eight times and deduplicate the redundancy away — correct results, wasted budget.
+  Whether to hoist the seam to the query level depends on what a real USAJOBS response
+  looks like, and building that abstraction now, against no second provider, would be
+  guessing. Resolve it when the first real response is in hand.

@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { withConnection } from './pool.js';
 import { formatSalary, toIso } from './rows.js';
+import { providerLabel } from '../providers.js';
 
 // How a rediscovered listing relates to what is already stored. Saved and dismissed
 // decisions are never overwritten; an expired listing may reopen as new.
@@ -101,7 +102,7 @@ function mapDiscoveryItem(row, matchedQueries, roleFamilies) {
     url: row.url,
     publishedAt: toIso(row.published_at),
     status: row.status,
-    source: 'Adzuna',
+    source: providerLabel(row.provider),
     latitude: row.latitude == null ? null : Number(row.latitude),
     longitude: row.longitude == null ? null : Number(row.longitude),
     providerCategory: row.provider_category,

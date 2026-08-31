@@ -15,7 +15,7 @@ import { createLogger } from './logger.js';
 export function createServices({
   env = process.env,
   pool: suppliedPool,
-  adzunaClient: suppliedClient,
+  providers: suppliedProviders,
   geocoder: suppliedGeocoder,
   logger = createLogger(),
 } = {}) {
@@ -28,10 +28,14 @@ export function createServices({
   const insightsRepository = createInsightsRepository(pool);
   const insights = createInsightsService({ repository: insightsRepository });
   const discoveryRepository = createDiscoveryRepository(pool);
-  const adzunaClient = suppliedClient ?? (config.adzuna.configured ? createAdzunaClient(config.adzuna) : null);
-  const discovery = adzunaClient ? createDiscoveryService({
+  // Discovery runs against whichever providers are configured; an unconfigured one is
+  // simply absent from the list. With none of them configured there is nothing to
+  // search, and the service stays off entirely.
+  const providers = suppliedProviders
+    ?? [config.adzuna.configured ? createAdzunaClient(config.adzuna) : null].filter(Boolean);
+  const discovery = providers.length ? createDiscoveryService({
     pool, queryRepository: queries, listingRepository: listings, runRepository: runs,
-    discoveryRepository, adzunaClient, logger, discovery: config.discovery,
+    discoveryRepository, providers, logger, discovery: config.discovery,
   }) : null;
   // Nominatim requires a contact identity, so location lookup stays off until it is configured.
   const geocoder = suppliedGeocoder ?? (config.geocoder.userAgent ? createNominatimClient(config.geocoder) : null);
