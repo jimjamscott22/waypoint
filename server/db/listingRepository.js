@@ -3,6 +3,7 @@ import { withConnection, withTransaction } from './pool.js';
 import { insertJob } from './jobRepository.js';
 import { persistMatch } from './discoveryRepository.js';
 import { formatSalary, mapJob, toIso } from './rows.js';
+import { providerLabel } from '../providers.js';
 
 export { formatSalary };
 
@@ -21,7 +22,7 @@ function mapMatch(row, matchedQueries = []) {
     url: row.url,
     publishedAt: toIso(row.published_at),
     status: row.status,
-    source: 'Adzuna',
+    source: providerLabel(row.provider),
     score: matchedQueries.length ? Math.max(...matchedQueries.map(item => item.score)) : 0,
     matchedQueries,
   };

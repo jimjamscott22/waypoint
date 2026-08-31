@@ -2,6 +2,18 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { AppError } from '../server/errors.js';
 import { createDiscoveryService } from '../server/discovery/service.js';
+import { providerPhrases } from '../server/discovery/criteria.js';
+
+// Stands in for a real client: same identity and plan shape, with the search function
+// supplied per test. Defaults to Adzuna's decomposition (one request per family synonym)
+// so a plain `search` stub exercises the same paths it always did.
+function fakeProvider({ id = 'adzuna', search, planRoleFamily } = {}) {
+  return {
+    id,
+    planRoleFamily: planRoleFamily ?? (({ roleFamily }) => providerPhrases(roleFamily).map(phrase => ({ phrase }))),
+    search,
+  };
+}
 
 const AT = new Date('2026-08-12T12:00:00.000Z');
 const AUBURN = { latitude: 42.9317, longitude: -76.5661 };
@@ -79,7 +91,7 @@ function busyPool() {
   return { getConnection: async () => connection };
 }
 
-function harness({ pool, search, queries = [query()], persist, discovery = {}, statuses = new Map() }) {
+function harness({ pool, search, providers, queries = [query()], persist, discovery = {}, statuses = new Map() }) {
   const searches = [];
   const finishedQueries = [];
   let finishedRun;
@@ -100,8 +112,11 @@ function harness({ pool, search, queries = [query()], persist, discovery = {}, s
       finishQuery: async (_connection, result) => { finishedQueries.push(result); },
       finish: async (_connection, id, summary) => { finishedRun = summary; return { id, ...summary }; },
     },
-    discoveryRepository: { statusesByProviderId: async () => statuses },
-    adzunaClient: { search },
+    discoveryRepository: {
+      statusesByProviderId: async (provider, ids) =>
+        (typeof statuses === 'function' ? statuses(provider, ids) : statuses),
+    },
+    providers: providers ?? [fakeProvider({ search })],
     logger: { info: () => {}, error: () => {} },
     discovery,
     now: () => AT,
@@ -393,7 +408,7 @@ test('rejects a manual run during the cooldown before taking the scrape lock', a
     listingRepository: {},
     runRepository: { recentManual: async () => ({ id: 'recent' }) },
     discoveryRepository: {},
-    adzunaClient: {},
+    providers: [fakeProvider({ search: async () => { throw new Error('search should not be attempted'); } })],
     logger: { info: () => {}, error: () => {} },
     now: () => AT,
   });
@@ -420,7 +435,7 @@ test('retains committed counters when a fatal bookkeeping error ends a run', asy
       },
     },
     discoveryRepository: { statusesByProviderId: async () => new Map() },
-    adzunaClient: { search: async () => page([listing(1)]) },
+    providers: [fakeProvider({ search: async () => page([listing(1)]) })],
     logger: { info: () => {}, error: () => {} },
     now: () => AT,
   });
@@ -480,4 +495,122 @@ test('stops searching later phrases once the request budget runs out', async () 
   assert.deepEqual(requested, ['systems administrator', 'system administrator']);
   assert.equal(finishedQueries[0].truncated, true);
   assert.ok(finishedQueries[0].unsearchedRequests >= 1);
+});
+
+test('gives each provider its own budget so a broad provider cannot starve another', async () => {
+  const { pool } = fakePool();
+  const requested = [];
+  const { service } = harness({
+    pool,
+    providers: [
+      // Three phrases and every page full: against one shared counter this provider
+      // would page until the whole run budget was gone, which is the starvation the
+      // per-provider split exists to prevent.
+      fakeProvider({
+        id: 'adzuna',
+        search: async () => { requested.push('adzuna'); return fullPage(requested.length * 100, 50); },
+      }),
+      fakeProvider({
+        id: 'usajobs',
+        planRoleFamily: () => [{ series: '2210' }],
+        search: async () => { requested.push('usajobs'); return page([]); },
+      }),
+    ],
+    discovery: { runRequestBudget: 4, maxPagesPerFamily: 3, persistedMatchTarget: 5000 },
+  });
+
+  await service.runAll('scheduled');
+
+  assert.deepEqual(requested, ['adzuna', 'adzuna', 'usajobs']);
+});
+
+test('lets each provider decompose a role family its own way', async () => {
+  const { pool } = fakePool();
+  const adzunaRequests = [];
+  const usajobsRequests = [];
+  const { service } = harness({
+    pool,
+    providers: [
+      fakeProvider({
+        id: 'adzuna',
+        search: async ({ phrase }) => { adzunaRequests.push(phrase); return page([]); },
+      }),
+      // A series-code provider covers the family in a single request instead of being
+      // driven through a phrase loop that suits neither its retrieval model nor its budget.
+      fakeProvider({
+        id: 'usajobs',
+        planRoleFamily: () => [{ series: '2210' }],
+        search: async ({ series }) => { usajobsRequests.push(series); return page([]); },
+      }),
+    ],
+    discovery: { runRequestBudget: 20, maxPagesPerFamily: 3, persistedMatchTarget: 500 },
+  });
+
+  await service.runAll('scheduled');
+
+  assert.deepEqual(adzunaRequests, ['systems administrator', 'system administrator', 'IT administrator']);
+  assert.deepEqual(usajobsRequests, ['2210']);
+});
+
+test('keeps listings from different providers apart when they share a provider job id', async () => {
+  const { pool } = fakePool();
+  const { service, finishedQueries } = harness({
+    pool,
+    providers: [
+      fakeProvider({
+        id: 'adzuna',
+        planRoleFamily: () => [{ phrase: 'systems administrator' }],
+        search: async () => page([listing(1)]),
+      }),
+      // The same provider_job_id from a different provider is a different posting:
+      // the id is unique only within a provider, so these must not collapse into one.
+      fakeProvider({
+        id: 'usajobs',
+        planRoleFamily: () => [{ series: '2210' }],
+        search: async () => page([listing(1, { provider: 'usajobs', company: 'Syracuse VA Medical Center' })]),
+      }),
+    ],
+    discovery: { runRequestBudget: 20, maxPagesPerFamily: 1, persistedMatchTarget: 500 },
+  });
+
+  await service.runAll('scheduled');
+
+  assert.equal(finishedQueries[0].duplicates, 0, 'a shared id across providers is not a duplicate');
+  assert.equal(finishedQueries[0].newMatches, 2);
+});
+
+test('scopes preview duplicate lookups to each provider', async () => {
+  const { pool } = fakePool();
+  const lookups = [];
+  const { service } = harness({
+    pool,
+    providers: [
+      fakeProvider({
+        id: 'adzuna',
+        planRoleFamily: () => [{ phrase: 'systems administrator' }],
+        search: async () => page([listing(1)]),
+      }),
+      fakeProvider({
+        id: 'usajobs',
+        planRoleFamily: () => [{ series: '2210' }],
+        search: async () => page([listing(1, { provider: 'usajobs' })]),
+      }),
+    ],
+    // Only the federal copy is already stored. Asking Adzuna for id '1' must not match it.
+    statuses: (provider, ids) => {
+      lookups.push({ provider, ids: [...ids] });
+      return provider === 'usajobs' ? new Map([['1', 'saved']]) : new Map();
+    },
+    discovery: { previewRequestBudget: 20, maxPagesPerFamily: 1 },
+  });
+
+  const result = await service.preview(query());
+
+  assert.deepEqual(lookups, [
+    { provider: 'adzuna', ids: ['1'] },
+    { provider: 'usajobs', ids: ['1'] },
+  ]);
+  assert.equal(result.diagnostics.previouslySaved, 1);
+  assert.equal(result.diagnostics.newMatches, 1);
+  assert.equal(result.results.find(item => item.company === 'Northwind').status, null);
 });

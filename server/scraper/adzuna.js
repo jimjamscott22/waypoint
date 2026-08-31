@@ -1,5 +1,5 @@
 import { sanitizeError } from '../errors.js';
-import { adzunaParameters, RESULTS_PER_PAGE } from '../discovery/criteria.js';
+import { adzunaParameters, providerPhrases, RESULTS_PER_PAGE } from '../discovery/criteria.js';
 
 const ENDPOINT_BASE = 'https://api.adzuna.com/v1/api/jobs/us/search';
 const CONTRACT_TIMES = new Set(['full_time', 'part_time']);
@@ -95,6 +95,17 @@ export function createAdzunaClient({
 }) {
   if (!appId || !appKey) throw new Error('Adzuna credentials are not configured');
   return {
+    id: 'adzuna',
+
+    // How this provider decomposes one role family into requests. Adzuna's `what_phrase`
+    // matches a single exact phrase per request, so recall requires issuing the family's
+    // synonyms separately; they share the family's budget rather than multiplying it.
+    // A provider with a different retrieval model returns a different, possibly shorter,
+    // plan here instead of being forced through a phrase loop that does not suit it.
+    planRoleFamily({ roleFamily }) {
+      return providerPhrases(roleFamily).map(phrase => ({ phrase }));
+    },
+
     async search({ query, roleFamily, phrase, page = 1 }) {
       const parameters = adzunaParameters(query, roleFamily, page, phrase);
       const url = buildUrl({ appId, appKey, parameters });
