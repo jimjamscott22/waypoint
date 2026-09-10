@@ -20,6 +20,14 @@ node --test --test-name-pattern "reorders visible jobs" tests/ # single test by 
 
 There is no linter or formatter configured. Tests use the built-in `node:test` runner (no Jest/Vitest), so test files import source modules directly and must use explicit `.js` extensions in import paths.
 
+## Required deployment after changes
+
+After any code change or whenever a new production build is created, treat redeployment to this device's `waypoint.service` as part of completing the task unless the user explicitly says not to deploy. Do not stop after `npm run build` or hand off deployment commands for the user to run.
+
+Follow the upgrade procedure in `docs/deployment-raspberry-pi.md`: run the full tests and production build, stage a new immutable artifact under `/opt/waypoint/releases`, install its production dependencies, run the protected migration helper against the staged release, atomically repoint `/opt/waypoint/current`, and restart `waypoint.service`. Keep the previous release available for rollback and never expose protected environment-file contents.
+
+Before reporting completion, verify the active release symlink, `waypoint.service`, the loopback `/api/health` endpoint, the systemd timers, and Tailscale Serve routing. If permissions or another external condition prevent deployment, report the concrete blocker instead of claiming the code change is complete on the device.
+
 ## Architecture
 
 Waypoint is a single-screen React + Vite dashboard backed by a Fastify 5 API and MariaDB 10.6+.

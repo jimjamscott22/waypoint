@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { JOB_STAGES } from '../lib/seedData';
 import { formatDateTime, fromLocalDateTimeInput, toLocalDateTimeInput } from '../lib/dateTime';
+import { externalJobUrl } from '../lib/jobUrl';
 import { color, font, radius } from '../theme';
 
 function toForm(job) {
@@ -71,6 +72,7 @@ export default function JobDetailPanel({ job, initialMode, onClose, onSave, onDu
   const panelRef = useRef(null);
   const closeButtonRef = useRef(null);
   const mobile = layoutMode === 'mobile';
+  const jobPostingUrl = externalJobUrl(job.url);
 
   useEffect(() => {
     const returnFocusTo = document.activeElement;
@@ -193,7 +195,11 @@ export default function JobDetailPanel({ job, initialMode, onClose, onSave, onDu
             {fields.map(([label, value]) => (
               <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.7px', textTransform: 'uppercase', color: color.textMuted }}>{label}</div>
-                <div style={{ fontSize: 13, color: color.textBodyMid, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{value || '—'}</div>
+                <div style={{ fontSize: 13, color: color.textBodyMid, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                  {label === 'URL' && jobPostingUrl ? (
+                    <a href={jobPostingUrl} target="_blank" rel="noopener noreferrer" aria-label={`Open ${job.role} job posting in a new tab`} style={{ color: color.accent, fontWeight: 600, textUnderlineOffset: 2 }}>{value} ↗</a>
+                  ) : value || '—'}
+                </div>
               </div>
             ))}
           </div>

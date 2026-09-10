@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { JOB_STAGES } from '../lib/seedData';
 import { formatSavedDate } from '../lib/dateTime';
+import { externalJobUrl } from '../lib/jobUrl';
 import { color, chipColor, font, radius, shadow } from '../theme';
 import JobActionsMenu from './JobActionsMenu';
 
@@ -26,6 +27,39 @@ function StageSelect({ job, onChangeStage }) {
       </select>
       <span aria-hidden="true" style={{ position: 'absolute', right: 8, color: chip.fg, fontSize: 8, pointerEvents: 'none' }}>▼</span>
     </div>
+  );
+}
+
+function JobTitle({ job, mobile = false }) {
+  const href = externalJobUrl(job.url);
+  const style = {
+    display: 'block',
+    color: href ? color.accent : color.ink,
+    font: mobile ? `650 15px ${font.heading}` : undefined,
+    fontSize: mobile ? undefined : 13.5,
+    fontWeight: mobile ? undefined : 650,
+    lineHeight: mobile ? 1.25 : undefined,
+    textDecoration: href ? 'underline' : 'none',
+    textDecorationThickness: href ? '1px' : undefined,
+    textUnderlineOffset: href ? 2 : undefined,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  };
+
+  if (!href) return <span style={style}>{job.role}</span>;
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`Open ${job.role} at ${job.company || 'company not set'} job posting in a new tab`}
+      onClick={event => event.stopPropagation()}
+      style={style}
+    >
+      {job.role} ↗
+    </a>
   );
 }
 
@@ -72,9 +106,9 @@ export default function JobRow({ job, columns, layoutMode, onSelect, onEdit, onD
 
   if (mobile) {
     return (
-      <article role="group" aria-label={`${job.role} at ${job.company}`} onClick={onSelect} style={{ padding: 14, border: `1px solid ${color.cardBorder}`, borderRadius: radius.card, background: color.cardBg, boxShadow: shadow.card, cursor: 'pointer' }}>
+      <article role="group" tabIndex={0} aria-label={`${job.role} at ${job.company}`} onClick={onSelect} onKeyDown={keyboardSelect} style={{ padding: 14, border: `1px solid ${color.cardBorder}`, borderRadius: radius.card, background: color.cardBg, boxShadow: shadow.card, cursor: 'pointer' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
-          <button type="button" onClick={event => { event.stopPropagation(); onSelect(); }} style={{ minWidth: 0, border: 'none', background: 'transparent', padding: 0, textAlign: 'left', cursor: 'pointer' }}><span style={{ display: 'block', color: color.ink, font: `650 15px ${font.heading}`, lineHeight: 1.25 }}>{job.role}</span><span style={{ display: 'block', marginTop: 3, color: color.textSecondary, fontSize: 12.5 }}>{job.company || 'Company not set'}</span></button>
+          <div style={{ minWidth: 0 }}><JobTitle job={job} mobile /><span style={{ display: 'block', marginTop: 3, color: color.textSecondary, fontSize: 12.5 }}>{job.company || 'Company not set'}</span></div>
           <JobActionsMenu onEdit={onEdit} onDuplicate={onDuplicate} onMoveUp={onMoveUp} onMoveDown={onMoveDown} onDelete={onDelete} canMoveUp={canMoveUp} canMoveDown={canMoveDown} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 12 }}><StageSelect job={job} onChangeStage={onChangeStage} /><span style={{ color: color.textMuted, font: `500 10px ${font.utility}` }}>Saved {formatSavedDate(job.createdAt)}</span></div>
@@ -87,7 +121,7 @@ export default function JobRow({ job, columns, layoutMode, onSelect, onEdit, onD
   return (
     <div role="row" tabIndex={0} aria-label={`${job.role} at ${job.company}`} onClick={onSelect} onKeyDown={keyboardSelect} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onDragOver={event => { event.preventDefault(); onDragOver(); }} onDrop={event => { event.preventDefault(); onDrop(); }} style={{ display: 'grid', gridTemplateColumns: columns, gap: 8, alignItems: 'center', padding: '13px 14px', borderBottom: `1px solid ${isDragTarget ? color.accent : color.rowDivider}`, cursor: 'pointer', background: hovered || isDragTarget ? color.inputBg : 'transparent', transition: 'background 120ms ease, border-color 120ms ease' }}>
       <button type="button" draggable aria-label={`Drag ${job.role} to reorder`} title="Drag to reorder" onClick={event => event.stopPropagation()} onDragStart={event => { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', job.id); onDragStart(); }} onDragEnd={onDragEnd} style={{ border: 'none', background: 'transparent', color: hovered ? color.textSecondary : color.textMuted, cursor: 'grab', fontSize: 15, letterSpacing: '-2px', padding: 0 }}>⋮⋮</button>
-      <div style={{ minWidth: 0 }}><div style={{ color: color.ink, fontSize: 13.5, fontWeight: 650, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{job.role}</div><div style={{ marginTop: 2, color: color.textSecondary, fontSize: 11.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{job.company || 'Company not set'}{job.location ? ` · ${job.location}` : ''}</div></div>
+      <div style={{ minWidth: 0 }}><JobTitle job={job} /><div style={{ marginTop: 2, color: color.textSecondary, fontSize: 11.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{job.company || 'Company not set'}{job.location ? ` · ${job.location}` : ''}</div></div>
       <StageSelect job={job} onChangeStage={onChangeStage} />
       <div style={{ color: color.textBodyMid, fontSize: 11.5, overflow: 'hidden', textOverflow: 'ellipsis' }}>{job.salary || '—'}</div>
       <div style={{ color: color.textBodyMid, fontSize: 11.5, overflow: 'hidden', textOverflow: 'ellipsis' }}>{job.contact || '—'}</div>
