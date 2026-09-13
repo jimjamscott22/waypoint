@@ -8,3 +8,8 @@ Thumbs.db
 npm-debug.log*
 .vite
 .claude/
+# Local Graphify execution state and reusable extraction cache
+graphify-out/cache/
+graphify-out/.graphify_python
+graphify-out/.graphify_root
+graphify-out/cost.json
