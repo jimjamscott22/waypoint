@@ -202,6 +202,21 @@ test('applies the structured discovery migration with Auburn defaults and safe s
       'junior-systems-engineering', 'network-administration', 'systems-administration',
     ]);
 
+    const syracuseId = '10000000-0000-4000-8000-000000000005';
+    const syracuse = await withConnection(pool, connection => connection.query('SELECT * FROM saved_queries WHERE id = ?', [syracuseId]));
+    assert.equal(syracuse.length, 1);
+    assert.equal(syracuse[0].center_display_name, 'Syracuse, Onondaga County, New York, United States');
+    assert.equal(Number(syracuse[0].preferred_radius_miles), 15);
+    assert.equal(Number(syracuse[0].maximum_radius_miles), 25);
+    assert.equal(Number(syracuse[0].enabled), 1);
+    const syracuseFamilies = await withConnection(pool, connection => connection.query(
+      'SELECT role_family FROM saved_query_role_families WHERE query_id = ? ORDER BY role_family', [syracuseId]
+    ));
+    assert.deepEqual(syracuseFamilies.map(row => row.role_family), [
+      'cloud-support', 'desktop-support', 'internet-service-installation', 'it-operations',
+      'it-support', 'junior-systems-engineering', 'network-administration', 'systems-administration',
+    ]);
+
     const seedFamilies = await withConnection(pool, connection => connection.query(
       `SELECT query_id, role_family FROM saved_query_role_families
        WHERE query_id IN (
