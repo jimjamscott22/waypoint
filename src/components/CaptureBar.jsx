@@ -9,6 +9,8 @@ export default function CaptureBar({
   onCreateQuery,
   onUpdateQuery,
   onDeleteQuery,
+  onResolveLocation,
+  onPreviewQuery,
   focusQueryId,
   onFocusQueryHandled,
 }) {
@@ -86,6 +88,8 @@ export default function CaptureBar({
         onCreate={onCreateQuery}
         onUpdate={onUpdateQuery}
         onDelete={onDeleteQuery}
+        onResolveLocation={onResolveLocation}
+        onPreview={onPreviewQuery}
         focusQueryId={focusQueryId}
         onFocusHandled={onFocusQueryHandled}
       />

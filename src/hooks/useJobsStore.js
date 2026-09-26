@@ -10,6 +10,7 @@ import {
 import { api } from '../lib/apiClient';
 import { parseLegacyJobs } from '../lib/legacyImport';
 import { layoutModeForWidth } from '../lib/responsiveLayout';
+import { countByFit, filterByFit, withFit } from '../lib/matchFit';
 
 const STORAGE_KEY = 'waypoint.jobs';
 const TOAST_DURATION_MS = 6000;
@@ -43,6 +44,7 @@ export function useJobsStore() {
   const [insightsError, setInsightsError] = useState(null);
   const [focusedQueryId, setFocusedQueryId] = useState(null);
   const [stageFilter, setStageFilter] = useState('All');
+  const [fitFilter, setFitFilter] = useState('all');
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [selectedJobMode, setSelectedJobMode] = useState('view');
   const [deletedJobId, setDeletedJobId] = useState(null);
@@ -121,6 +123,11 @@ export function useJobsStore() {
     () => jobs.filter(job => job.isDraft || stageFilter === 'All' || job.stage === stageFilter),
     [jobs, stageFilter]
   );
+  // Like stageFilter, the fit filter narrows what the review queue shows while
+  // `reviewCount` and actions still work against the full queue.
+  const queueWithFit = useMemo(() => withFit(queue), [queue]);
+  const visibleQueue = useMemo(() => filterByFit(queueWithFit, fitFilter), [queueWithFit, fitFilter]);
+  const fitCounts = useMemo(() => countByFit(queueWithFit), [queueWithFit]);
   const tabs = useMemo(() => STAGES.map(stage => ({
     stage,
     count: stage === 'All' ? jobs.length : jobs.filter(job => job.stage === stage).length,
@@ -221,14 +228,19 @@ export function useJobsStore() {
     } catch (error) { await fail(error); }
   }, [deletedJobId, notify, fail]);
 
+  // Both resolve to whether the write landed, so an editor can stay open on failure.
   const createQuery = useCallback(async input => {
-    try { const { query } = await api.createQuery(input); setQueries(previous => [...previous, query]); notify('Saved query created.'); }
-    catch (error) { await fail(error); }
+    try { const { query } = await api.createQuery(input); setQueries(previous => [...previous, query]); notify('Saved query created.'); return true; }
+    catch (error) { await fail(error); return false; }
   }, [notify, fail]);
   const updateQuery = useCallback(async (id, changes) => {
-    try { const { query } = await api.updateQuery(id, changes); setQueries(previous => previous.map(item => item.id === id ? query : item)); notify('Saved query updated.'); }
-    catch (error) { await fail(error); }
+    try { const { query } = await api.updateQuery(id, changes); setQueries(previous => previous.map(item => item.id === id ? query : item)); notify('Saved query updated.'); return true; }
+    catch (error) { await fail(error); return false; }
   }, [notify, fail]);
+  // Lookups and previews are read-only, so their errors belong inline in the editor
+  // rather than in a toast that also re-syncs the whole app.
+  const resolveQueryLocation = useCallback(async text => (await api.resolveQueryLocation(text)).candidates, []);
+  const previewQuery = useCallback(criteria => api.previewQuery(criteria), []);
   const deleteQuery = useCallback(async id => {
     try { await api.deleteQuery(id); setQueries(previous => previous.filter(item => item.id !== id)); notify('Saved query deleted.'); }
     catch (error) { await fail(error); }
@@ -273,6 +285,7 @@ export function useJobsStore() {
   const selectedJob = useMemo(() => jobs.find(job => job.id === selectedJobId) ?? null, [jobs, selectedJobId]);
   return {
     jobs: visibleJobs, totalCount: jobs.length, stageFilter, setStageFilter, tabs, queue, queries,
+    visibleQueue, fitFilter, setFitFilter, fitCounts,
     latestRun, provider, providerConfigured, running, loading, migration, selectedJob, selectedJobMode, toast,
     activeView, setActiveView, layoutMode, insightsRange, setInsightsRange, insights, insightsLoading, insightsError,
     focusedQueryId,
@@ -280,7 +293,7 @@ export function useJobsStore() {
     selectJob: id => { setSelectedJobId(id); setSelectedJobMode('view'); },
     editJob: id => { setSelectedJobId(id); setSelectedJobMode('edit'); },
     clearSelection, updateJob, changeJobStage, reorderJobs, moveJob, duplicateJob, deleteJob, undoDelete, dismissToast,
-    createQuery, updateQuery, deleteQuery, runScrape, importLocalJobs, discardLocalJobs,
+    createQuery, updateQuery, deleteQuery, resolveQueryLocation, previewQuery, runScrape, importLocalJobs, discardLocalJobs,
     retryInsights, openInsightJob, openInsightQuery, clearFocusedQuery,
   };
 }
