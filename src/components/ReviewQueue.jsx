@@ -37,7 +37,7 @@ export default function ReviewQueue({ queue, latestRun, provider, providerConfig
       </div>
       {!queue.length ? <div style={{ border: `1px dashed ${color.dashedBorder}`, borderRadius: radius.card, padding: '26px 16px', textAlign: 'center', background: 'rgba(255,255,255,0.5)' }}><div style={{ color: color.ink, font: `650 14px ${font.heading}` }}>Review route clear</div><div style={{ marginTop: 4, fontSize: 11.5, color: color.textMuted }}>New matches will appear here after a search run.</div></div> : null}
 
-      <div style={{ borderTop: `1px solid ${color.cardBorder}`, paddingTop: 13, fontSize: 11.5, lineHeight: 1.55, color: color.textSecondary }}>Scores combine title fit, description fit, and posting recency. Dismissed jobs stay dismissed.</div>
+      <div style={{ borderTop: `1px solid ${color.cardBorder}`, paddingTop: 13, fontSize: 11.5, lineHeight: 1.55, color: color.textSecondary }}>Scores weigh title fit most, then description fit and distance, then posting recency and nice-to-have terms. Highlighted words are what matched. Dismissed jobs stay dismissed.</div>
       {provider ? <a href={provider.attributionUrl} target="_blank" rel="noreferrer" style={{ color: color.textMuted, font: `500 9.5px ${font.utility}`, textDecoration: 'none' }}>Jobs by {provider.name} ↗</a> : null}
     </>
   );

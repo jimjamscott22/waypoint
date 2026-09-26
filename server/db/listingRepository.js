@@ -7,7 +7,7 @@ import { providerLabel } from '../providers.js';
 
 export { formatSalary };
 
-function mapMatch(row, matchedQueries = []) {
+function mapMatch(row, matchedQueries = [], roleFamilies = []) {
   return {
     id: row.id,
     title: row.title,
@@ -23,9 +23,23 @@ function mapMatch(row, matchedQueries = []) {
     publishedAt: toIso(row.published_at),
     status: row.status,
     source: providerLabel(row.provider),
+    providerCategory: row.provider_category ?? null,
+    contractTime: row.contract_time ?? null,
+    contractType: row.contract_type ?? null,
     score: matchedQueries.length ? Math.max(...matchedQueries.map(item => item.score)) : 0,
     matchedQueries,
+    roleFamilies,
   };
+}
+
+function parseMatchFacts(value) {
+  if (value == null) return null;
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
 }
 
 const REOPENING_OUTCOMES = new Set(['new', 'expired-reopened']);
@@ -49,19 +63,40 @@ export function createListingRepository(pool) {
         if (!listings.length) return [];
         const ids = listings.map(row => row.id);
         const placeholders = ids.map(() => '?').join(',');
-        const matches = await connection.query(
-          `SELECT lq.listing_id, lq.score, q.id, q.name FROM listing_queries lq
-           JOIN saved_queries q ON q.id = lq.query_id WHERE lq.listing_id IN (${placeholders})`,
-          ids
-        );
+        const [matches, families] = await Promise.all([
+          connection.query(
+            `SELECT lq.listing_id, lq.score, lq.distance_miles, lq.distance_band, lq.match_facts, q.id, q.name
+             FROM listing_queries lq
+             JOIN saved_queries q ON q.id = lq.query_id WHERE lq.listing_id IN (${placeholders})`,
+            ids
+          ),
+          connection.query(
+            `SELECT listing_id, role_family FROM listing_query_role_families
+             WHERE listing_id IN (${placeholders}) ORDER BY role_family`,
+            ids
+          ),
+        ]);
         const grouped = new Map();
         for (const match of matches) {
           const list = grouped.get(match.listing_id) ?? [];
-          list.push({ id: match.id, name: match.name, score: Number(match.score) });
+          list.push({
+            id: match.id,
+            name: match.name,
+            score: Number(match.score),
+            distanceMiles: match.distance_miles == null ? null : Number(match.distance_miles),
+            distanceBand: match.distance_band ?? null,
+            matchFacts: parseMatchFacts(match.match_facts),
+          });
           grouped.set(match.listing_id, list);
         }
+        const familiesByListing = new Map();
+        for (const row of families) {
+          const list = familiesByListing.get(row.listing_id) ?? [];
+          if (!list.includes(row.role_family)) list.push(row.role_family);
+          familiesByListing.set(row.listing_id, list);
+        }
         return listings
-          .map(row => mapMatch(row, grouped.get(row.id) ?? []))
+          .map(row => mapMatch(row, grouped.get(row.id) ?? [], familiesByListing.get(row.id) ?? []))
           .sort((left, right) => right.score - left.score || right.publishedAt.localeCompare(left.publishedAt));
       });
     },
