@@ -37,6 +37,8 @@ export default function App() {
               onCreateQuery={store.createQuery}
               onUpdateQuery={store.updateQuery}
               onDeleteQuery={store.deleteQuery}
+              onResolveLocation={store.resolveQueryLocation}
+              onPreviewQuery={store.previewQuery}
               focusQueryId={store.focusedQueryId}
               onFocusQueryHandled={store.clearFocusedQuery}
             />

@@ -221,14 +221,19 @@ export function useJobsStore() {
     } catch (error) { await fail(error); }
   }, [deletedJobId, notify, fail]);
 
+  // Both resolve to whether the write landed, so an editor can stay open on failure.
   const createQuery = useCallback(async input => {
-    try { const { query } = await api.createQuery(input); setQueries(previous => [...previous, query]); notify('Saved query created.'); }
-    catch (error) { await fail(error); }
+    try { const { query } = await api.createQuery(input); setQueries(previous => [...previous, query]); notify('Saved query created.'); return true; }
+    catch (error) { await fail(error); return false; }
   }, [notify, fail]);
   const updateQuery = useCallback(async (id, changes) => {
-    try { const { query } = await api.updateQuery(id, changes); setQueries(previous => previous.map(item => item.id === id ? query : item)); notify('Saved query updated.'); }
-    catch (error) { await fail(error); }
+    try { const { query } = await api.updateQuery(id, changes); setQueries(previous => previous.map(item => item.id === id ? query : item)); notify('Saved query updated.'); return true; }
+    catch (error) { await fail(error); return false; }
   }, [notify, fail]);
+  // Lookups and previews are read-only, so their errors belong inline in the editor
+  // rather than in a toast that also re-syncs the whole app.
+  const resolveQueryLocation = useCallback(async text => (await api.resolveQueryLocation(text)).candidates, []);
+  const previewQuery = useCallback(criteria => api.previewQuery(criteria), []);
   const deleteQuery = useCallback(async id => {
     try { await api.deleteQuery(id); setQueries(previous => previous.filter(item => item.id !== id)); notify('Saved query deleted.'); }
     catch (error) { await fail(error); }
@@ -280,7 +285,7 @@ export function useJobsStore() {
     selectJob: id => { setSelectedJobId(id); setSelectedJobMode('view'); },
     editJob: id => { setSelectedJobId(id); setSelectedJobMode('edit'); },
     clearSelection, updateJob, changeJobStage, reorderJobs, moveJob, duplicateJob, deleteJob, undoDelete, dismissToast,
-    createQuery, updateQuery, deleteQuery, runScrape, importLocalJobs, discardLocalJobs,
+    createQuery, updateQuery, deleteQuery, resolveQueryLocation, previewQuery, runScrape, importLocalJobs, discardLocalJobs,
     retryInsights, openInsightJob, openInsightQuery, clearFocusedQuery,
   };
 }
