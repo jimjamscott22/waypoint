@@ -10,6 +10,7 @@ import {
 import { api } from '../lib/apiClient';
 import { parseLegacyJobs } from '../lib/legacyImport';
 import { layoutModeForWidth } from '../lib/responsiveLayout';
+import { countByFit, filterByFit, withFit } from '../lib/matchFit';
 
 const STORAGE_KEY = 'waypoint.jobs';
 const TOAST_DURATION_MS = 6000;
@@ -43,6 +44,7 @@ export function useJobsStore() {
   const [insightsError, setInsightsError] = useState(null);
   const [focusedQueryId, setFocusedQueryId] = useState(null);
   const [stageFilter, setStageFilter] = useState('All');
+  const [fitFilter, setFitFilter] = useState('all');
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [selectedJobMode, setSelectedJobMode] = useState('view');
   const [deletedJobId, setDeletedJobId] = useState(null);
@@ -121,6 +123,11 @@ export function useJobsStore() {
     () => jobs.filter(job => job.isDraft || stageFilter === 'All' || job.stage === stageFilter),
     [jobs, stageFilter]
   );
+  // Like stageFilter, the fit filter narrows what the review queue shows while
+  // `reviewCount` and actions still work against the full queue.
+  const queueWithFit = useMemo(() => withFit(queue), [queue]);
+  const visibleQueue = useMemo(() => filterByFit(queueWithFit, fitFilter), [queueWithFit, fitFilter]);
+  const fitCounts = useMemo(() => countByFit(queueWithFit), [queueWithFit]);
   const tabs = useMemo(() => STAGES.map(stage => ({
     stage,
     count: stage === 'All' ? jobs.length : jobs.filter(job => job.stage === stage).length,
@@ -278,6 +285,7 @@ export function useJobsStore() {
   const selectedJob = useMemo(() => jobs.find(job => job.id === selectedJobId) ?? null, [jobs, selectedJobId]);
   return {
     jobs: visibleJobs, totalCount: jobs.length, stageFilter, setStageFilter, tabs, queue, queries,
+    visibleQueue, fitFilter, setFitFilter, fitCounts,
     latestRun, provider, providerConfigured, running, loading, migration, selectedJob, selectedJobMode, toast,
     activeView, setActiveView, layoutMode, insightsRange, setInsightsRange, insights, insightsLoading, insightsError,
     focusedQueryId,

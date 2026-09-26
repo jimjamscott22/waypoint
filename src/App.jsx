@@ -61,7 +61,11 @@ export default function App() {
           </>
         ) : showReviewPage ? (
           <ReviewQueue
-            queue={store.queue}
+            queue={store.visibleQueue}
+            totalQueueCount={store.queue.length}
+            fitFilter={store.fitFilter}
+            fitCounts={store.fitCounts}
+            onChangeFitFilter={store.setFitFilter}
             latestRun={store.latestRun}
             provider={store.provider}
             providerConfigured={store.providerConfigured}
@@ -88,7 +92,11 @@ export default function App() {
 
       {wide && showPipeline ? (
         <ReviewQueue
-          queue={store.queue}
+          queue={store.visibleQueue}
+          totalQueueCount={store.queue.length}
+          fitFilter={store.fitFilter}
+          fitCounts={store.fitCounts}
+          onChangeFitFilter={store.setFitFilter}
           latestRun={store.latestRun}
           provider={store.provider}
           providerConfigured={store.providerConfigured}

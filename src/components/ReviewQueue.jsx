@@ -1,5 +1,6 @@
 import { color, font, radius } from '../theme';
 import MatchCard from './MatchCard';
+import { FIT_FILTERS } from '../lib/matchFit';
 
 function relativeTime(timestamp) {
   if (!timestamp) return 'not run yet';
@@ -11,7 +12,7 @@ function relativeTime(timestamp) {
   return `${Math.round(hours / 24)}d ago`;
 }
 
-export default function ReviewQueue({ queue, latestRun, provider, providerConfigured, running, onRun, onSave, onDismiss, layoutMode }) {
+export default function ReviewQueue({ queue, totalQueueCount = queue.length, fitFilter = 'all', fitCounts, onChangeFitFilter, latestRun, provider, providerConfigured, running, onRun, onSave, onDismiss, layoutMode }) {
   const wide = layoutMode === 'wide';
   const mobile = layoutMode === 'mobile';
   const runHasErrors = latestRun?.status === 'failed' || latestRun?.status === 'partial';
@@ -23,7 +24,7 @@ export default function ReviewQueue({ queue, latestRun, provider, providerConfig
         <div>
           <div style={{ color: color.accent, font: `600 9.5px ${font.utility}`, letterSpacing: '1px', textTransform: 'uppercase' }}>Discovery review</div>
           <h1 id={!wide ? 'review-title' : undefined} style={{ margin: '5px 0 0', color: color.ink, font: `650 ${wide ? 20 : mobile ? 28 : 32}px ${font.heading}`, letterSpacing: '-0.5px' }}>New matches</h1>
-          <div style={{ marginTop: 5, color: color.textSecondary, fontSize: 12.5, lineHeight: 1.45 }}>{providerConfigured ? `${queue.length} match${queue.length === 1 ? '' : 'es'} waiting for a decision.` : 'Configure the discovery provider to start reviewing matches.'}</div>
+          <div style={{ marginTop: 5, color: color.textSecondary, fontSize: 12.5, lineHeight: 1.45 }}>{providerConfigured ? `${totalQueueCount} match${totalQueueCount === 1 ? '' : 'es'} waiting for a decision.` : 'Configure the discovery provider to start reviewing matches.'}</div>
         </div>
         <button type="button" disabled={running || !providerConfigured} onClick={onRun} style={{ minHeight: 42, border: 'none', borderRadius: radius.input, background: running || !providerConfigured ? color.inputBorder : color.accent, color: '#fff', padding: '8px 13px', font: `600 11.5px ${font.body}`, cursor: running ? 'wait' : providerConfigured ? 'pointer' : 'not-allowed', whiteSpace: 'nowrap' }}>{running ? 'Running…' : 'Run searches'}</button>
       </div>
@@ -32,10 +33,24 @@ export default function ReviewQueue({ queue, latestRun, provider, providerConfig
         {status}{runHasErrors && latestRun.errorSummary ? <div style={{ marginTop: 3 }}>{latestRun.errorSummary}</div> : null}
       </div>
 
+      {totalQueueCount && onChangeFitFilter ? (
+        <div role="group" aria-label="Filter matches by experience level" style={{ display: 'flex', gap: 4, padding: 3, borderRadius: radius.input, background: color.inputBg, border: `1px solid ${color.rowDivider}`, width: wide ? 'auto' : 'fit-content' }}>
+          {FIT_FILTERS.map(option => {
+            const active = fitFilter === option.id;
+            return (
+              <button key={option.id} type="button" aria-pressed={active} onClick={() => onChangeFitFilter(option.id)} style={{ flex: wide ? 1 : 'none', minHeight: 32, border: 'none', borderRadius: radius.badge, padding: '5px 10px', background: active ? color.cardBg : 'transparent', boxShadow: active ? '0 1px 3px rgba(24,56,67,0.12)' : 'none', color: active ? color.ink : color.textSecondary, font: `${active ? 650 : 500} 11px ${font.body}`, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                {option.label} <span style={{ color: color.textMuted, font: `500 10px ${font.utility}` }}>{fitCounts?.[option.id] ?? 0}</span>
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+
       <div style={{ display: 'grid', gridTemplateColumns: !wide && !mobile ? 'repeat(2, minmax(0, 1fr))' : '1fr', gap: 10 }}>
         {queue.map(match => <MatchCard key={match.id} match={match} onSave={() => onSave(match.id)} onDismiss={() => onDismiss(match.id)} />)}
       </div>
-      {!queue.length ? <div style={{ border: `1px dashed ${color.dashedBorder}`, borderRadius: radius.card, padding: '26px 16px', textAlign: 'center', background: 'rgba(255,255,255,0.5)' }}><div style={{ color: color.ink, font: `650 14px ${font.heading}` }}>Review route clear</div><div style={{ marginTop: 4, fontSize: 11.5, color: color.textMuted }}>New matches will appear here after a search run.</div></div> : null}
+      {!queue.length && totalQueueCount ? <div style={{ border: `1px dashed ${color.dashedBorder}`, borderRadius: radius.card, padding: '22px 16px', textAlign: 'center' }}><div style={{ color: color.ink, font: `650 14px ${font.heading}` }}>No matches at this level</div><div style={{ marginTop: 4, fontSize: 11.5, color: color.textMuted }}>{totalQueueCount} other match{totalQueueCount === 1 ? '' : 'es'} hidden by this filter.</div><button type="button" onClick={() => onChangeFitFilter('all')} style={{ marginTop: 8, border: 'none', background: 'transparent', color: color.accent, font: `600 11.5px ${font.body}`, cursor: 'pointer' }}>Show all matches</button></div> : null}
+      {!totalQueueCount ? <div style={{ border: `1px dashed ${color.dashedBorder}`, borderRadius: radius.card, padding: '26px 16px', textAlign: 'center', background: 'rgba(255,255,255,0.5)' }}><div style={{ color: color.ink, font: `650 14px ${font.heading}` }}>Review route clear</div><div style={{ marginTop: 4, fontSize: 11.5, color: color.textMuted }}>New matches will appear here after a search run.</div></div> : null}
 
       <div style={{ borderTop: `1px solid ${color.cardBorder}`, paddingTop: 13, fontSize: 11.5, lineHeight: 1.55, color: color.textSecondary }}>Scores weigh title fit most, then description fit and distance, then posting recency and nice-to-have terms. Highlighted words are what matched. Dismissed jobs stay dismissed.</div>
       {provider ? <a href={provider.attributionUrl} target="_blank" rel="noreferrer" style={{ color: color.textMuted, font: `500 9.5px ${font.utility}`, textDecoration: 'none' }}>Jobs by {provider.name} ↗</a> : null}
