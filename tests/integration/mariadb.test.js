@@ -704,3 +704,110 @@ test('filters, sorts, and paginates discovery results without inflating totals',
     await pool.end();
   }
 });
+
+test('returns per-query match evidence for the review queue', { skip: !enabled }, async () => {
+  const env = {
+    ...process.env,
+    DB_NAME: process.env.TEST_DB_NAME || 'waypoint_test',
+    DB_USER: process.env.TEST_DB_USER || 'waypoint_test_app',
+    DB_PASSWORD: process.env.TEST_DB_PASSWORD,
+    MIGRATION_DB_USER: process.env.TEST_MIGRATION_DB_USER || 'waypoint_test_migrate',
+    MIGRATION_DB_PASSWORD: process.env.TEST_MIGRATION_DB_PASSWORD,
+  };
+  await runMigrations(env);
+
+  const connection = env.DB_HOST
+    ? { host: env.DB_HOST, port: Number(env.DB_PORT || 3306) }
+    : { socketPath: env.DB_SOCKET || '/run/mysqld/mysqld.sock' };
+  const pool = createPool({
+    ...connection, database: env.DB_NAME, user: env.DB_USER, password: env.DB_PASSWORD, connectionLimit: 2,
+  });
+  const queries = createQueryRepository(pool);
+  const listings = createListingRepository(pool);
+  const created = [];
+
+  try {
+    await withConnection(pool, c => c.query('DELETE FROM listings'));
+
+    const makeQuery = (name, placeId) => queries.create({
+      name,
+      center: { displayName: 'Auburn, New York', latitude: 42.9317, longitude: -76.5661, provider: 'nominatim', placeId },
+      preferredRadiusMiles: 20,
+      maximumRadiusMiles: 40,
+      roleFamilies: ['it-support', 'systems-administration'],
+      maxAgeDays: 30,
+    });
+    const first = await makeQuery('Evidence search one', '9300');
+    const second = await makeQuery('Evidence search two', '9301');
+    created.push(first.id, second.id);
+
+    const provider = (suffix, overrides = {}) => normalizeAdzunaJob({
+      id: `evidence-${suffix}`,
+      title: 'IT Support Specialist',
+      company: { display_name: 'Example' },
+      location: { display_name: 'Auburn, NY' },
+      description: 'Help desk and Windows support',
+      redirect_url: `https://example.test/evidence-${suffix}`,
+      created: '2026-08-10T10:00:00.000Z',
+      latitude: 42.94,
+      longitude: -76.57,
+      contract_time: 'full_time',
+      contract_type: 'permanent',
+      category: { tag: 'it-jobs' },
+      ...overrides,
+    });
+    const persist = (listing, queryId, evaluation) => withTransaction(pool, c => persistMatch(c, {
+      listing, queryId, evaluation, seenAt: '2026-08-12 12:00:00.000',
+    }));
+
+    const evidenced = await persist(provider('both'), first.id, {
+      score: 88, distanceMiles: 3.5, distanceBand: 'preferred',
+      matchFacts: { matchedSynonyms: ['IT support'], requiredTerms: [], optionalTerms: ['Windows'], excludedTerms: [] },
+      matchedRoleFamilies: ['it-support', 'systems-administration'],
+    });
+    await persist(provider('both'), second.id, {
+      score: 61, distanceMiles: 3.5, distanceBand: 'preferred',
+      matchFacts: { matchedSynonyms: ['help desk'], requiredTerms: [], optionalTerms: [], excludedTerms: [] },
+      matchedRoleFamilies: ['it-support'],
+    });
+    // The score-only compatibility path stores no distance, band, or facts.
+    const legacy = await withTransaction(pool, c => upsertListingMatch(
+      c, provider('legacy', { contract_time: undefined, contract_type: undefined, category: undefined }),
+      first.id, 40, '2026-08-12 12:00:00.000'
+    ));
+    const dismissed = await persist(provider('dismissed'), first.id, {
+      score: 70, distanceMiles: 5, distanceBand: 'preferred', matchFacts: null, matchedRoleFamilies: [],
+    });
+    await listings.dismiss(dismissed.id);
+
+    const queue = await listings.listNew();
+    assert.deepEqual(queue.map(item => item.id), [evidenced.id, legacy.id]);
+
+    const [top, older] = queue;
+    assert.equal(top.score, 88);
+    assert.equal(top.contractTime, 'full_time');
+    assert.equal(top.contractType, 'permanent');
+    assert.equal(top.providerCategory, 'it-jobs');
+    // Two role-family rows for the first query and one for the second collapse to two.
+    assert.deepEqual([...top.roleFamilies].sort(), ['it-support', 'systems-administration']);
+    const byQuery = new Map(top.matchedQueries.map(query => [query.id, query]));
+    assert.deepEqual(byQuery.get(first.id), {
+      id: first.id,
+      name: 'Evidence search one',
+      score: 88,
+      distanceMiles: 3.5,
+      distanceBand: 'preferred',
+      matchFacts: { matchedSynonyms: ['IT support'], requiredTerms: [], optionalTerms: ['Windows'], excludedTerms: [] },
+    });
+    assert.deepEqual(byQuery.get(second.id).matchFacts.matchedSynonyms, ['help desk']);
+
+    assert.equal(older.contractTime, null);
+    assert.deepEqual(older.roleFamilies, []);
+    assert.deepEqual(older.matchedQueries, [{
+      id: first.id, name: 'Evidence search one', score: 40, distanceMiles: null, distanceBand: null, matchFacts: null,
+    }]);
+  } finally {
+    for (const id of created) await queries.remove(id).catch(() => {});
+    await pool.end();
+  }
+});
