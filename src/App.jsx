@@ -8,6 +8,7 @@ import ReviewQueue from './components/ReviewQueue';
 import Toast from './components/Toast';
 import MigrationBanner from './components/MigrationBanner';
 import InsightsView from './components/InsightsView';
+import JobBoardsView from './components/JobBoardsView';
 import { color, font } from './theme';
 
 export default function App() {
@@ -69,6 +70,8 @@ export default function App() {
             onDismiss={store.dismissMatch}
             layoutMode={store.layoutMode}
           />
+        ) : store.activeView === 'Boards' ? (
+          <JobBoardsView queries={store.queries} layoutMode={store.layoutMode} />
         ) : (
           <InsightsView
             data={store.insights}
