@@ -3,12 +3,14 @@ import { color, font, radius } from '../theme';
 const DESKTOP_ITEMS = [
   { label: 'Pipeline', view: 'Pipeline', mark: '↗' },
   { label: 'Insights', view: 'Insights', mark: '∿' },
+  { label: 'Boards', view: 'Boards', mark: '◇' },
 ];
 
 const COMPACT_ITEMS = [
   { label: 'Pipeline', view: 'Pipeline', mark: '↗' },
   { label: 'Review', view: 'Review', mark: '◎' },
   { label: 'Insights', view: 'Insights', mark: '∿' },
+  { label: 'Boards', view: 'Boards', mark: '◇' },
 ];
 
 function Wordmark({ compact = false }) {
