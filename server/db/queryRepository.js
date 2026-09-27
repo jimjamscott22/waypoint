@@ -155,6 +155,7 @@ function resolveRecord(input, current, currentFamilies) {
       : normalizeTerms(pick(input, 'excludedTerms', parseStoredTerms(row.excluded_terms))),
     maxAgeDays: Number(pick(input, 'maxAgeDays', row.max_age_days)),
     minimumSalary: minimumSalary == null ? null : Number(minimumSalary),
+    excludeSeniorRoles: Boolean(pick(input, 'excludeSeniorRoles', current ? Boolean(row.exclude_senior_roles) : false)),
     enabled: Boolean(pick(input, 'enabled', current ? Boolean(row.enabled) : true)),
     // Only the legacy compatibility path still writes the legacy keywords column.
     keywords: legacy && Object.hasOwn(input, 'keywords')
@@ -192,6 +193,7 @@ function writeColumns(record) {
     JSON.stringify(record.excludedTerms),
     record.maxAgeDays,
     record.minimumSalary,
+    record.excludeSeniorRoles ? 1 : 0,
     record.enabled ? 1 : 0,
   ];
 }
@@ -209,7 +211,8 @@ function criteriaChanged(record, current, currentFamilies) {
     || !sameTerms(parseStoredTerms(current.optional_terms), record.optionalTerms)
     || !sameTerms(parseStoredTerms(current.excluded_terms), record.excludedTerms)
     || Number(current.max_age_days) !== record.maxAgeDays
-    || (current.minimum_salary == null ? null : Number(current.minimum_salary)) !== record.minimumSalary;
+    || (current.minimum_salary == null ? null : Number(current.minimum_salary)) !== record.minimumSalary
+    || Boolean(current.exclude_senior_roles) !== record.excludeSeniorRoles;
 }
 
 export function createQueryRepository(pool) {
@@ -236,8 +239,9 @@ export function createQueryRepository(pool) {
           `INSERT INTO saved_queries (
              id, name, keywords, location, center_display_name, center_latitude, center_longitude,
              geocoder_provider, geocoder_place_id, preferred_radius_miles, maximum_radius_miles,
-             required_terms, optional_terms, excluded_terms, max_age_days, minimum_salary, enabled
-           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             required_terms, optional_terms, excluded_terms, max_age_days, minimum_salary,
+             exclude_senior_roles, enabled
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [id, ...writeColumns(record)]
         );
         await replaceRoleFamilies(connection, id, record.roleFamilies);
@@ -260,7 +264,8 @@ export function createQueryRepository(pool) {
                name = ?, keywords = ?, location = ?, center_display_name = ?, center_latitude = ?,
                center_longitude = ?, geocoder_provider = ?, geocoder_place_id = ?,
                preferred_radius_miles = ?, maximum_radius_miles = ?, required_terms = ?,
-               optional_terms = ?, excluded_terms = ?, max_age_days = ?, minimum_salary = ?, enabled = ?,
+               optional_terms = ?, excluded_terms = ?, max_age_days = ?, minimum_salary = ?,
+               exclude_senior_roles = ?, enabled = ?,
                updated_at = UTC_TIMESTAMP(3)
              WHERE id = ?`,
             [...writeColumns(record), id]

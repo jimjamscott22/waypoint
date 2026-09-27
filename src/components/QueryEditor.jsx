@@ -312,6 +312,11 @@ export default function QueryEditor({ query, layoutMode, onSave, onCancel, onDel
             </label>
           </div>
           <FieldError id="query-minimumSalary-error" message={visibleErrors.minimumSalary} />
+          <label style={{ display: 'flex', alignItems: 'center', gap: 7, minHeight: 38, color: color.textBodyMid, font: `500 12px ${font.body}`, cursor: 'pointer' }}>
+            <input type="checkbox" checked={form.excludeSeniorRoles} onChange={event => update('excludeSeniorRoles', event.target.checked)} style={{ accentColor: color.accent, width: 16, height: 16 }} />
+            Exclude senior roles
+          </label>
+          <span style={{ color: color.textMuted, font: `400 11px ${font.body}` }}>Filters out listings whose title reads senior, lead, principal, manager, or similar, or that ask for 5+ years of experience.</span>
         </Section>
       </div>
 

@@ -168,6 +168,24 @@ test('enforces required and excluded terms across title and description', () => 
   assert.equal(excludedByTitle.rejectReason, 'terms');
 });
 
+test('excludes senior-titled listings only when the query opts in', () => {
+  const senior = evaluate({ title: 'Senior Systems Administrator' }, { excludeSeniorRoles: true });
+  assert.equal(senior.accepted, false);
+  assert.equal(senior.rejectReason, 'senior');
+
+  const seniorAllowed = evaluate({ title: 'Senior Systems Administrator' }, { excludeSeniorRoles: false });
+  assert.equal(seniorAllowed.accepted, true);
+
+  const entryLevel = evaluate({ title: 'Junior Systems Administrator' }, { excludeSeniorRoles: true });
+  assert.equal(entryLevel.accepted, true);
+
+  const yearsGated = evaluate(
+    { description: 'Maintain Windows servers. Requires 6 years of experience.' },
+    { excludeSeniorRoles: true }
+  );
+  assert.equal(yearsGated.rejectReason, 'senior');
+});
+
 test('rejects a known salary ceiling below the floor and keeps unknown salary eligible', () => {
   assert.equal(evaluate({ salaryMax: 40000 }, { minimumSalary: 60000 }).rejectReason, 'salary');
   assert.equal(evaluate({ salaryMax: 60000 }, { minimumSalary: 60000 }).accepted, true);

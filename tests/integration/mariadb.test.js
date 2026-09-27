@@ -384,6 +384,7 @@ test('round-trips structured saved searches and preserves decided attribution', 
       excludedTerms: ['sales'],
       maxAgeDays: 14,
       minimumSalary: 55000,
+      excludeSeniorRoles: true,
       enabled: true,
     });
     created.push(structured.id);
@@ -401,6 +402,7 @@ test('round-trips structured saved searches and preserves decided attribution', 
     assert.deepEqual(structured.optionalTerms, ['powershell']);
     assert.deepEqual(structured.excludedTerms, ['sales']);
     assert.equal(structured.minimumSalary, 55000);
+    assert.equal(structured.excludeSeniorRoles, true);
     assert.equal(structured.enabled, true);
 
     const reloaded = (await queries.list()).find(query => query.id === structured.id);
@@ -410,10 +412,12 @@ test('round-trips structured saved searches and preserves decided attribution', 
     const relabelled = await queries.update(structured.id, {
       roleFamilies: ['cloud-support'],
       minimumSalary: null,
+      excludeSeniorRoles: false,
       enabled: false,
     });
     assert.deepEqual(relabelled.roleFamilies, ['cloud-support']);
     assert.equal(relabelled.minimumSalary, null);
+    assert.equal(relabelled.excludeSeniorRoles, false);
     assert.equal(relabelled.enabled, false);
 
     await assert.rejects(

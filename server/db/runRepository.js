@@ -52,16 +52,16 @@ export function createRunRepository(pool) {
           (id, run_id, query_id, query_name, status, listings_fetched, new_matches, error_message,
            started_at, finished_at, provider_result_count, pages_requested, records_received,
            duplicates, previously_saved, previously_dismissed, rejected_age, rejected_distance,
-           rejected_terms, rejected_salary, rejected_remote_only, malformed_records,
+           rejected_terms, rejected_salary, rejected_remote_only, rejected_seniority, malformed_records,
            unsearched_requests, truncated)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [randomUUID(), result.runId, result.queryId, result.queryName, result.status,
           result.listingsFetched, result.newMatches, result.errorMessage,
           result.startedAt, result.finishedAt,
           result.providerResultCount, result.pagesRequested, result.recordsReceived,
           result.duplicates, result.previouslySaved, result.previouslyDismissed,
           result.rejectedAge, result.rejectedDistance, result.rejectedTerms, result.rejectedSalary,
-          result.rejectedRemoteOnly, result.malformedRecords, result.unsearchedRequests,
+          result.rejectedRemoteOnly, result.rejectedSeniority, result.malformedRecords, result.unsearchedRequests,
           result.truncated ? 1 : 0]
       );
     },
