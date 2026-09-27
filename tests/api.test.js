@@ -156,6 +156,7 @@ test('rejects saved searches with unusable structured criteria', async t => {
     ['unsupported age', { ...auburnCriteria, maxAgeDays: 21 }, 'VALIDATION_ERROR'],
     ['negative salary', { ...auburnCriteria, minimumSalary: -1 }, 'VALIDATION_ERROR'],
     ['duplicate terms', { ...auburnCriteria, excludedTerms: ['sales', 'sales'] }, 'VALIDATION_ERROR'],
+    ['excludeSeniorRoles not boolean', { ...auburnCriteria, excludeSeniorRoles: 'yes' }, 'VALIDATION_ERROR'],
     ['inverted radii', { ...auburnCriteria, preferredRadiusMiles: 40, maximumRadiusMiles: 20 }, 'INVALID_RADIUS_RANGE'],
   ];
 

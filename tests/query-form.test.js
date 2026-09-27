@@ -32,6 +32,7 @@ const auburn = {
   excludedTerms: [],
   maxAgeDays: 14,
   minimumSalary: null,
+  excludeSeniorRoles: false,
   enabled: true,
   keywords: '',
   location: 'Auburn, Cayuga County, New York, United States',
@@ -60,8 +61,15 @@ test('a keyword-less structured query validates and round-trips unchanged', () =
     excludedTerms: [],
     maxAgeDays: 14,
     minimumSalary: null,
+    excludeSeniorRoles: false,
     enabled: true,
   });
+});
+
+test('a query with senior roles excluded round-trips the flag', () => {
+  const form = queryToForm({ ...auburn, excludeSeniorRoles: true });
+  assert.equal(form.excludeSeniorRoles, true);
+  assert.equal(formToPayload(form).excludeSeniorRoles, true);
 });
 
 test('payload never carries the legacy fields that switch the server to its compatibility path', () => {
@@ -147,12 +155,13 @@ test('summarizes preview diagnostics with the heaviest filter first', () => {
   const summary = summarizePreview({
     recordsReceived: 120, newMatches: 6, duplicates: 2, previouslySaved: 0, previouslyDismissed: 1,
     rejectedAge: 4, rejectedDistance: 30, rejectedTerms: 70, rejectedSalary: 0, rejectedRemoteOnly: 7,
+    rejectedSeniority: 9,
     truncated: true,
   });
   assert.equal(summary.newMatches, 6);
   assert.equal(summary.scanned, 120);
   assert.deepEqual(summary.known, [{ label: 'already in review', count: 2 }, { label: 'dismissed before', count: 1 }]);
-  assert.deepEqual(summary.filteredOut.map(item => item.label), ['title or terms', 'too far', 'remote-only', 'too old']);
+  assert.deepEqual(summary.filteredOut.map(item => item.label), ['title or terms', 'too far', 'senior/lead titles', 'remote-only', 'too old']);
   assert.equal(summary.truncated, true);
   assert.deepEqual(summarizePreview().filteredOut, []);
 });

@@ -18,6 +18,7 @@ const REJECT_COUNTERS = Object.freeze({
   terms: 'rejectedTerms',
   salary: 'rejectedSalary',
   'remote-only': 'rejectedRemoteOnly',
+  senior: 'rejectedSeniority',
   malformed: 'malformedRecords',
 });
 
@@ -46,6 +47,7 @@ export function emptyCounters() {
     rejectedTerms: 0,
     rejectedSalary: 0,
     rejectedRemoteOnly: 0,
+    rejectedSeniority: 0,
     malformedRecords: 0,
     unsearchedRequests: 0,
     truncated: false,

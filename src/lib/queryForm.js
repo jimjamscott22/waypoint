@@ -56,6 +56,7 @@ export function queryToForm(query) {
       excludedTerms: '',
       maxAgeDays: 7,
       minimumSalary: '',
+      excludeSeniorRoles: false,
       enabled: true,
     };
   }
@@ -72,6 +73,7 @@ export function queryToForm(query) {
     excludedTerms: termsToText(query.excludedTerms),
     maxAgeDays: MAX_AGE_OPTIONS.includes(query.maxAgeDays) ? query.maxAgeDays : 7,
     minimumSalary: query.minimumSalary == null ? '' : String(query.minimumSalary),
+    excludeSeniorRoles: query.excludeSeniorRoles ?? false,
     enabled: query.enabled ?? true,
   };
 }
@@ -170,6 +172,7 @@ export function formToPayload(form) {
     excludedTerms: parseTermList(form.excludedTerms),
     maxAgeDays: Number(form.maxAgeDays),
     minimumSalary: parseSalary(form.minimumSalary),
+    excludeSeniorRoles: Boolean(form.excludeSeniorRoles),
     enabled: Boolean(form.enabled),
   };
 }
@@ -205,6 +208,7 @@ const REJECTION_LABELS = Object.freeze([
   ['rejectedAge', 'too old'],
   ['rejectedSalary', 'below salary'],
   ['rejectedRemoteOnly', 'remote-only'],
+  ['rejectedSeniority', 'senior/lead titles'],
 ]);
 
 // Turns preview diagnostics into what someone tuning a query needs to see: how many

@@ -49,6 +49,7 @@ const structuredProperties = {
   excludedTerms: termArray,
   maxAgeDays: { type: 'integer', enum: MAX_AGE_DAYS },
   minimumSalary: { type: ['number', 'null'], minimum: 0 },
+  excludeSeniorRoles: { type: 'boolean' },
   enabled: { type: 'boolean' },
 };
 

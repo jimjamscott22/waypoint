@@ -1,6 +1,7 @@
 import { ROLE_FAMILIES } from './roleFamilies.js';
 import { keywordCoverage } from '../scraper/scoring.js';
 import { classifyDistance, haversineMiles, roundMiles } from './distance.js';
+import { assessEntryLevelFit } from './entryLevelFit.js';
 
 const DAY_MS = 86_400_000;
 
@@ -83,6 +84,10 @@ export function evaluateListing({ query, listing, roleFamily, now = new Date() }
 
   const excludedTerms = (query.excludedTerms ?? []).filter(term => termMatches(term, searchable));
   if (excludedTerms.length > 0) return reject('terms', { matchFacts: emptyFactsWith({ excludedTerms }) });
+
+  if (query.excludeSeniorRoles && assessEntryLevelFit({ title, description }).fit === 'senior') {
+    return reject('senior');
+  }
 
   const required = query.requiredTerms ?? [];
   const requiredTerms = required.filter(term => termMatches(term, searchable));
