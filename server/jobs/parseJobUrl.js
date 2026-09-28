@@ -14,14 +14,18 @@ const BLOCKED_HOSTNAMES = new Set([
   'metadata.google',
 ]);
 
+const HTML_ENTITIES = {
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  '#39': "'",
+  '#x27': "'",
+};
+
 function decodeHtmlEntities(value) {
   return String(value ?? '')
-    .replace(/&amp;/gi, '&')
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'")
-    .replace(/&#x27;/gi, "'")
+    .replace(/&(amp|lt|gt|quot|#39|#x27);/gi, (match, entity) => HTML_ENTITIES[entity.toLowerCase()] ?? match)
     .trim();
 }
 
