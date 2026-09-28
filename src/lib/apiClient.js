@@ -19,6 +19,7 @@ const body = value => JSON.stringify(value);
 
 export const api = {
   bootstrap: () => request('/api/bootstrap'),
+  parseJobUrl: url => request('/api/jobs/parse-url', { method: 'POST', body: body({ url }) }),
   createJob: job => request('/api/jobs', { method: 'POST', body: body(job) }),
   updateJob: (id, changes) => request(`/api/jobs/${id}`, { method: 'PATCH', body: body(changes) }),
   deleteJob: id => request(`/api/jobs/${id}`, { method: 'DELETE' }),

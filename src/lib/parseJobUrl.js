@@ -1,12 +1,29 @@
-// Stub for a future real scraper. Resolves immediately with an empty
-// draft so the UI can let the user fill in details by hand.
-export function parseJobUrl(url) {
-  return Promise.resolve({
+import { api } from './apiClient.js';
+
+export function emptyJobDraft(url) {
+  return {
     role: '',
     company: '',
     location: '',
     salary: '',
     contact: '',
-    url,
-  });
+    url: String(url ?? '').trim(),
+  };
+}
+
+export async function parseJobUrl(url) {
+  const { draft } = await api.parseJobUrl(url);
+  return draft;
+}
+
+export async function parseJobUrlWithFallback(url) {
+  try {
+    const draft = await parseJobUrl(url);
+    return { draft, error: null };
+  } catch (error) {
+    return {
+      draft: emptyJobDraft(url),
+      error: error instanceof Error ? error : new Error(String(error)),
+    };
+  }
 }

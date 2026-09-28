@@ -29,7 +29,18 @@ const updateSchema = {
   minProperties: 1,
 };
 
-export async function jobRoutes(app, { jobs }) {
+export async function jobRoutes(app, { jobs, jobUrlParser }) {
+  app.post('/api/jobs/parse-url', {
+    schema: {
+      body: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['url'],
+        properties: { url: { type: 'string', minLength: 1, maxLength: 4000 } },
+      },
+    },
+  }, async request => ({ draft: await jobUrlParser.parse(request.body.url) }));
+
   app.post('/api/jobs', { schema: { body: createSchema } }, async (request, reply) => {
     const job = await jobs.create(request.body);
     return reply.code(201).send({ job });

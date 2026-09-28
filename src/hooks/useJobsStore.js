@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { STAGES } from '../lib/seedData';
-import { parseJobUrl } from '../lib/parseJobUrl';
+import { parseJobUrlWithFallback } from '../lib/parseJobUrl';
 import {
   duplicateJob as copyJob,
   moveVisibleJob,
@@ -134,12 +134,13 @@ export function useJobsStore() {
   })), [jobs]);
 
   const captureJob = useCallback(async url => {
+    const { draft, error: parseError } = await parseJobUrlWithFallback(url);
+    if (parseError) notify(parseError.message, 'error');
     try {
-      const draft = await parseJobUrl(url);
       const { job } = await api.createJob({ ...draft, stage: 'Saved', next: 'Tailor resume & apply', urgent: false, isDraft: true });
       setJobs(previous => [job, ...previous]);
     } catch (error) { await fail(error); }
-  }, [fail]);
+  }, [fail, notify]);
   const updateDraftField = useCallback((id, field, value) => setJobs(previous => replaceJob(previous, id, { [field]: value })), []);
   const commitDraft = useCallback(async id => {
     const draft = jobs.find(job => job.id === id);

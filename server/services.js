@@ -11,6 +11,7 @@ import { createDiscoveryRepository } from './db/discoveryRepository.js';
 import { createDiscoveryService } from './discovery/service.js';
 import { createNominatimClient } from './geocoding/nominatim.js';
 import { createLogger } from './logger.js';
+import { createJobUrlParser } from './jobs/parseJobUrl.js';
 
 export function createServices({
   env = process.env,
@@ -39,5 +40,10 @@ export function createServices({
   }) : null;
   // Nominatim requires a contact identity, so location lookup stays off until it is configured.
   const geocoder = suppliedGeocoder ?? (config.geocoder.userAgent ? createNominatimClient(config.geocoder) : null);
-  return { config, pool, jobs, queries, listings, runs, insights, discovery, discoveryRepository, geocoder, logger };
+  const jobUrlParser = createJobUrlParser({
+    userAgent: config.geocoder.userAgent || 'Waypoint/0.1 (job-url-parser)',
+  });
+  return {
+    config, pool, jobs, queries, listings, runs, insights, discovery, discoveryRepository, geocoder, jobUrlParser, logger,
+  };
 }
