@@ -108,6 +108,8 @@ tailscale serve status --json
 
 Restrict the Pi's Waypoint HTTPS service to the owner's identity/devices in the tailnet ACL or grants policy. Do not enable Funnel, router port forwarding, or a public DNS proxy. Verify access from an authorized tailnet device and denial from a device outside the allowed policy.
 
+If the Serve mapping exists but the Waypoint hostname presents Pi-hole's certificate or content, see [Tailscale and Pi-hole port 443 conflict](tailscale-port-443-conflict.md). This issue was observed after the Raspberry Pi backup restoration and Trixie migration; the migration is suspected context, not yet a confirmed cause.
+
 ## 7. Verify operation
 
 ```bash
