@@ -33,6 +33,7 @@ function fakeServices() {
       }),
     },
     discovery: null,
+    jobUrlParser: { parse: async url => ({ role: '', company: '', location: '', salary: '', contact: '', url }) },
   };
 }
 
