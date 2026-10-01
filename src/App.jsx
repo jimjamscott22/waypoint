@@ -10,6 +10,7 @@ import Toast from './components/Toast';
 import MigrationBanner from './components/MigrationBanner';
 import InsightsView from './components/InsightsView';
 import JobBoardsView from './components/JobBoardsView';
+import AssistantView from './components/AssistantView';
 import { color, font } from './theme';
 
 export default function App() {
@@ -80,6 +81,8 @@ export default function App() {
           />
         ) : store.activeView === 'Boards' ? (
           <JobBoardsView queries={store.queries} layoutMode={store.layoutMode} />
+        ) : store.activeView === 'Assistant' ? (
+          <AssistantView configured={store.assistantConfigured} layoutMode={store.layoutMode} />
         ) : (
           <InsightsView
             data={store.insights}

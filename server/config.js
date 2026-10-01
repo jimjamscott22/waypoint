@@ -47,6 +47,14 @@ export function loadConfig(env = process.env, { migration = false } = {}) {
       maxPagesPerFamily: integer(env.DISCOVERY_MAX_PAGES_PER_FAMILY, 3, 'DISCOVERY_MAX_PAGES_PER_FAMILY'),
       persistedMatchTarget: integer(env.DISCOVERY_PERSISTED_MATCH_TARGET, 50, 'DISCOVERY_PERSISTED_MATCH_TARGET'),
     },
+    assistant: {
+      baseUrl: (env.ASSISTANT_BASE_URL || '').replace(/\/$/, ''),
+      model: env.ASSISTANT_MODEL || '',
+      apiKey: env.ASSISTANT_API_KEY || '',
+      configured: Boolean(env.ASSISTANT_BASE_URL && env.ASSISTANT_MODEL),
+      timeoutMs: integer(env.ASSISTANT_TIMEOUT_MS, 60_000, 'ASSISTANT_TIMEOUT_MS'),
+      maxIterations: integer(env.ASSISTANT_MAX_TOOL_ITERATIONS, 6, 'ASSISTANT_MAX_TOOL_ITERATIONS'),
+    },
   };
 }
 
@@ -54,5 +62,6 @@ export function publicConfig(config) {
   return {
     providerConfigured: config.adzuna.configured,
     locationResolutionConfigured: Boolean(config.geocoder.userAgent),
+    assistantConfigured: config.assistant.configured,
   };
 }

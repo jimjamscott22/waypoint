@@ -51,4 +51,5 @@ export const api = {
   updateOutreach: (jobId, entryId, changes) => request(`/api/jobs/${jobId}/outreach/${entryId}`, { method: 'PATCH', body: body(changes) }),
   deleteOutreach: (jobId, entryId) => request(`/api/jobs/${jobId}/outreach/${entryId}`, { method: 'DELETE' }),
   listFollowUps: () => request('/api/follow-ups'),
+  assistantChat: messages => request('/api/assistant/chat', { method: 'POST', body: body({ messages }) }),
 };

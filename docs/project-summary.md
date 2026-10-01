@@ -155,6 +155,7 @@ All responses are JSON. Errors are always `{ error: { code, message } }`.
 | `PATCH` | `/api/jobs/:jobId/outreach/:entryId` | Update an outreach entry |
 | `DELETE` | `/api/jobs/:jobId/outreach/:entryId` | Delete an outreach entry |
 | `GET` | `/api/follow-ups` | Due/overdue job next actions and outreach follow-ups |
+| `POST` | `/api/assistant/chat` | In-app coach: tool-grounded chat (requires assistant env config) |
 | `POST` | `/api/queries` · `PATCH /api/queries/:id` · `DELETE /api/queries/:id` | Saved query CRUD |
 | `POST` | `/api/listings/:id/save` | Promote a match into the pipeline |
 | `POST` | `/api/listings/:id/dismiss` | Dismiss a match |
@@ -217,6 +218,9 @@ Target: **a Raspberry Pi running MariaDB ≥ 10.6 and Node ≥ 24**, reachable o
 | `DB_NAME` / `DB_USER` / `DB_PASSWORD` | `DB_PASSWORD` is **required**; startup fails without it |
 | `DB_CONNECTION_LIMIT` | Default 5 |
 | `ADZUNA_APP_ID` / `ADZUNA_APP_KEY` | If absent, `config.adzuna.configured` is false, no client is built, and `services.scraper` is `null` — the app runs fine, ingestion is simply disabled |
+| `ASSISTANT_BASE_URL` / `ASSISTANT_MODEL` | OpenAI-compatible chat API. Both required to enable the Coach; `assistantConfigured` is exposed in bootstrap |
+| `ASSISTANT_API_KEY` | Optional Bearer token for hosted providers; omit for local Ollama/LM Studio |
+| `ASSISTANT_TIMEOUT_MS` / `ASSISTANT_MAX_TOOL_ITERATIONS` | Provider timeout (default 60s) and tool-loop cap (default 6) |
 | `MIGRATION_DB_USER` / `MIGRATION_DB_PASSWORD` | Migration-only; keep out of the runtime environment |
 
 ### Commands

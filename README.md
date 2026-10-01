@@ -23,6 +23,8 @@ This project is a React + Vite web app built around a pipeline and outcome dashb
 - **Review queue** for persisted matches, with save and dismiss actions
 - **Job details drawer** for viewing and editing a selected job
 - **Optional next-action dates** for accurate follow-up reminders
+- **Contacts & outreach log** per job with follow-up reminders (phase 1)
+- **In-app Coach** (optional) — LLM assistant grounded in your pipeline via read-only tools (phase 2)
 - **Stage-history tracking** for forward-looking conversion and activity metrics
 - **Drag-and-drop reordering** for manual priority management
 - **Undoable delete flow** with toast notifications
@@ -53,6 +55,40 @@ npm install
 ```
 
 Copy `.env.example` to a local environment file and provide the MariaDB and Adzuna credentials. Export those values in the shell before running commands.
+
+### Optional: in-app Coach (LLM assistant)
+
+The assistant uses any **OpenAI-compatible** `POST /v1/chat/completions` endpoint. Configure:
+
+| Variable | Purpose |
+|---|---|
+| `ASSISTANT_BASE_URL` | API root, usually ending in `/v1` (required with model) |
+| `ASSISTANT_MODEL` | Model name sent to the provider |
+| `ASSISTANT_API_KEY` | Bearer token for hosted APIs; omit for local Ollama/LM Studio |
+
+**Ollama (local):**
+
+```bash
+export ASSISTANT_BASE_URL=http://127.0.0.1:11434/v1
+export ASSISTANT_MODEL=llama3.2
+```
+
+**LM Studio (local):**
+
+```bash
+export ASSISTANT_BASE_URL=http://127.0.0.1:1234/v1
+export ASSISTANT_MODEL=your-loaded-model
+```
+
+**Hosted OpenAI-compatible API:**
+
+```bash
+export ASSISTANT_BASE_URL=https://api.openai.com/v1
+export ASSISTANT_MODEL=gpt-4o-mini
+export ASSISTANT_API_KEY=sk-...
+```
+
+If `ASSISTANT_BASE_URL` or `ASSISTANT_MODEL` is missing, Waypoint runs normally and the **Coach** sidebar view explains that the assistant is disabled (same pattern as unconfigured Adzuna ingestion).
 
 ### Run locally
 

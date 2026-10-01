@@ -33,6 +33,7 @@ export function useJobsStore() {
   const [latestRun, setLatestRun] = useState(null);
   const [provider, setProvider] = useState(null);
   const [providerConfigured, setProviderConfigured] = useState(false);
+  const [assistantConfigured, setAssistantConfigured] = useState(false);
   const [migration, setMigration] = useState(null);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
@@ -63,6 +64,7 @@ export function useJobsStore() {
     setLatestRun(payload.latestRun);
     setProvider(payload.provider);
     setProviderConfigured(payload.providerConfigured);
+    setAssistantConfigured(payload.assistantConfigured);
     if (payload.serverJobsEmpty) {
       const candidate = importCandidate();
       if (candidate?.error) notify(candidate.error, 'error');
@@ -304,7 +306,7 @@ export function useJobsStore() {
   return {
     jobs: visibleJobs, totalCount: jobs.length, stageFilter, setStageFilter, tabs, queue, queries,
     visibleQueue, fitFilter, setFitFilter, fitCounts,
-    latestRun, provider, providerConfigured, running, loading, migration, selectedJob, selectedJobMode, toast,
+    latestRun, provider, providerConfigured, assistantConfigured, running, loading, migration, selectedJob, selectedJobMode, toast,
     activeView, setActiveView, layoutMode, insightsRange, setInsightsRange, insights, insightsLoading, insightsError,
     focusedQueryId,
     captureJob, updateDraftField, commitDraft, discardDraft, saveToPipeline, dismissMatch,
