@@ -1,4 +1,5 @@
 import { AppError } from '../errors.js';
+import { buildFollowUpItems } from '../lib/followUps.js';
 
 export const INSIGHTS_RANGES = ['30d', '90d', 'all'];
 
@@ -181,11 +182,30 @@ function ageInDays(now, value) {
   return date ? (now.getTime() - date.getTime()) / DAY_MS : 0;
 }
 
-function buildRecommendations(jobs, events, queryRows, now) {
+function buildRecommendations(jobs, events, queryRows, outreachFollowUps, now) {
   const latest = latestStageTimes(events);
   const activeJobs = jobs.filter(job => !job.deletedAt && job.stage !== 'Closed');
   const recommendations = [];
   const includedJobs = new Set();
+
+  const outreachDue = buildFollowUpItems({
+    jobs: [],
+    outreachEntries: outreachFollowUps,
+    now,
+  }).filter(item => item.kind === 'outreach-follow-up');
+
+  for (const item of outreachDue) {
+    includedJobs.add(item.jobId);
+    recommendations.push({
+      id: `outreach-follow-up:${item.id.replace('outreach:', '')}`,
+      type: 'outreach-follow-up',
+      title: item.title,
+      detail: item.detail,
+      actionLabel: 'Open job',
+      jobId: item.jobId,
+      stage: item.stage,
+    });
+  }
 
   const dueJobs = activeJobs
     .filter(job => {
@@ -289,7 +309,13 @@ export function buildInsights(snapshot, { range, startsAt, now = new Date() }) {
     outcomes,
     funnel,
     weeklyActivity: buildWeeklyActivity(snapshot.events, startsAt, currentTime),
-    recommendations: buildRecommendations(snapshot.jobs, snapshot.events, discovery.queries, currentTime),
+    recommendations: buildRecommendations(
+      snapshot.jobs,
+      snapshot.events,
+      discovery.queries,
+      snapshot.outreachFollowUps ?? [],
+      currentTime
+    ),
     discovery,
   };
 }

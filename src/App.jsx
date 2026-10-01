@@ -4,6 +4,7 @@ import PipelineRoute from './components/PipelineRoute';
 import CaptureBar from './components/CaptureBar';
 import PipelineTable from './components/PipelineTable';
 import JobDetailPanel from './components/JobDetailPanel';
+import FollowUpsPanel from './components/FollowUpsPanel';
 import ReviewQueue from './components/ReviewQueue';
 import Toast from './components/Toast';
 import MigrationBanner from './components/MigrationBanner';
@@ -31,6 +32,7 @@ export default function App() {
           <>
             <PipelineRoute tabs={store.tabs} stageFilter={store.stageFilter} onSelectStage={store.setStageFilter} layoutMode={store.layoutMode} />
             {store.migration ? <MigrationBanner count={store.migration.jobs.length} error={store.migration.error} onImport={store.importLocalJobs} onDiscard={store.discardLocalJobs} /> : null}
+            <FollowUpsPanel followUps={store.followUps} onOpenJob={store.openFollowUpJob} layoutMode={store.layoutMode} />
             <CaptureBar
               layoutMode={store.layoutMode}
               onCapture={store.captureJob}
@@ -120,6 +122,7 @@ export default function App() {
           onSave={store.updateJob}
           onDuplicate={store.duplicateJob}
           onDelete={store.deleteJob}
+          onEngagementChanged={store.refreshFollowUps}
           layoutMode={store.layoutMode}
         />
       ) : null}

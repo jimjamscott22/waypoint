@@ -3,6 +3,7 @@ import { JOB_STAGES } from '../lib/seedData';
 import { formatDateTime, fromLocalDateTimeInput, toLocalDateTimeInput } from '../lib/dateTime';
 import { externalJobUrl } from '../lib/jobUrl';
 import { color, font, radius } from '../theme';
+import JobEngagementPanel from './JobEngagementPanel';
 
 function toForm(job) {
   return {
@@ -65,7 +66,7 @@ function ActionButton({ children, onClick, primary = false, danger = false }) {
   );
 }
 
-export default function JobDetailPanel({ job, initialMode, onClose, onSave, onDuplicate, onDelete, layoutMode }) {
+export default function JobDetailPanel({ job, initialMode, onClose, onSave, onDuplicate, onDelete, onEngagementChanged, layoutMode }) {
   const [mode, setMode] = useState(initialMode ?? 'view');
   const [form, setForm] = useState(() => toForm(job));
   const [errors, setErrors] = useState({});
@@ -202,6 +203,11 @@ export default function JobDetailPanel({ job, initialMode, onClose, onSave, onDu
                 </div>
               </div>
             ))}
+            {mode === 'view' ? (
+              <div style={{ marginTop: 6, paddingTop: 14, borderTop: `1px solid ${color.rowDivider}` }}>
+                <JobEngagementPanel jobId={job.id} onChanged={onEngagementChanged} />
+              </div>
+            ) : null}
           </div>
         )}
 

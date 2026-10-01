@@ -42,4 +42,13 @@ export const api = {
   runScrape: () => request('/api/scrape-runs', { method: 'POST' }),
   runDetail: id => request(`/api/scrape-runs/${id}`),
   insights: (range = '90d') => request(`/api/insights?range=${encodeURIComponent(range)}`),
+  listContacts: jobId => request(`/api/jobs/${jobId}/contacts`),
+  createContact: (jobId, contact) => request(`/api/jobs/${jobId}/contacts`, { method: 'POST', body: body(contact) }),
+  updateContact: (jobId, contactId, changes) => request(`/api/jobs/${jobId}/contacts/${contactId}`, { method: 'PATCH', body: body(changes) }),
+  deleteContact: (jobId, contactId) => request(`/api/jobs/${jobId}/contacts/${contactId}`, { method: 'DELETE' }),
+  listOutreach: jobId => request(`/api/jobs/${jobId}/outreach`),
+  createOutreach: (jobId, entry) => request(`/api/jobs/${jobId}/outreach`, { method: 'POST', body: body(entry) }),
+  updateOutreach: (jobId, entryId, changes) => request(`/api/jobs/${jobId}/outreach/${entryId}`, { method: 'PATCH', body: body(changes) }),
+  deleteOutreach: (jobId, entryId) => request(`/api/jobs/${jobId}/outreach/${entryId}`, { method: 'DELETE' }),
+  listFollowUps: () => request('/api/follow-ups'),
 };

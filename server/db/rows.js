@@ -34,6 +34,36 @@ export function mapJob(row) {
   };
 }
 
+export function mapContact(row) {
+  return {
+    id: row.id,
+    jobId: row.job_id,
+    name: row.name,
+    title: row.title,
+    email: row.email,
+    profileUrl: row.profile_url,
+    notes: row.notes,
+    sortOrder: Number(row.sort_order),
+    createdAt: toIso(row.created_at),
+    updatedAt: toIso(row.updated_at),
+  };
+}
+
+export function mapOutreach(row) {
+  return {
+    id: row.id,
+    jobId: row.job_id,
+    contactId: row.contact_id,
+    contactName: row.contact_name ?? null,
+    occurredAt: toIso(row.occurred_at),
+    channel: row.channel,
+    note: row.note,
+    nextFollowUpAt: toIso(row.next_follow_up_at),
+    createdAt: toIso(row.created_at),
+    updatedAt: toIso(row.updated_at),
+  };
+}
+
 function parseTerms(value) {
   if (value == null) return [];
   if (Array.isArray(value)) return value;

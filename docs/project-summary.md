@@ -146,6 +146,15 @@ All responses are JSON. Errors are always `{ error: { code, message } }`.
 | `POST` | `/api/jobs/:id/restore` | Undo a delete |
 | `POST` | `/api/jobs/reorder` | Persist an explicit `orderedIds` permutation |
 | `POST` | `/api/jobs/import` | One-time legacy `localStorage` import |
+| `GET` | `/api/jobs/:jobId/contacts` | List people linked to a pipeline job |
+| `POST` | `/api/jobs/:jobId/contacts` | Create a job contact |
+| `PATCH` | `/api/jobs/:jobId/contacts/:contactId` | Update a job contact |
+| `DELETE` | `/api/jobs/:jobId/contacts/:contactId` | Remove a job contact |
+| `GET` | `/api/jobs/:jobId/outreach` | List outreach log entries for a job |
+| `POST` | `/api/jobs/:jobId/outreach` | Log outreach (channel, note, optional follow-up date) |
+| `PATCH` | `/api/jobs/:jobId/outreach/:entryId` | Update an outreach entry |
+| `DELETE` | `/api/jobs/:jobId/outreach/:entryId` | Delete an outreach entry |
+| `GET` | `/api/follow-ups` | Due/overdue job next actions and outreach follow-ups |
 | `POST` | `/api/queries` · `PATCH /api/queries/:id` · `DELETE /api/queries/:id` | Saved query CRUD |
 | `POST` | `/api/listings/:id/save` | Promote a match into the pipeline |
 | `POST` | `/api/listings/:id/dismiss` | Dismiss a match |
@@ -155,12 +164,14 @@ Known error codes: `VALIDATION_ERROR` (400), `RUN_IN_PROGRESS` (409), `RUN_COOLD
 
 ### Database schema
 
-Seven application tables, all InnoDB / `utf8mb4_unicode_ci`, with `CHECK` constraints enforcing enums at the database level rather than trusting the application.
+Nine application tables, all InnoDB / `utf8mb4_unicode_ci`, with `CHECK` constraints enforcing enums at the database level rather than trusting the application.
 
 | Table | Notes |
 |---|---|
 | `listings` | Scraped postings. `UNIQUE (provider, provider_job_id)` is what makes ingestion idempotent. `status ∈ (new, saved, dismissed, expired)`. |
 | `jobs` | The pipeline. `stage` is CHECK-constrained to the five stages; `next_action_at` adds an optional follow-up date; `sort_order` carries manual priority; `deleted_at` gives soft delete + undo; `source_listing_id` is a UNIQUE FK to `listings`. |
+| `job_contacts` | People tied to a job (name, title, email, profile URL, notes). Cascades on job delete. |
+| `outreach_entries` | Outreach log per job, optionally linked to a contact. `channel ∈ (email, linkedin, phone, in_person, other)`; optional `next_follow_up_at` for reminders. |
 | `job_stage_events` | Baseline and transition history used by Insights. Stage changes are inserted in the same transaction as the job update; pre-migration movement is never fabricated. |
 | `saved_queries` | `max_age_days` CHECK-constrained to exactly `(1, 3, 7, 14, 30)`. Seeded with three queries. |
 | `listing_queries` | Join table carrying the `score` (CHECK 0–100) — one listing can match several queries with different scores. |
