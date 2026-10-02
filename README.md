@@ -80,6 +80,8 @@ npm test
 npm run test:integration
 ```
 
+Unit tests and the production build also run on every pull request and on pushes to `master` via [GitHub Actions](.github/workflows/ci.yml). Integration tests (`npm run test:integration`) need a live MariaDB instance and are not part of CI; run them locally when you change database behavior.
+
 ## Project Structure
 
 - `src/App.jsx` — top-level layout and app composition
