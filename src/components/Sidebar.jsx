@@ -2,6 +2,7 @@ import { color, font, radius } from '../theme';
 
 const DESKTOP_ITEMS = [
   { label: 'Pipeline', view: 'Pipeline', mark: '↗' },
+  { label: 'Coach', view: 'Assistant', mark: '✦' },
   { label: 'Insights', view: 'Insights', mark: '∿' },
   { label: 'Boards', view: 'Boards', mark: '◇' },
 ];
@@ -9,6 +10,7 @@ const DESKTOP_ITEMS = [
 const COMPACT_ITEMS = [
   { label: 'Pipeline', view: 'Pipeline', mark: '↗' },
   { label: 'Review', view: 'Review', mark: '◎' },
+  { label: 'Coach', view: 'Assistant', mark: '✦' },
   { label: 'Insights', view: 'Insights', mark: '∿' },
   { label: 'Boards', view: 'Boards', mark: '◇' },
 ];

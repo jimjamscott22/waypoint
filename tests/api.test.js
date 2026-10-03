@@ -7,7 +7,7 @@ import { buildApp } from '../server/app.js';
 
 function fakeServices() {
   return {
-    config: { adzuna: { configured: false }, geocoder: { userAgent: '' } },
+    config: { adzuna: { configured: false }, geocoder: { userAgent: '' }, assistant: { configured: false } },
     pool: {},
     jobs: { list: async () => [], isEmpty: async () => true, create: async input => ({ id: 'job-1', ...input }) },
     queries: {
@@ -47,6 +47,7 @@ function fakeServices() {
       remove: async (jobId, entryId) => ({ id: entryId, jobId }),
     },
     followUps: { listDue: async () => [] },
+    assistant: null,
   };
 }
 
@@ -58,7 +59,7 @@ test('returns centralized bootstrap state', async t => {
   assert.deepEqual(response.json(), {
     jobs: [], queries: [], matches: [], latestRun: null, serverJobsEmpty: true,
     provider: { name: 'Adzuna', attributionUrl: 'https://www.adzuna.com/' },
-    providerConfigured: false, locationResolutionConfigured: false,
+    providerConfigured: false, locationResolutionConfigured: false, assistantConfigured: false,
   });
 });
 

@@ -15,6 +15,9 @@ import { createDiscoveryService } from './discovery/service.js';
 import { createNominatimClient } from './geocoding/nominatim.js';
 import { createLogger } from './logger.js';
 import { createJobUrlParser } from './jobs/parseJobUrl.js';
+import { createAssistantClient } from './assistant/client.js';
+import { createAssistantService } from './assistant/service.js';
+import { createAssistantToolkit } from './assistant/toolkit.js';
 
 export function createServices({
   env = process.env,
@@ -34,6 +37,21 @@ export function createServices({
   const contacts = createContactRepository(pool);
   const outreach = createOutreachRepository(pool);
   const followUps = createFollowUpRepository(pool);
+  const assistantToolkit = createAssistantToolkit({
+    jobs, followUps, contacts, outreach, insightsRepository,
+  });
+  const assistant = config.assistant.configured
+    ? createAssistantService({
+      client: createAssistantClient({
+        baseUrl: config.assistant.baseUrl,
+        model: config.assistant.model,
+        apiKey: config.assistant.apiKey,
+        timeoutMs: config.assistant.timeoutMs,
+      }),
+      toolkit: assistantToolkit,
+      maxIterations: config.assistant.maxIterations,
+    })
+    : null;
   const discoveryRepository = createDiscoveryRepository(pool);
   // Discovery runs against whichever providers are configured; an unconfigured one is
   // simply absent from the list. With none of them configured there is nothing to
@@ -50,6 +68,6 @@ export function createServices({
     userAgent: config.geocoder.userAgent || 'Waypoint/0.1 (job-url-parser)',
   });
   return {
-    config, pool, jobs, queries, listings, runs, insights, contacts, outreach, followUps, discovery, discoveryRepository, geocoder, jobUrlParser, logger,
+    config, pool, jobs, queries, listings, runs, insights, contacts, outreach, followUps, assistant, discovery, discoveryRepository, geocoder, jobUrlParser, logger,
   };
 }

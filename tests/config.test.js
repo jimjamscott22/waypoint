@@ -50,7 +50,17 @@ test('reports location resolution availability without exposing the geocoder ide
   const configured = publicConfig(loadConfig({ DB_PASSWORD: 'secret', GEOCODER_USER_AGENT: contact }));
   const unconfigured = publicConfig(loadConfig({ DB_PASSWORD: 'secret' }));
 
-  assert.deepEqual(configured, { providerConfigured: false, locationResolutionConfigured: true });
+  assert.deepEqual(configured, { providerConfigured: false, locationResolutionConfigured: true, assistantConfigured: false });
   assert.equal(unconfigured.locationResolutionConfigured, false);
   assert.equal(JSON.stringify(configured).includes('person@example.com'), false);
+});
+
+test('marks the assistant configured when base URL and model are present', () => {
+  const config = loadConfig({
+    DB_PASSWORD: 'secret',
+    ASSISTANT_BASE_URL: 'http://127.0.0.1:11434/v1',
+    ASSISTANT_MODEL: 'llama3.2',
+  });
+  assert.equal(config.assistant.configured, true);
+  assert.equal(publicConfig(config).assistantConfigured, true);
 });

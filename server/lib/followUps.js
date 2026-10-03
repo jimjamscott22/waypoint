@@ -73,6 +73,52 @@ export function buildFollowUpItems({ jobs = [], outreachEntries = [], now = new 
   });
 }
 
+function pushUpcomingItem(items, base, dueAt, now, horizonDays) {
+  const due = asDate(dueAt);
+  const current = asDate(now);
+  if (!due || !current) return;
+  const todayStart = startOfUtcDay(current);
+  const tomorrowStart = new Date(todayStart.getTime() + DAY_MS);
+  const horizonEnd = new Date(todayStart.getTime() + (horizonDays + 1) * DAY_MS);
+  if (due < tomorrowStart || due >= horizonEnd) return;
+  items.push({ ...base, status: 'upcoming', dueAt });
+}
+
+export function buildUpcomingFollowUpItems({ jobs = [], outreachEntries = [], now = new Date(), horizonDays = 7 }) {
+  const activeJobs = jobs.filter(job => !job.deletedAt && job.stage !== 'Closed');
+  const activeJobIds = new Set(activeJobs.map(job => job.id));
+  const jobById = new Map(jobs.map(job => [job.id, job]));
+  const items = [];
+
+  for (const job of activeJobs) {
+    pushUpcomingItem(items, {
+      id: `job-next:${job.id}`,
+      kind: 'job-next-action',
+      jobId: job.id,
+      stage: job.stage,
+      title: job.next?.trim() || 'Upcoming next action',
+      detail: `${job.role || 'Role'} at ${job.company || 'this company'}`,
+    }, job.nextActionAt, now, horizonDays);
+  }
+
+  for (const entry of outreachEntries) {
+    if (!activeJobIds.has(entry.jobId)) continue;
+    const job = jobById.get(entry.jobId);
+    const contactLabel = entry.contactName?.trim();
+    pushUpcomingItem(items, {
+      id: `outreach:${entry.id}`,
+      kind: 'outreach-follow-up',
+      jobId: entry.jobId,
+      contactId: entry.contactId ?? null,
+      stage: job?.stage ?? null,
+      title: contactLabel ? `Follow up with ${contactLabel}` : 'Upcoming outreach follow-up',
+      detail: `${job?.company || 'Employer'} · ${formatChannel(entry.channel)}`,
+    }, entry.nextFollowUpAt, now, horizonDays);
+  }
+
+  return items.sort((left, right) => asDate(left.dueAt) - asDate(right.dueAt));
+}
+
 export function formatChannel(channel) {
   switch (channel) {
     case 'email': return 'Email';

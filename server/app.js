@@ -13,6 +13,7 @@ import { insightRoutes } from './routes/insights.js';
 import { contactRoutes } from './routes/contacts.js';
 import { outreachRoutes } from './routes/outreach.js';
 import { followUpRoutes } from './routes/followUps.js';
+import { assistantRoutes } from './routes/assistant.js';
 
 const defaultDist = fileURLToPath(new URL('../dist/', import.meta.url));
 
@@ -59,6 +60,7 @@ export function buildApp({ services, logger = false, serveStatic = true, staticR
   app.register(contactRoutes, services);
   app.register(outreachRoutes, services);
   app.register(followUpRoutes, services);
+  app.register(assistantRoutes, services);
 
   const staticAvailable = serveStatic && existsSync(staticRoot);
   if (staticAvailable) {
