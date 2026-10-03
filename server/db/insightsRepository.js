@@ -25,6 +25,15 @@ export function createInsightsRepository(pool) {
         const coverage = await connection.query(
           'SELECT MIN(occurred_at) AS history_coverage_starts_at FROM job_stage_events'
         );
+        const outreachFollowUps = await connection.query(
+          `SELECT oe.id, oe.job_id, oe.contact_id, oe.channel, oe.note, oe.next_follow_up_at, jc.name AS contact_name
+           FROM outreach_entries oe
+           JOIN jobs j ON j.id = oe.job_id
+           LEFT JOIN job_contacts jc ON jc.id = oe.contact_id
+           WHERE oe.next_follow_up_at IS NOT NULL
+             AND j.deleted_at IS NULL
+             AND j.stage <> 'Closed'`
+        );
 
         return {
           jobs: jobs.map(row => ({
@@ -55,6 +64,15 @@ export function createInsightsRepository(pool) {
             enabled: Boolean(row.enabled),
           })),
           historyCoverageStartsAt: toIso(coverage[0]?.history_coverage_starts_at),
+          outreachFollowUps: outreachFollowUps.map(row => ({
+            id: row.id,
+            jobId: row.job_id,
+            contactId: row.contact_id,
+            contactName: row.contact_name,
+            channel: row.channel,
+            note: row.note,
+            nextFollowUpAt: toIso(row.next_follow_up_at),
+          })),
         };
       });
     },

@@ -10,6 +10,9 @@ import { queryRoutes } from './routes/queries.js';
 import { listingRoutes } from './routes/listings.js';
 import { runRoutes } from './routes/runs.js';
 import { insightRoutes } from './routes/insights.js';
+import { contactRoutes } from './routes/contacts.js';
+import { outreachRoutes } from './routes/outreach.js';
+import { followUpRoutes } from './routes/followUps.js';
 
 const defaultDist = fileURLToPath(new URL('../dist/', import.meta.url));
 
@@ -53,6 +56,9 @@ export function buildApp({ services, logger = false, serveStatic = true, staticR
   app.register(listingRoutes, services);
   app.register(runRoutes, services);
   app.register(insightRoutes, services);
+  app.register(contactRoutes, services);
+  app.register(outreachRoutes, services);
+  app.register(followUpRoutes, services);
 
   const staticAvailable = serveStatic && existsSync(staticRoot);
   if (staticAvailable) {

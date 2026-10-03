@@ -12,6 +12,14 @@ export function fromLocalDateTimeInput(value) {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
+export function toLocalDateInput(iso) {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 10);
+}
+
 export function formatDateTime(iso) {
   if (!iso) return '—';
   const date = new Date(iso);

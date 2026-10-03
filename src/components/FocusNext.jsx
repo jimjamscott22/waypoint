@@ -2,6 +2,7 @@ import { color, font, radius } from '../theme';
 
 const TYPE_LABELS = {
   'follow-up-due': 'Due',
+  'outreach-follow-up': 'Outreach',
   'stalled-applied': 'Stalled',
   'stale-saved': 'Saved',
   'low-performing-query': 'Query',

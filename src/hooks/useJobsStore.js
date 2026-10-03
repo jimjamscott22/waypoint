@@ -49,6 +49,7 @@ export function useJobsStore() {
   const [selectedJobMode, setSelectedJobMode] = useState('view');
   const [deletedJobId, setDeletedJobId] = useState(null);
   const [toast, setToast] = useState(null);
+  const [followUps, setFollowUps] = useState([]);
 
   const notify = useCallback((message, tone = 'success', action = null) => {
     if (action !== 'undo-delete') setDeletedJobId(null);
@@ -69,11 +70,21 @@ export function useJobsStore() {
     }
   }, [notify]);
 
+  const loadFollowUps = useCallback(async () => {
+    try {
+      const payload = await api.listFollowUps();
+      setFollowUps(payload.followUps);
+    } catch {
+      setFollowUps([]);
+    }
+  }, []);
+
   const refresh = useCallback(async () => {
     const payload = await api.bootstrap();
     applyBootstrap(payload);
+    await loadFollowUps();
     return payload;
-  }, [applyBootstrap]);
+  }, [applyBootstrap, loadFollowUps]);
 
   useEffect(() => {
     refresh()
@@ -176,9 +187,10 @@ export function useJobsStore() {
     try {
       const { job } = await api.updateJob(id, changes);
       setJobs(previous => replaceJob(previous, id, job));
+      await loadFollowUps();
       notify(message);
     } catch (error) { await fail(error); }
-  }, [notify, fail]);
+  }, [notify, fail, loadFollowUps]);
   const changeJobStage = useCallback((id, stage) => updateJob(id, { stage }, `Job moved to ${stage}.`), [updateJob]);
 
   const persistOrder = useCallback(async nextJobs => {
@@ -276,6 +288,11 @@ export function useJobsStore() {
     setSelectedJobMode('view');
     setActiveView('Pipeline');
   }, []);
+  const openFollowUpJob = useCallback(jobId => {
+    setStageFilter('All');
+    setSelectedJobId(jobId);
+    setSelectedJobMode('view');
+  }, []);
   const openInsightQuery = useCallback(queryId => {
     setFocusedQueryId(queryId);
     setActiveView('Pipeline');
@@ -296,5 +313,6 @@ export function useJobsStore() {
     clearSelection, updateJob, changeJobStage, reorderJobs, moveJob, duplicateJob, deleteJob, undoDelete, dismissToast,
     createQuery, updateQuery, deleteQuery, resolveQueryLocation, previewQuery, runScrape, importLocalJobs, discardLocalJobs,
     retryInsights, openInsightJob, openInsightQuery, clearFocusedQuery,
+    followUps, refreshFollowUps: loadFollowUps, openFollowUpJob,
   };
 }

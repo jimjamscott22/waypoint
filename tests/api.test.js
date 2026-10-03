@@ -34,6 +34,19 @@ function fakeServices() {
     },
     discovery: null,
     jobUrlParser: { parse: async url => ({ role: '', company: '', location: '', salary: '', contact: '', url }) },
+    contacts: {
+      listForJob: async () => [],
+      create: async (jobId, input) => ({ id: 'contact-1', jobId, ...input }),
+      update: async (jobId, contactId, input) => ({ id: contactId, jobId, ...input }),
+      remove: async (jobId, contactId) => ({ id: contactId, jobId }),
+    },
+    outreach: {
+      listForJob: async () => [],
+      create: async (jobId, input) => ({ id: 'outreach-1', jobId, ...input }),
+      update: async (jobId, entryId, input) => ({ id: entryId, jobId, ...input }),
+      remove: async (jobId, entryId) => ({ id: entryId, jobId }),
+    },
+    followUps: { listDue: async () => [] },
   };
 }
 

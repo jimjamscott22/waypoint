@@ -5,6 +5,9 @@ import { createQueryRepository } from './db/queryRepository.js';
 import { createListingRepository } from './db/listingRepository.js';
 import { createRunRepository } from './db/runRepository.js';
 import { createInsightsRepository } from './db/insightsRepository.js';
+import { createContactRepository } from './db/contactRepository.js';
+import { createOutreachRepository } from './db/outreachRepository.js';
+import { createFollowUpRepository } from './db/followUpRepository.js';
 import { createInsightsService } from './insights/service.js';
 import { createAdzunaClient } from './scraper/adzuna.js';
 import { createDiscoveryRepository } from './db/discoveryRepository.js';
@@ -28,6 +31,9 @@ export function createServices({
   const runs = createRunRepository(pool);
   const insightsRepository = createInsightsRepository(pool);
   const insights = createInsightsService({ repository: insightsRepository });
+  const contacts = createContactRepository(pool);
+  const outreach = createOutreachRepository(pool);
+  const followUps = createFollowUpRepository(pool);
   const discoveryRepository = createDiscoveryRepository(pool);
   // Discovery runs against whichever providers are configured; an unconfigured one is
   // simply absent from the list. With none of them configured there is nothing to
@@ -44,6 +50,6 @@ export function createServices({
     userAgent: config.geocoder.userAgent || 'Waypoint/0.1 (job-url-parser)',
   });
   return {
-    config, pool, jobs, queries, listings, runs, insights, discovery, discoveryRepository, geocoder, jobUrlParser, logger,
+    config, pool, jobs, queries, listings, runs, insights, contacts, outreach, followUps, discovery, discoveryRepository, geocoder, jobUrlParser, logger,
   };
 }
