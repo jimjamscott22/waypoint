@@ -19,3 +19,27 @@ export function sortMatches(matches, sortId) {
     .sort((a, b) => key(b.match) - key(a.match) || a.index - b.index)
     .map(entry => entry.match);
 }
+
+export const WORK_TYPE_FILTERS = Object.freeze([
+  Object.freeze({ id: 'all', label: 'All' }),
+  Object.freeze({ id: 'full-time', label: 'Full-time' }),
+  Object.freeze({ id: 'part-time', label: 'Part-time' }),
+  Object.freeze({ id: 'contract', label: 'Contract' }),
+]);
+
+// No dedicated "permanent" tab: it's the common/default case for a listing's
+// contractType and not an interesting filter target on its own.
+const WORK_TYPE_PREDICATES = Object.freeze({
+  all: () => true,
+  'full-time': match => match.contractTime === 'full_time',
+  'part-time': match => match.contractTime === 'part_time',
+  contract: match => match.contractType === 'contract',
+});
+
+export function filterByWorkType(matches, filterId) {
+  return matches.filter(WORK_TYPE_PREDICATES[filterId] ?? WORK_TYPE_PREDICATES.all);
+}
+
+export function countByWorkType(matches) {
+  return Object.fromEntries(WORK_TYPE_FILTERS.map(({ id }) => [id, matches.filter(WORK_TYPE_PREDICATES[id]).length]));
+}
