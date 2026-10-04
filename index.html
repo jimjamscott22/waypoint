@@ -10,14 +10,23 @@
       href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <script>
+      // Choose the canvas before loading React to avoid a light flash.
+      let theme;
+      try { theme = localStorage.getItem('waypoint.theme.v1'); } catch {}
+      if (theme !== 'light' && theme !== 'dark') theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.style.colorScheme = theme;
+    </script>
     <style>
-      html { background: #f4f7f8; }
-      body { margin: 0; background: #f4f7f8; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #183843; }
+      html { background: var(--color-pageBg, #f4f7f8); }
+      html[data-theme="dark"] { background: var(--color-pageBg, #101c22); }
+      body { margin: 0; background: var(--color-pageBg, transparent); font-family: 'IBM Plex Sans', system-ui, sans-serif; color: var(--color-ink, #183843); }
       * { box-sizing: border-box; }
-      ::placeholder { color: #76898d; }
+      ::placeholder { color: var(--color-textMuted, #76898d); }
       button, input, select, textarea { font: inherit; }
       button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible, [tabindex]:focus-visible {
-        outline: 3px solid rgba(169, 85, 62, 0.35) !important;
+        outline: 3px solid var(--color-focusRing, #a9553e) !important;
         outline-offset: 2px;
       }
       @keyframes route-in {

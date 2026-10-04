@@ -47,15 +47,24 @@ function NavButton({ item, active, count, horizontal = false, onSelect }) {
   );
 }
 
-export default function Sidebar({ activeView, onSelectView, layoutMode, reviewCount }) {
+function ThemeToggle({ theme, onToggle }) {
+  return (
+    <button type="button" aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'} aria-pressed={theme === 'dark'} onClick={onToggle}
+      style={{ minHeight: 44, width: '100%', border: `1px solid ${color.sidebarBulletOutline}`, borderRadius: radius.input, background: 'transparent', color: color.sidebarText, padding: '8px 6px', cursor: 'pointer', font: `600 11px ${font.body}` }}>
+      <span aria-hidden="true" style={{ marginRight: 5 }}>{theme === 'dark' ? '☀' : '☾'}</span>{theme === 'dark' ? 'Light' : 'Dark'}
+    </button>
+  );
+}
+
+export default function Sidebar({ activeView, onSelectView, layoutMode, reviewCount, theme, onToggleTheme }) {
   if (layoutMode === 'mobile') {
     return (
       <>
         <header style={{ position: 'sticky', top: 0, zIndex: 12, height: 58, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', background: color.sidebarBg, boxShadow: '0 6px 20px rgba(24,56,67,0.14)' }}>
           <Wordmark />
-          <div style={{ color: color.sidebarMuted, font: `500 10px ${font.utility}`, letterSpacing: '0.7px', textTransform: 'uppercase' }}>Search cockpit</div>
+          <div><ThemeToggle theme={theme} onToggle={onToggleTheme} /></div>
         </header>
-        <nav aria-label="Primary" style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 18, minHeight: 70, display: 'flex', alignItems: 'center', padding: '6px 10px calc(6px + env(safe-area-inset-bottom))', background: 'rgba(255,255,255,0.96)', borderTop: `1px solid ${color.cardBorder}`, boxShadow: '0 -8px 28px rgba(24,56,67,0.10)', backdropFilter: 'blur(12px)' }}>
+        <nav aria-label="Primary" style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 18, minHeight: 70, display: 'flex', alignItems: 'center', padding: '6px 10px calc(6px + env(safe-area-inset-bottom))', background: color.navBg, borderTop: `1px solid ${color.cardBorder}`, boxShadow: '0 -8px 28px rgba(24,56,67,0.10)', backdropFilter: 'blur(12px)' }}>
           {COMPACT_ITEMS.map(item => <NavButton key={item.view} item={item} horizontal active={activeView === item.view} count={item.view === 'Review' ? reviewCount : 0} onSelect={onSelectView} />)}
         </nav>
       </>
@@ -70,7 +79,8 @@ export default function Sidebar({ activeView, onSelectView, layoutMode, reviewCo
       <nav aria-label="Primary" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 5, marginTop: 34 }}>
         {items.map(item => <NavButton key={item.view} item={item} active={highlightedView === item.view} count={item.view === 'Review' ? reviewCount : 0} onSelect={onSelectView} />)}
       </nav>
-      <div aria-hidden="true" style={{ marginTop: 'auto', width: 1, height: 64, background: 'linear-gradient(transparent, rgba(216,236,232,0.55))' }} />
+      <div style={{ width: '100%', marginTop: 'auto', paddingTop: 24 }}><ThemeToggle theme={theme} onToggle={onToggleTheme} /></div>
+      <div aria-hidden="true" style={{ marginTop: 20, width: 1, height: 64, background: 'linear-gradient(transparent, rgba(216,236,232,0.55))' }} />
       <div style={{ marginTop: 10, color: color.sidebarMuted, font: `500 9px ${font.utility}`, letterSpacing: '0.8px', writingMode: 'vertical-rl', transform: 'rotate(180deg)', textTransform: 'uppercase' }}>Keep moving</div>
     </aside>
   );

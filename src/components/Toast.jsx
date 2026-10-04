@@ -19,7 +19,7 @@ export default function Toast({ toast, onUndo, onDismiss, drawerOpen = false, la
         alignItems: 'center',
         gap: 12,
         padding: '12px 14px',
-        background: color.ink,
+        background: color.toastBg,
         border: `1px solid ${toast.tone === 'error' ? color.urgent : 'rgba(255,255,255,0.14)'}`,
         borderRadius: radius.statCard,
         boxShadow: '0 14px 36px rgba(28,39,52,0.24)',

@@ -11,7 +11,7 @@ const linkButton = primary => ({
   display: 'inline-flex', alignItems: 'center', gap: 5, textDecoration: 'none', borderRadius: radius.smallButton,
   padding: '7px 11px', font: `600 12px ${font.body}`,
   background: primary ? color.accent : 'transparent',
-  color: primary ? '#fff' : color.textSecondary,
+  color: primary ? color.onAccent : color.textSecondary,
   border: primary ? 'none' : `1px solid ${color.inputBorder}`,
 });
 
@@ -86,7 +86,7 @@ export default function JobBoardsView({ queries, layoutMode }) {
                 key={query.id}
                 type="button"
                 onClick={() => setTerms({ keywords: query.keywords, location: query.location ?? '' })}
-                style={{ border: `1px solid ${color.inputBorder}`, borderRadius: radius.pill, padding: '3px 10px', background: '#fff', color: color.textBodyMid, font: `500 12px ${font.body}`, cursor: 'pointer' }}
+                style={{ border: `1px solid ${color.inputBorder}`, borderRadius: radius.pill, padding: '3px 10px', background: color.cardBg, color: color.textBodyMid, font: `500 12px ${font.body}`, cursor: 'pointer' }}
               >
                 {query.name}
               </button>

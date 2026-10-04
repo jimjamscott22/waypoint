@@ -51,10 +51,10 @@ function ActionButton({ children, onClick, primary = false, danger = false }) {
       type="button"
       onClick={onClick}
       style={{
-        border: primary ? 'none' : `1px solid ${danger ? '#e7bbb7' : color.inputBorder}`,
+        border: primary ? 'none' : `1px solid ${danger ? color.urgentBorder : color.inputBorder}`,
         borderRadius: radius.input,
-        background: primary ? color.accent : '#fff',
-        color: primary ? '#fff' : danger ? color.urgent : color.textBodyMid,
+        background: primary ? color.accent : color.cardBg,
+        color: primary ? color.onAccent : danger ? color.urgent : color.textBodyMid,
         cursor: 'pointer',
         font: `600 12.5px ${font.body}`,
         minHeight: 42,

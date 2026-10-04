@@ -1,3 +1,4 @@
+import useTheme from './hooks/useTheme';
 import { useJobsStore } from './hooks/useJobsStore';
 import Sidebar from './components/Sidebar';
 import PipelineRoute from './components/PipelineRoute';
@@ -14,6 +15,7 @@ import { color, font } from './theme';
 
 export default function App() {
   const store = useJobsStore();
+  const { theme, toggleTheme } = useTheme();
   const mobile = store.layoutMode === 'mobile';
   const wide = store.layoutMode === 'wide';
   const showPipeline = store.activeView === 'Pipeline' || (wide && store.activeView === 'Review');
@@ -25,7 +27,7 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: mobile ? 'column' : 'row', minHeight: '100vh', background: color.pageBg }}>
-      <Sidebar activeView={store.activeView} onSelectView={store.setActiveView} layoutMode={store.layoutMode} reviewCount={store.queue.length} />
+      <Sidebar theme={theme} onToggleTheme={toggleTheme} activeView={store.activeView} onSelectView={store.setActiveView} layoutMode={store.layoutMode} reviewCount={store.queue.length} />
 
       <main style={{ flex: 1, minWidth: 0, width: mobile ? '100%' : 'auto', padding: mobile ? '20px 16px 96px' : store.layoutMode === 'compact' ? '28px 24px 44px' : '32px 28px 48px', display: 'flex', flexDirection: 'column', gap: mobile ? 16 : 20 }}>
         {showPipeline ? (

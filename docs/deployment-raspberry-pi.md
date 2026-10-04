@@ -144,6 +144,10 @@ sudo mariadb -e "DROP DATABASE waypoint_restore_test"
 
 Copy backups off the Pi to another encrypted device or storage service. Local SSD/NVMe improves database reliability but is not a substitute for an off-device copy.
 
+On restored hosts whose service uses Node outside `/usr/bin/node`, pass
+`WAYPOINT_NODE_BIN=/opt/waypoint/node-v24.21.0/bin/node` to the protected migration
+helper along with `WAYPOINT_RELEASE_DIR`. It defaults to `/usr/bin/node` on standard installations.
+
 ## 9. Upgrade and rollback
 
 For an upgrade, build and stage a new immutable production artifact as in step 3. Run migrations against the staged release using only `migration.env`; activate it only after migration succeeds:

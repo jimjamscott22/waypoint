@@ -44,10 +44,10 @@ export default function InsightsView({
     return (
       <section aria-labelledby="insights-title" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <InsightsHeader range={range} onChangeRange={onChangeRange} headingRef={headingRef} layoutMode={layoutMode} />
-        <div style={{ padding: 20, border: `1px solid #e7bbb7`, borderRadius: radius.card, background: '#fff7f6', color: color.urgent }}>
+        <div style={{ padding: 20, border: `1px solid ${color.urgentBorder}`, borderRadius: radius.card, background: color.urgentSoft, color: color.urgent }}>
           <div style={{ font: `600 15px ${font.heading}` }}>Insights could not load</div>
           <div style={{ marginTop: 5, fontSize: 12.5 }}>{error.message}</div>
-          <button type="button" onClick={onRetry} style={{ marginTop: 11, border: 'none', background: color.urgent, color: '#fff', borderRadius: radius.badge, padding: '7px 11px', font: `600 12px ${font.body}`, cursor: 'pointer' }}>Retry</button>
+          <button type="button" onClick={onRetry} style={{ marginTop: 11, border: 'none', background: color.urgent, color: color.onAccent, borderRadius: radius.badge, padding: '7px 11px', font: `600 12px ${font.body}`, cursor: 'pointer' }}>Retry</button>
         </div>
       </section>
     );
@@ -62,7 +62,7 @@ export default function InsightsView({
     <section aria-labelledby="insights-title" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <InsightsHeader range={range} onChangeRange={onChangeRange} data={data} loading={loading} headingRef={headingRef} layoutMode={layoutMode} />
       {error ? (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '9px 12px', border: `1px solid #e7bbb7`, borderRadius: radius.input, background: '#fff7f6', color: color.urgent, fontSize: 11.5 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '9px 12px', border: `1px solid ${color.urgentBorder}`, borderRadius: radius.input, background: color.urgentSoft, color: color.urgent, fontSize: 11.5 }}>
           <span>Refresh failed: {error.message}</span>
           <button type="button" onClick={onRetry} style={{ border: 'none', background: 'transparent', color: color.urgent, font: `700 11.5px ${font.body}`, cursor: 'pointer' }}>Try again</button>
         </div>

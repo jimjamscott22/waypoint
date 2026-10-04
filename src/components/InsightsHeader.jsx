@@ -49,7 +49,7 @@ export default function InsightsHeader({ range, onChangeRange, data, loading, he
                 border: 'none',
                 borderRadius: radius.badge,
                 background: range === option.value ? color.ink : 'transparent',
-                color: range === option.value ? '#fff' : color.textSecondary,
+                color: range === option.value ? color.onInk : color.textSecondary,
                 padding: '7px 11px',
                 font: `600 12px ${font.body}`,
                 cursor: 'pointer',

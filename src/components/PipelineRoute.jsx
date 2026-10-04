@@ -35,7 +35,7 @@ export default function PipelineRoute({ tabs, stageFilter, onSelectStage, layout
           <h1 style={{ margin: '6px 0 0', maxWidth: 620, color: color.ink, font: `650 ${mobile ? 29 : 38}px ${font.heading}`, letterSpacing: '-1.15px', lineHeight: 1.02 }}>Where your search moves next.</h1>
           <p style={{ margin: '8px 0 0', color: color.textSecondary, fontSize: mobile ? 12.5 : 13.5, lineHeight: 1.5 }}>{total ? `${total} opportunities are mapped across your active pipeline.` : 'Capture your first opportunity to start mapping the route.'}</p>
         </div>
-        <button type="button" aria-pressed={stageFilter === 'All'} onClick={() => onSelectStage('All')} style={{ alignSelf: mobile ? 'flex-start' : 'auto', minHeight: 40, border: `1px solid ${stageFilter === 'All' ? color.ink : color.inputBorder}`, borderRadius: radius.pill, background: stageFilter === 'All' ? color.ink : color.cardBg, color: stageFilter === 'All' ? '#fff' : color.textSecondary, padding: '8px 13px', font: `600 11px ${font.utility}`, cursor: 'pointer' }}>All jobs · {total}</button>
+        <button type="button" aria-pressed={stageFilter === 'All'} onClick={() => onSelectStage('All')} style={{ alignSelf: mobile ? 'flex-start' : 'auto', minHeight: 40, border: `1px solid ${stageFilter === 'All' ? color.ink : color.inputBorder}`, borderRadius: radius.pill, background: stageFilter === 'All' ? color.ink : color.cardBg, color: stageFilter === 'All' ? color.onInk : color.textSecondary, padding: '8px 13px', font: `600 11px ${font.utility}`, cursor: 'pointer' }}>All jobs · {total}</button>
       </div>
 
       <div style={{ display: 'flex', flexDirection: mobile ? 'column' : 'row', alignItems: 'stretch', gap: mobile ? 5 : 9 }}>

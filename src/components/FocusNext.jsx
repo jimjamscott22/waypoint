@@ -34,7 +34,7 @@ export default function FocusNext({ recommendations = [], onOpenJob, onOpenQuery
         <ol style={{ listStyle: 'none', padding: 0, margin: 0 }}>
           {visible.map((recommendation, index) => (
             <li key={recommendation.id} style={{ display: 'grid', gridTemplateColumns: mobile ? '26px minmax(0, 1fr)' : '26px minmax(0, 1fr) auto', gap: 11, alignItems: 'center', padding: mobile ? '12px 13px' : '12px 18px', borderBottom: index === visible.length - 1 ? 'none' : `1px solid ${color.rowDivider}` }}>
-              <span aria-hidden="true" style={{ width: 24, height: 24, display: 'grid', placeItems: 'center', borderRadius: radius.badge, background: recommendation.type === 'follow-up-due' ? '#fff0ee' : color.accentSoft, color: recommendation.type === 'follow-up-due' ? color.urgent : color.accent, font: `700 10px ${font.body}` }}>
+              <span aria-hidden="true" style={{ width: 24, height: 24, display: 'grid', placeItems: 'center', borderRadius: radius.badge, background: recommendation.type === 'follow-up-due' ? color.urgentSoft : color.accentSoft, color: recommendation.type === 'follow-up-due' ? color.urgent : color.accent, font: `700 10px ${font.body}` }}>
                 {index + 1}
               </span>
               <div style={{ minWidth: 0 }}>
@@ -48,7 +48,7 @@ export default function FocusNext({ recommendations = [], onOpenJob, onOpenQuery
                 type="button"
                 onClick={() => action(recommendation, onOpenJob, onOpenQuery)}
                 aria-label={`${recommendation.actionLabel}: ${recommendation.title}`}
-                style={{ gridColumn: mobile ? '2' : 'auto', minHeight: mobile ? 40 : 0, justifySelf: mobile ? 'start' : 'auto', border: `1px solid ${color.inputBorder}`, borderRadius: radius.smallButton, background: '#fff', color: color.accent, padding: '6px 9px', font: `600 10.5px ${font.body}`, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                style={{ gridColumn: mobile ? '2' : 'auto', minHeight: mobile ? 40 : 0, justifySelf: mobile ? 'start' : 'auto', border: `1px solid ${color.inputBorder}`, borderRadius: radius.smallButton, background: color.cardBg, color: color.accent, padding: '6px 9px', font: `600 10.5px ${font.body}`, cursor: 'pointer', whiteSpace: 'nowrap' }}
               >
                 {recommendation.actionLabel}
               </button>

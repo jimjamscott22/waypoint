@@ -115,7 +115,7 @@ export default function MatchCard({ match, onSave, onDismiss }) {
           style={{
             flex: 1,
             border: `1px solid ${color.accent}`,
-            background: saveHovered ? color.accentSoft : '#fff',
+            background: saveHovered ? color.accentSoft : color.cardBg,
             color: color.accent,
             borderRadius: radius.smallButton,
             minHeight: 40,
@@ -134,7 +134,7 @@ export default function MatchCard({ match, onSave, onDismiss }) {
           style={{
             flex: 'none',
             border: `1px solid ${color.inputBorder}`,
-            background: '#fff',
+            background: color.cardBg,
             color: dismissHovered ? color.textSecondary : color.textMuted,
             borderRadius: radius.smallButton,
             minHeight: 40,

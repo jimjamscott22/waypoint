@@ -70,7 +70,7 @@ export default function CaptureBar({
             border: 'none',
             borderRadius: radius.input,
             background: color.accent,
-            color: '#fff',
+            color: color.onAccent,
             font: `600 13px ${font.body}`,
             minHeight: 44,
             padding: '0 18px',

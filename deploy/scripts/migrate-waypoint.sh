@@ -14,4 +14,4 @@ set -a
 source "$ENV_FILE"
 set +a
 cd "$RELEASE_DIR"
-exec /usr/bin/node server/db/migrate.js
+exec "${WAYPOINT_NODE_BIN:-/usr/bin/node}" server/db/migrate.js
