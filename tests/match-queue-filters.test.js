@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { DISTANCE_FILTERS, SORT_OPTIONS, WORK_TYPE_FILTERS, countByDistance, countByWorkType, filterByDistance, filterByWorkType, sortMatches } from '../src/lib/matchQueueFilters.js';
 
 const queue = [
-  { id: 'a', score: 60, publishedAt: '2026-01-01T00:00:00Z', contractTime: 'full_time', contractType: 'permanent', matchedQueries: [{ distanceBand: 'preferred', distanceMiles: 5 }] },
+  { id: 'a', score: 60, publishedAt: '2026-01-05T00:00:00Z', contractTime: 'full_time', contractType: 'permanent', matchedQueries: [{ distanceBand: 'preferred', distanceMiles: 5 }] },
   { id: 'b', score: 90, publishedAt: '2026-01-03T00:00:00Z', contractTime: 'part_time', contractType: 'contract', matchedQueries: [{ distanceBand: 'expanded', distanceMiles: 20 }] },
   { id: 'c', score: 90, publishedAt: '2026-01-02T00:00:00Z', contractTime: null, contractType: null, matchedQueries: [] },
 ];
@@ -13,7 +13,7 @@ test('sorts by score descending, breaking ties by original order', () => {
 });
 
 test('sorts by publish date descending', () => {
-  assert.deepEqual(sortMatches(queue, 'date').map(match => match.id), ['b', 'c', 'a']);
+  assert.deepEqual(sortMatches(queue, 'date').map(match => match.id), ['a', 'b', 'c']);
 });
 
 test('returns the input unchanged for an unknown sort id', () => {

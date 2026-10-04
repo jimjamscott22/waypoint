@@ -13,17 +13,20 @@ function relativeTime(timestamp) {
   return `${Math.round(hours / 24)}d ago`;
 }
 
-function FilterGroup({ label, options, activeId, counts, onChange, wide }) {
+function FilterGroup({ label, caption, options, activeId, counts, onChange, wide }) {
   return (
-    <div role="group" aria-label={label} style={{ display: 'flex', gap: 4, padding: 3, borderRadius: radius.input, background: color.inputBg, border: `1px solid ${color.rowDivider}`, width: wide ? 'auto' : 'fit-content' }}>
-      {options.map(option => {
-        const active = activeId === option.id;
-        return (
-          <button key={option.id} type="button" aria-pressed={active} onClick={() => onChange(option.id)} style={{ flex: wide ? 1 : 'none', minHeight: 32, border: 'none', borderRadius: radius.badge, padding: '5px 10px', background: active ? color.cardBg : 'transparent', boxShadow: active ? '0 1px 3px rgba(24,56,67,0.12)' : 'none', color: active ? color.ink : color.textSecondary, font: `${active ? 650 : 500} 11px ${font.body}`, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-            {option.label} <span style={{ color: color.textMuted, font: `500 10px ${font.utility}` }}>{counts?.[option.id] ?? 0}</span>
-          </button>
-        );
-      })}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div style={{ color: color.textMuted, font: `600 9px ${font.utility}`, letterSpacing: '0.5px', textTransform: 'uppercase' }}>{caption}</div>
+      <div role="group" aria-label={label} style={{ display: 'flex', flexWrap: 'wrap', gap: 4, padding: 3, borderRadius: radius.input, background: color.inputBg, border: `1px solid ${color.rowDivider}`, width: wide ? 'auto' : 'fit-content' }}>
+        {options.map(option => {
+          const active = activeId === option.id;
+          return (
+            <button key={option.id} type="button" aria-pressed={active} onClick={() => onChange(option.id)} style={{ flex: wide ? '1 1 auto' : 'none', minWidth: 0, minHeight: 32, border: 'none', borderRadius: radius.badge, padding: '5px 10px', background: active ? color.cardBg : 'transparent', boxShadow: active ? '0 1px 3px rgba(24,56,67,0.12)' : 'none', color: active ? color.ink : color.textSecondary, font: `${active ? 650 : 500} 11px ${font.body}`, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              {option.label} <span style={{ color: color.textMuted, font: `500 10px ${font.utility}` }}>{counts?.[option.id] ?? 0}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -66,13 +69,13 @@ export default function ReviewQueue({
       </div>
 
       {totalQueueCount && onChangeFitFilter ? (
-        <FilterGroup label="Filter matches by experience level" options={FIT_FILTERS} activeId={fitFilter} counts={fitCounts} onChange={onChangeFitFilter} wide={wide} />
+        <FilterGroup label="Filter matches by experience level" caption="Experience level" options={FIT_FILTERS} activeId={fitFilter} counts={fitCounts} onChange={onChangeFitFilter} wide={wide} />
       ) : null}
       {totalQueueCount && onChangeWorkTypeFilter ? (
-        <FilterGroup label="Filter matches by work type" options={WORK_TYPE_FILTERS} activeId={workTypeFilter} counts={workTypeCounts} onChange={onChangeWorkTypeFilter} wide={wide} />
+        <FilterGroup label="Filter matches by work type" caption="Work type" options={WORK_TYPE_FILTERS} activeId={workTypeFilter} counts={workTypeCounts} onChange={onChangeWorkTypeFilter} wide={wide} />
       ) : null}
       {totalQueueCount && onChangeDistanceFilter ? (
-        <FilterGroup label="Filter matches by distance" options={DISTANCE_FILTERS} activeId={distanceFilter} counts={distanceCounts} onChange={onChangeDistanceFilter} wide={wide} />
+        <FilterGroup label="Filter matches by distance" caption="Distance" options={DISTANCE_FILTERS} activeId={distanceFilter} counts={distanceCounts} onChange={onChangeDistanceFilter} wide={wide} />
       ) : null}
 
       <div style={{ display: 'grid', gridTemplateColumns: !wide && !mobile ? 'repeat(2, minmax(0, 1fr))' : '1fr', gap: 10 }}>
