@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { descriptionSnippet, explainMatch, highlightSegments } from '../src/lib/matchExplanation.js';
+import { bestDistance, descriptionSnippet, explainMatch, highlightSegments } from '../src/lib/matchExplanation.js';
 
 const facts = (overrides = {}) => ({ matchedSynonyms: [], requiredTerms: [], optionalTerms: [], excludedTerms: [], ...overrides });
 
@@ -21,6 +21,14 @@ test('distinguishes a known-unknown distance from matches saved before distance 
   );
   assert.equal(explainMatch({ matchedQueries: [{ score: 50, distanceMiles: null, distanceBand: null, matchFacts: null }] }).distance, null);
   assert.equal(explainMatch({ matchedQueries: [{ distanceMiles: 0.4, distanceBand: 'preferred' }] }).distance.label, '<1 mi · in preferred area');
+});
+
+test('exposes bestDistance directly for reuse outside explainMatch', () => {
+  assert.deepEqual(
+    bestDistance([{ distanceMiles: 4.2, distanceBand: 'preferred' }]),
+    { band: 'preferred', miles: 4.2, label: '4 mi · in preferred area' }
+  );
+  assert.equal(bestDistance([]), null);
 });
 
 test('merges title and term evidence across queries without duplicates', () => {

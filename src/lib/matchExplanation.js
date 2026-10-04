@@ -23,7 +23,7 @@ function uniqueTerms(lists) {
 // A listing matched by several queries is as close as its nearest query center, and
 // sits in the best band any of them assigned. Queries saved before distance scoring
 // carry no band at all, which is different from a known "unknown" distance.
-function bestDistance(matchedQueries) {
+export function bestDistance(matchedQueries) {
   const banded = matchedQueries.filter(query => query.distanceBand);
   if (!banded.length) return null;
   const band = banded
