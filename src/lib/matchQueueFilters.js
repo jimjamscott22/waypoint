@@ -1,3 +1,5 @@
+import { bestDistance } from './matchExplanation.js';
+
 export const SORT_OPTIONS = Object.freeze([
   Object.freeze({ id: 'score', label: 'Best match' }),
   Object.freeze({ id: 'date', label: 'Newest' }),
@@ -42,4 +44,24 @@ export function filterByWorkType(matches, filterId) {
 
 export function countByWorkType(matches) {
   return Object.fromEntries(WORK_TYPE_FILTERS.map(({ id }) => [id, matches.filter(WORK_TYPE_PREDICATES[id]).length]));
+}
+
+export const DISTANCE_FILTERS = Object.freeze([
+  Object.freeze({ id: 'all', label: 'All' }),
+  Object.freeze({ id: 'preferred', label: 'Nearby' }),
+  Object.freeze({ id: 'expanded', label: 'Expanded area' }),
+]);
+
+const DISTANCE_PREDICATES = Object.freeze({
+  all: () => true,
+  preferred: match => bestDistance(match.matchedQueries ?? [])?.band === 'preferred',
+  expanded: match => bestDistance(match.matchedQueries ?? [])?.band === 'expanded',
+});
+
+export function filterByDistance(matches, filterId) {
+  return matches.filter(DISTANCE_PREDICATES[filterId] ?? DISTANCE_PREDICATES.all);
+}
+
+export function countByDistance(matches) {
+  return Object.fromEntries(DISTANCE_FILTERS.map(({ id }) => [id, matches.filter(DISTANCE_PREDICATES[id]).length]));
 }
