@@ -4,6 +4,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { buildApp } from '../server/app.js';
+import { AppError } from '../server/errors.js';
 
 function fakeServices() {
   return {
@@ -76,6 +77,26 @@ test('reports an unconfigured provider for manual runs', async t => {
   const response = await app.inject({ method: 'POST', url: '/api/scrape-runs' });
   assert.equal(response.statusCode, 503);
   assert.deepEqual(response.json().error, { code: 'PROVIDER_NOT_CONFIGURED', message: 'Adzuna credentials are not configured' });
+});
+
+test('preserves RUN_COOLDOWN for manual scrape runs during cooldown', async t => {
+  const services = fakeServices();
+  services.config.adzuna.configured = true;
+  services.discovery = {
+    runAll: async () => {
+      throw new AppError(429, 'RUN_COOLDOWN', 'Manual discovery can run once every 15 minutes');
+    },
+  };
+  const app = buildApp({ services, serveStatic: false });
+  await app.ready();
+  t.after(() => app.close());
+
+  const response = await app.inject({ method: 'POST', url: '/api/scrape-runs' });
+  assert.equal(response.statusCode, 429);
+  assert.deepEqual(response.json().error, {
+    code: 'RUN_COOLDOWN',
+    message: 'Manual discovery can run once every 15 minutes',
+  });
 });
 
 test('returns Insights with a default or selected reporting range', async t => {

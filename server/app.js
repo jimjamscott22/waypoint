@@ -13,6 +13,7 @@ import { insightRoutes } from './routes/insights.js';
 import { contactRoutes } from './routes/contacts.js';
 import { outreachRoutes } from './routes/outreach.js';
 import { followUpRoutes } from './routes/followUps.js';
+import { databaseRouteRateLimit, registerRateLimit } from './rateLimit.js';
 
 const defaultDist = fileURLToPath(new URL('../dist/', import.meta.url));
 
@@ -26,15 +27,25 @@ export function buildApp({ services, logger = false, serveStatic = true, staticR
     if (error instanceof AppError) {
       return reply.code(error.statusCode).send({ error: { code: error.code, message: error.message } });
     }
+    if (error.statusCode === 429) {
+      return reply.code(429).send({
+        error: { code: 'RATE_LIMIT_EXCEEDED', message: error.message || 'Too many requests' },
+      });
+    }
     request.log.error(error);
     return reply.code(500).send({ error: { code: 'INTERNAL_ERROR', message: 'An unexpected server error occurred' } });
   });
 
-  app.get('/api/health', async () => ({
-    status: 'ok',
-    databaseVersion: await verifyDatabase(services.pool),
-    ...publicConfig(services.config),
-  }));
+  app.register(async instance => {
+    await registerRateLimit(instance);
+    instance.get('/api/health', {
+      config: { rateLimit: databaseRouteRateLimit },
+    }, async () => ({
+      status: 'ok',
+      databaseVersion: await verifyDatabase(services.pool),
+      ...publicConfig(services.config),
+    }));
+  });
 
   app.get('/api/bootstrap', async () => {
     const [jobs, serverJobsEmpty, queries, matches, latestRun] = await Promise.all([
