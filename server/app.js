@@ -24,13 +24,13 @@ export function buildApp({ services, logger = false, serveStatic = true, staticR
     if (error.validation) {
       return reply.code(400).send({ error: { code: 'VALIDATION_ERROR', message: error.message } });
     }
+    if (error instanceof AppError) {
+      return reply.code(error.statusCode).send({ error: { code: error.code, message: error.message } });
+    }
     if (error.statusCode === 429) {
       return reply.code(429).send({
         error: { code: 'RATE_LIMIT_EXCEEDED', message: error.message || 'Too many requests' },
       });
-    }
-    if (error instanceof AppError) {
-      return reply.code(error.statusCode).send({ error: { code: error.code, message: error.message } });
     }
     request.log.error(error);
     return reply.code(500).send({ error: { code: 'INTERNAL_ERROR', message: 'An unexpected server error occurred' } });
