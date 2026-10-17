@@ -21,7 +21,7 @@ This project is a React + Vite web app built around a pipeline and outcome dashb
 - **Job capture** from a pasted URL, with a draft flow for filling in details by hand
 - **Daily Adzuna ingestion** plus an in-app manual run
 - **Review queue** for persisted matches, with save and dismiss actions
-- **Job details drawer** for viewing and editing a selected job
+- **Job details drawer** with the next action, readable due date, and urgent status directly below the job title, followed by viewing and editing controls for the remaining details
 - **Optional next-action dates** for accurate follow-up reminders
 - **Stage-history tracking** for forward-looking conversion and activity metrics
 - **Drag-and-drop reordering** for manual priority management

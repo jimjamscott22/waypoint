@@ -43,3 +43,17 @@ export function formatSavedDate(iso) {
     year: 'numeric',
   }).format(date);
 }
+
+export function formatNextActionDue(iso, now = new Date()) {
+  if (!iso) return 'No due date';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return 'No due date';
+  if (date < now) return `Overdue · ${formatDateTime(iso)}`;
+
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const time = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(date);
+  if (date.toDateString() === now.toDateString()) return `Today · ${time}`;
+  if (date.toDateString() === tomorrow.toDateString()) return `Tomorrow · ${time}`;
+  return formatDateTime(iso);
+}

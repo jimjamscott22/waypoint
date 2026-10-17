@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { JOB_STAGES } from '../lib/seedData';
-import { formatDateTime, fromLocalDateTimeInput, toLocalDateTimeInput } from '../lib/dateTime';
+import { formatDateTime, formatNextActionDue, fromLocalDateTimeInput, toLocalDateTimeInput } from '../lib/dateTime';
 import { externalJobUrl } from '../lib/jobUrl';
 import { color, font, radius } from '../theme';
 import JobEngagementPanel from './JobEngagementPanel';
@@ -141,9 +141,6 @@ export default function JobDetailPanel({ job, initialMode, onClose, onSave, onDu
     ['Location', job.location],
     ['Salary', job.salary],
     ['Contact', job.contact],
-    ['Next action', job.next],
-    ['Next action due', formatDateTime(job.nextActionAt)],
-    ['Urgent', job.urgent ? 'Yes' : 'No'],
     ['URL', job.url],
     ['Notes', job.notes],
   ];
@@ -165,6 +162,17 @@ export default function JobDetailPanel({ job, initialMode, onClose, onSave, onDu
           </div>
           <button ref={closeButtonRef} type="button" aria-label="Close job details" onClick={onClose} style={{ border: 'none', borderRadius: radius.input, background: 'transparent', fontSize: 20, color: color.textMuted, cursor: 'pointer', width: 42, height: 42, flex: '0 0 auto' }}>×</button>
         </div>
+
+        {mode === 'view' ? (
+          <section aria-labelledby="job-next-action-title" style={{ paddingBottom: 18, borderBottom: `1px solid ${color.rowDivider}`, display: 'flex', flexDirection: 'column', gap: 7 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+              <h2 id="job-next-action-title" style={{ margin: 0, font: `600 12px ${font.body}`, color: color.textSecondary }}>Next action</h2>
+              {job.urgent ? <span style={{ font: `600 11px ${font.body}`, color: color.urgent }}>Urgent</span> : null}
+            </div>
+            <div style={{ font: `600 17px ${font.heading}`, lineHeight: 1.4, color: job.next?.trim() ? color.ink : color.textMuted, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{job.next?.trim() || 'No next action set'}</div>
+            <div title={formatDateTime(job.nextActionAt)} style={{ fontSize: 12, lineHeight: 1.5, color: color.textSecondary }}>{formatNextActionDue(job.nextActionAt)}</div>
+          </section>
+        ) : null}
 
         {mode === 'edit' ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
