@@ -88,6 +88,13 @@ export function createDiscoveryService({
     persistedMatchTarget: discovery?.persistedMatchTarget ?? 50,
   };
 
+  function plannedRequestsForFamily(query, roleFamily) {
+    return providers.reduce(
+      (sum, provider) => sum + provider.planRoleFamily({ query, roleFamily }).length,
+      0
+    );
+  }
+
   // One page loop drives both preview and persisted runs. `onAccepted` decides what
   // happens with a match; everything else — budgets, paging, diagnostics — is shared.
   // Each provider supplies its own request plan for the family rather than being driven
@@ -98,13 +105,15 @@ export function createDiscoveryService({
 
     for (const provider of providers) {
       let exhausted = false;
+      const requests = provider.planRoleFamily({ query, roleFamily });
 
-      for (const request of provider.planRoleFamily({ query, roleFamily })) {
+      for (let index = 0; index < requests.length; index += 1) {
         if (exhausted) break;
+        const request = requests[index];
 
         for (let page = 1; page <= limits.maxPagesPerFamily; page += 1) {
           if (!budget.take(provider.id)) {
-            counters.unsearchedRequests += 1;
+            counters.unsearchedRequests += requests.length - index;
             truncated = true;
             exhausted = true;
             break;
@@ -170,7 +179,7 @@ export function createDiscoveryService({
 
         for (const { roleFamily } of buildRoleFamilyPlan(criteria)) {
           if (accepted.size >= PREVIEW_SAMPLE_TARGET || budget.exhausted()) {
-            counters.unsearchedRequests += 1;
+            counters.unsearchedRequests += Math.max(1, plannedRequestsForFamily(criteria, roleFamily));
             counters.truncated = true;
             continue;
           }
@@ -184,8 +193,33 @@ export function createDiscoveryService({
             at,
             familyCounters: emptyFamilyCounters(),
             onAccepted: (listing, evaluation) => {
-              if (!accepted.has(listingKey(listing))) {
-                accepted.set(listingKey(listing), { listing, evaluation });
+              const key = listingKey(listing);
+              const existing = accepted.get(key);
+              if (!existing) {
+                accepted.set(key, { listing, evaluation });
+              } else {
+                const mergedSynonyms = [...new Set([
+                  ...(existing.evaluation.matchFacts?.matchedSynonyms ?? []),
+                  ...(evaluation.matchFacts?.matchedSynonyms ?? []),
+                ])];
+                const mergedFamilies = [...new Set([
+                  ...(existing.evaluation.matchedRoleFamilies ?? []),
+                  ...(evaluation.matchedRoleFamilies ?? []),
+                ])];
+                const bestEvaluation = evaluation.score > existing.evaluation.score
+                  ? evaluation
+                  : existing.evaluation;
+                accepted.set(key, {
+                  listing,
+                  evaluation: {
+                    ...bestEvaluation,
+                    matchedRoleFamilies: mergedFamilies,
+                    matchFacts: {
+                      ...bestEvaluation.matchFacts,
+                      matchedSynonyms: mergedSynonyms,
+                    },
+                  },
+                });
               }
             },
           });
@@ -250,7 +284,7 @@ export function createDiscoveryService({
     for (const { roleFamily } of plan) {
       const familyStarted = now();
       if (accepted.size >= limits.persistedMatchTarget || budget.exhausted()) {
-        counters.unsearchedRequests += 1;
+        counters.unsearchedRequests += Math.max(1, plannedRequestsForFamily(query, roleFamily));
         counters.truncated = true;
         continue;
       }

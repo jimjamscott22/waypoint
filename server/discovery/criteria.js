@@ -49,11 +49,26 @@ export function providerLocation(displayName) {
   if (segments.length === 2 && /^[A-Z]{2}$/.test(segments[1])) return raw;
 
   // The state is the last segment that names one; "Washington, Washington County, Utah"
-  // must resolve to UT, not WA.
+  // must resolve to UT, not WA. Also accept a two-letter state code, optionally followed
+  // by a ZIP code ("Syracuse, NY 13202, USA").
   let state;
-  for (const segment of segments) {
+  for (let i = 1; i < segments.length; i += 1) {
+    const segment = segments[i];
     const abbreviation = STATE_ABBREVIATIONS.get(segment.toLowerCase());
-    if (abbreviation) state = abbreviation;
+    if (abbreviation) {
+      state = abbreviation;
+      continue;
+    }
+    const zipMatch = segment.match(/^([A-Za-z]{2})(?:\s+\d{5}(?:-\d{4})?)?$/);
+    if (zipMatch) {
+      const code = zipMatch[1].toUpperCase();
+      for (const known of STATE_ABBREVIATIONS.values()) {
+        if (known === code) {
+          state = code;
+          break;
+        }
+      }
+    }
   }
   if (!state) return raw;
 

@@ -79,8 +79,14 @@ export function evaluateListing({ query, listing, roleFamily, now = new Date() }
   if (ageDays > query.maxAgeDays) return reject('age');
 
   // The planned role family must appear in the title; description-only hits are too weak.
-  const matchedSynonyms = matchedSynonymsFor(roleFamily, title);
-  if (matchedSynonyms.length === 0) return reject('terms');
+  const matchedRoleFamilies = (query.roleFamilies ?? []).filter(
+    family => matchedSynonymsFor(family, title).length > 0
+  );
+  const matchedSynonyms = [...new Set([
+    ...matchedSynonymsFor(roleFamily, title),
+    ...matchedRoleFamilies.flatMap(family => matchedSynonymsFor(family, title)),
+  ])];
+  if (matchedSynonymsFor(roleFamily, title).length === 0) return reject('terms');
 
   const excludedTerms = (query.excludedTerms ?? []).filter(term => termMatches(term, searchable));
   if (excludedTerms.length > 0) return reject('terms', { matchFacts: emptyFactsWith({ excludedTerms }) });
@@ -116,16 +122,20 @@ export function evaluateListing({ query, listing, roleFamily, now = new Date() }
   const optional = query.optionalTerms ?? [];
   const optionalTerms = optional.filter(term => termMatches(term, searchable));
 
+  // Score against the best-matching role family in the query so a listing whose title
+  // matches multiple families is not penalized by whichever family happened to find it first.
+  const scoringFamilies = matchedRoleFamilies.includes(roleFamily)
+    ? matchedRoleFamilies
+    : [roleFamily, ...matchedRoleFamilies];
+  const titleCoverage = Math.max(...scoringFamilies.map(family => bestSynonymCoverage(family, title)));
+  const descriptionCoverage = Math.max(...scoringFamilies.map(family => bestSynonymCoverage(family, description)));
+
   const score = clampScore(
-    SCORE_WEIGHTS.titleFamily * bestSynonymCoverage(roleFamily, title) +
-    SCORE_WEIGHTS.description * bestSynonymCoverage(roleFamily, description) +
+    SCORE_WEIGHTS.titleFamily * titleCoverage +
+    SCORE_WEIGHTS.description * descriptionCoverage +
     DISTANCE_POINTS[distanceBand] +
     SCORE_WEIGHTS.recency * Math.max(0, 1 - ageDays / query.maxAgeDays) +
     (optional.length ? SCORE_WEIGHTS.optionalTerms * (optionalTerms.length / optional.length) : 0)
-  );
-
-  const matchedRoleFamilies = (query.roleFamilies ?? []).filter(
-    family => matchedSynonymsFor(family, title).length > 0
   );
 
   return {

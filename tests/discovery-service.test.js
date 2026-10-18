@@ -487,14 +487,15 @@ test('stops searching later phrases once the request budget runs out', async () 
   const { service, finishedQueries } = harness({
     pool,
     search: async ({ phrase }) => { requested.push(phrase); return page([]); },
-    discovery: { runRequestBudget: 2, maxPagesPerFamily: 3, persistedMatchTarget: 500 },
+    discovery: { runRequestBudget: 1, maxPagesPerFamily: 3, persistedMatchTarget: 500 },
   });
 
   await service.runAll('scheduled');
 
-  assert.deepEqual(requested, ['systems administrator', 'system administrator']);
+  assert.deepEqual(requested, ['systems administrator']);
   assert.equal(finishedQueries[0].truncated, true);
-  assert.ok(finishedQueries[0].unsearchedRequests >= 1);
+  // Two of the three planned phrases were skipped when the budget ran out.
+  assert.equal(finishedQueries[0].unsearchedRequests, 2);
 });
 
 test('gives each provider its own budget so a broad provider cannot starve another', async () => {
