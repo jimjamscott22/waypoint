@@ -206,16 +206,16 @@ export function createDiscoveryService({
                   ...(existing.evaluation.matchedRoleFamilies ?? []),
                   ...(evaluation.matchedRoleFamilies ?? []),
                 ])];
-                const bestEvaluation = evaluation.score > existing.evaluation.score
-                  ? evaluation
-                  : existing.evaluation;
+                const winner = evaluation.score > existing.evaluation.score
+                  ? { listing, evaluation }
+                  : existing;
                 accepted.set(key, {
-                  listing,
+                  listing: winner.listing,
                   evaluation: {
-                    ...bestEvaluation,
+                    ...winner.evaluation,
                     matchedRoleFamilies: mergedFamilies,
                     matchFacts: {
-                      ...bestEvaluation.matchFacts,
+                      ...winner.evaluation.matchFacts,
                       matchedSynonyms: mergedSynonyms,
                     },
                   },

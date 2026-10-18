@@ -184,6 +184,47 @@ test('preview counts existing listings by their stored decision', async () => {
   assert.equal(result.diagnostics.newMatches, 0);
 });
 
+test('preview keeps the listing paired with its winning evaluation while merging evidence', async () => {
+  const { pool } = fakePool();
+  const { service } = harness({
+    pool,
+    search: async ({ phrase }) => {
+      if (phrase === 'systems administrator') {
+        return page([
+          listing(1, {
+            title: 'Systems Administrator',
+            location: 'Auburn, NY',
+            description: 'Systems administrator maintaining servers',
+          }),
+        ]);
+      }
+      if (phrase === 'system administrator') {
+        // Same providerJobId returned with a lower-scoring payload (missing coordinates
+        // and description) and a different title/location.
+        return page([
+          listing(1, {
+            title: 'Sysadmin (Repost)',
+            location: 'Unknown, NY',
+            description: 'General duties',
+            latitude: null,
+            longitude: null,
+          }),
+        ]);
+      }
+      return page([]);
+    },
+  });
+
+  const result = await service.preview(query());
+  assert.equal(result.results.length, 1);
+  assert.equal(result.results[0].title, 'Systems Administrator');
+  assert.equal(result.results[0].location, 'Auburn, NY');
+  assert.equal(result.results[0].distanceBand, 'preferred');
+  assert.equal(result.results[0].score, 90);
+  assert.ok(result.results[0].matchFacts.matchedSynonyms.includes('systems administrator'));
+  assert.ok(result.results[0].matchFacts.matchedSynonyms.includes('sysadmin'));
+});
+
 test('preview refuses to overlap a run already holding the scrape lock', async () => {
   const { service } = harness({ pool: busyPool(), search: async () => page([]) });
   await assert.rejects(service.preview(query()), error => error instanceof AppError && error.code === 'RUN_IN_PROGRESS');

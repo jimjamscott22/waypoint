@@ -469,6 +469,8 @@ test('sends the provider a location it can geocode rather than the full display 
     ['Madison, Dane County, Wisconsin, United States', 'Madison, WI'],
     ['Syracuse, NY 13202, USA', 'Syracuse, NY'],
     ['Auburn, NY, USA', 'Auburn, NY'],
+    ['New York, United States', 'New York, NY'],
+    ['Washington, Washington County, Utah, United States', 'Washington, UT'],
   ];
   for (const [displayName, expected] of cases) {
     const parameters = adzunaParameters(query({ center: { displayName, ...AUBURN } }), 'it-support', 1);
