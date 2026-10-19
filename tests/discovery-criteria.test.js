@@ -71,7 +71,7 @@ test('normalizes terms by trimming, collapsing, and removing case-insensitive du
 test('plans one provider request group per selected role family', () => {
   const plan = buildRoleFamilyPlan(query({ roleFamilies: ['it-support', 'cloud-support'] }));
   assert.deepEqual(plan.map(entry => entry.roleFamily), ['it-support', 'cloud-support']);
-  assert.deepEqual(plan[1].synonyms, ['cloud support', 'cloud engineer', 'cloud administrator', 'cloud operations', 'Azure administrator', 'AWS administrator']);
+  assert.deepEqual(plan[1].synonyms, ROLE_FAMILIES['cloud-support'].synonyms);
 });
 
 test('translates a structured search into provider parameters', () => {
@@ -299,6 +299,35 @@ test('widening the filter does not change what is asked of the provider', () => 
   assert.deepEqual(providerPhrases('systems-administration'),
     ['systems administrator', 'system administrator', 'IT administrator']);
   assert.deepEqual(providerPhrases('it-operations'), ['IT operations', 'data center technician', 'NOC technician']);
+  assert.deepEqual(providerPhrases('network-administration'),
+    ['network administrator', 'network engineer', 'network technician']);
+  assert.deepEqual(providerPhrases('cloud-support'),
+    ['cloud support', 'cloud engineer', 'cloud administrator']);
+  assert.deepEqual(providerPhrases('desktop-support'),
+    ['desktop support', 'desktop technician', 'deskside support']);
+  assert.deepEqual(providerPhrases('junior-systems-engineering'),
+    ['junior systems engineer', 'associate systems engineer', 'IT engineer']);
+});
+
+test('scores multi-family listings using the best-matching role family and records all matched synonyms', () => {
+  // When searched under systems-administration, a listing whose description only mentions
+  // "help desk" still earns the 15-point description coverage because it also matches
+  // the query's it-support family.
+  const multiFamily = evaluateListing({
+    query: query({ roleFamilies: ['systems-administration', 'it-support'] }),
+    listing: listing({
+      title: 'Systems Administrator and IT Support Specialist',
+      description: 'Provide help desk support for local users',
+    }),
+    roleFamily: 'systems-administration',
+    now: NOW,
+  });
+  assert.equal(multiFamily.accepted, true);
+  assert.equal(multiFamily.score, 90);
+  assert.deepEqual(multiFamily.matchedRoleFamilies, ['systems-administration', 'it-support']);
+  assert.ok(multiFamily.matchFacts.matchedSynonyms.includes('systems administrator'));
+  assert.ok(multiFamily.matchFacts.matchedSynonyms.includes('IT support'));
+  assert.ok(multiFamily.matchFacts.matchedSynonyms.includes('IT specialist'));
 });
 
 test('still rejects unrelated postings that only mention support in the description', () => {
@@ -361,12 +390,25 @@ test('matches the local technician titles this market actually posts', () => {
   const cases = [
     ['it-support', 'IT Technician'],
     ['it-support', 'Technical Support Specialist'],
+    ['it-support', 'Helpdesk Technician'],
+    ['it-support', 'End User Support Specialist'],
+    ['it-support', 'Information Technology Specialist'],
+    ['systems-administration', 'Linux Administrator'],
+    ['systems-administration', 'Windows Server Administrator'],
     ['desktop-support', 'Desktop Technician'],
+    ['desktop-support', 'Workstation Support Technician'],
+    ['desktop-support', 'Endpoint Support Technician'],
     ['network-administration', 'Network Technician'],
+    ['network-administration', 'NOC Analyst'],
     ['it-operations', 'Data Center Technician'],
+    ['it-operations', 'Datacenter Technician'],
     ['cloud-support', 'Cloud Engineer'],
+    ['cloud-support', 'Microsoft 365 Administrator'],
     ['junior-systems-engineering', 'Junior Systems Engineer'],
+    ['junior-systems-engineering', 'Entry Level Systems Engineer'],
     ['internet-service-installation', 'Installation Technician'],
+    ['internet-service-installation', 'Fiber Optic Technician'],
+    ['internet-service-installation', 'OSP Technician'],
   ];
   for (const [roleFamily, title] of cases) {
     const result = evaluateListing({
@@ -425,6 +467,10 @@ test('sends the provider a location it can geocode rather than the full display 
     ['Town of DeWitt, Onondaga County, New York, United States', 'DeWitt, NY'],
     ['Village of Liverpool, Onondaga County, New York, 13088, United States', 'Liverpool, NY'],
     ['Madison, Dane County, Wisconsin, United States', 'Madison, WI'],
+    ['Syracuse, NY 13202, USA', 'Syracuse, NY'],
+    ['Auburn, NY, USA', 'Auburn, NY'],
+    ['New York, United States', 'New York, NY'],
+    ['Washington, Washington County, Utah, United States', 'Washington, UT'],
   ];
   for (const [displayName, expected] of cases) {
     const parameters = adzunaParameters(query({ center: { displayName, ...AUBURN } }), 'it-support', 1);
