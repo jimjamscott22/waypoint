@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { color, font, radius } from '../theme';
 import SavedQueries from './SavedQueries';
 
@@ -14,6 +14,7 @@ export default function CaptureBar({
   focusQueryId,
   onFocusQueryHandled,
 }) {
+  const inputId = useId();
   const [url, setUrl] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
   const [buttonHovered, setButtonHovered] = useState(false);
@@ -38,15 +39,17 @@ export default function CaptureBar({
         gap: 10,
       }}
     >
-      <div style={{ display: 'flex', flexDirection: mobile ? 'column' : 'row', gap: 10 }}>
+      <form onSubmit={event => { event.preventDefault(); handleCapture(); }} style={{ display: 'flex', flexDirection: mobile ? 'column' : 'row', gap: 10 }}>
+        <label htmlFor={inputId} data-visually-hidden>Job posting URL</label>
         <input
+          id={inputId}
+          type="url"
+          inputMode="url"
+          required
           value={url}
           onChange={e => setUrl(e.target.value)}
           onFocus={() => setInputFocused(true)}
           onBlur={() => setInputFocused(false)}
-          onKeyDown={e => {
-            if (e.key === 'Enter') handleCapture();
-          }}
           placeholder="Paste a job posting URL to create an editable draft"
           style={{
             flex: 1,
@@ -62,7 +65,7 @@ export default function CaptureBar({
           }}
         />
         <button
-          onClick={handleCapture}
+          type="submit"
           onMouseEnter={() => setButtonHovered(true)}
           onMouseLeave={() => setButtonHovered(false)}
           style={{
@@ -81,7 +84,7 @@ export default function CaptureBar({
         >
           Capture job
         </button>
-      </div>
+      </form>
       <SavedQueries
         layoutMode={layoutMode}
         queries={queries}

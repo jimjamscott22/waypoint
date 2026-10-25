@@ -50,6 +50,12 @@ Waypoint is a single-screen React + Vite dashboard backed by a Fastify 5 API and
 
 There are no CSS files or classes. Every component styles itself with **inline `style` objects** built from tokens in `src/theme.js` (`color`, `chipColor`, `font`, `radius`). Fonts are loaded via a Google Fonts link in `index.html`; base body styles live in that file's `<style>` block. Follow the token pattern — do not hardcode hex values or introduce a CSS framework. The layout is deliberately desktop-first (`minWidth: 1280` on the app shell).
 
+### Native overlays and browser support
+
+Menus and notifications use native Popover; the job drawer uses `<dialog>` and `showModal()`. Target browsers with native Dialog and Popover support; no polyfill is bundled. Drawer light dismissal uses `closedby="any"` with a pointer fallback when `closedBy` is unavailable. Menu coordinates are calculated from viewport bounds rather than CSS anchor positioning. Render notifications inside the active dialog so modal inertness does not disable their controls.
+
+Global element/attribute selectors, pseudo-elements, and at-rules that inline styles cannot express belong in the existing `index.html` style block and use theme tokens. View transitions are optional enhancements and are skipped under reduced motion; unsupported animation features must not prevent opening, closing, or navigating.
+
 ## Reference files
 
 `Dashboard.dc.html`, `support.js`, and `.thumbnail` at the repo root are the original design handoff artifacts, not part of the build. Consult them for visual intent; do not import from or edit them.

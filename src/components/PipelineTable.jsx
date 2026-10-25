@@ -92,13 +92,16 @@ export default function PipelineTable({
       </div>
 
       <div style={{ minWidth: 0, overflowX: 'auto', overflowY: 'visible' }}>
-        <div style={{ minWidth: 760 }}>
-          <div role="row" style={{ display: 'grid', gridTemplateColumns: COLUMNS, gap: 8, padding: '10px 14px 8px', color: color.textMuted, font: `600 9px ${font.utility}`, letterSpacing: '0.65px', textTransform: 'uppercase', borderBottom: `1px solid ${color.rowDivider}` }}>
-            <div aria-label="Priority" /><div>Opportunity</div><div>Stage</div><div>Compensation</div><div>Contact</div><div>Next action</div><div>Date saved</div><div aria-label="Actions" />
+        <div role="table" aria-label="Job pipeline" aria-rowcount={jobs.length + 1} aria-colcount={8} style={{ minWidth: 760 }}>
+          <div role="rowgroup">
+            <div role="row" style={{ display: 'grid', gridTemplateColumns: COLUMNS, gap: 8, padding: '10px 14px 8px', color: color.textMuted, font: `600 9px ${font.utility}`, letterSpacing: '0.65px', textTransform: 'uppercase', borderBottom: `1px solid ${color.rowDivider}` }}>
+              <div role="columnheader" aria-label="Priority" /><div role="columnheader">Opportunity</div><div role="columnheader">Stage</div><div role="columnheader">Compensation</div><div role="columnheader">Contact</div><div role="columnheader">Next action</div><div role="columnheader">Date saved</div><div role="columnheader" aria-label="Actions" />
+            </div>
           </div>
-          {jobs.length ? rows : <EmptyState stageFilter={stageFilter} />}
+          <div role="rowgroup">{rows}</div>
         </div>
       </div>
+      {!jobs.length ? <EmptyState stageFilter={stageFilter} /> : null}
     </section>
   );
 }
