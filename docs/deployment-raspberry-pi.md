@@ -58,9 +58,11 @@ RELEASE_DIR="/opt/waypoint/releases/$RELEASE_ID"
 sudo install -d -o root -g root /opt/waypoint/releases
 sudo install -d -o root -g root "$RELEASE_DIR"
 sudo cp -a dist server deploy docs package.json package-lock.json "$RELEASE_DIR/"
-sudo npm ci --omit=dev --prefix "$RELEASE_DIR"
+sudo env "PATH=$PATH" npm ci --omit=dev --prefix "$RELEASE_DIR"
 sudo useradd --system --home /nonexistent --shell /usr/sbin/nologin waypoint 2>/dev/null || true
 ```
+
+`sudo` replaces `PATH` with `secure_path` from `/etc/sudoers`, which excludes user-level installs such as nvm or `~/.npm-global`. If `npm` is not in a system directory, a bare `sudo npm` fails with `npm: command not found`, so `env "PATH=$PATH"` passes your shell's `PATH` through. A failed install leaves the staged release without `node_modules`, and the migration then fails with `ERR_MODULE_NOT_FOUND`; the active release is unaffected.
 
 This explicit artifact excludes `.env`, `.git`, source-only files, caches, and unrelated workspace contents. Keep the `RELEASE_DIR` value for the activation step. Keep at least one previous release directory for rollback. The release is read-only to the service user.
 
