@@ -62,6 +62,12 @@ lightColor.warningBg = '#fff8e8';
 lightColor.warningBorder = '#efd9a5';
 lightColor.navBg = 'rgba(255,255,255,0.96)';
 lightColor.emptyBg = 'rgba(255,255,255,0.5)';
+// Text on the always-dark sidebar and toast surfaces (identical in both themes).
+lightColor.onSidebar = '#ffffff';
+lightColor.toastText = '#ffffff';
+lightColor.toastBorder = 'rgba(255,255,255,0.14)';
+lightColor.scrollbarThumb = '#a9bbbd';
+lightColor.backdrop = 'rgba(24,56,67,0.38)';
 
 const darkColor = {
   ...lightColor,
@@ -76,6 +82,7 @@ const darkColor = {
   onAccent: '#291912', onInk: '#101c22', urgentSoft: '#442c2d',
   urgentBorder: '#79504e', warningBg: '#3b3423', warningBorder: '#78663b',
   navBg: 'rgba(25,42,50,0.96)', emptyBg: 'rgba(25,42,50,0.5)',
+  scrollbarThumb: '#48616c', backdrop: 'rgba(5,12,16,0.6)',
 };
 const darkChips = {
   Saved: { bg: '#24443f', fg: '#a5ddd2' },

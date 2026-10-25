@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
-import { color, font, radius } from '../theme';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { color, font, radius, shadow } from '../theme';
+import { overlayPosition } from '../lib/overlayPosition.js';
 
 const menuButtonStyle = {
   border: 'none',
@@ -15,42 +16,63 @@ const menuButtonStyle = {
 
 export default function JobActionsMenu({ onEdit, onDuplicate, onMoveUp, onMoveDown, onDelete, canMoveUp, canMoveDown }) {
   const [open, setOpen] = useState(false);
-  const rootRef = useRef(null);
+  const triggerRef = useRef(null);
+  const panelRef = useRef(null);
+  const panelId = useId();
+
+  const positionPanel = useCallback(() => {
+    const panel = panelRef.current;
+    const trigger = triggerRef.current;
+    if (!panel || !trigger) return;
+    // Measure unconstrained content before choosing which side has more space.
+    panel.style.maxHeight = 'none';
+    const position = overlayPosition(trigger.getBoundingClientRect(), {
+      width: panel.offsetWidth, height: panel.offsetHeight,
+    }, { width: document.documentElement.clientWidth, height: window.innerHeight });
+    Object.assign(panel.style, {
+      left: `${position.left}px`, top: `${position.top}px`, maxHeight: `${position.maxHeight}px`,
+    });
+  }, []);
+
+  useEffect(() => {
+    const panel = panelRef.current;
+    const beforeToggle = event => { if (event.newState === 'open') requestAnimationFrame(positionPanel); };
+    const toggle = event => setOpen(event.newState === 'open');
+    panel.addEventListener('beforetoggle', beforeToggle);
+    panel.addEventListener('toggle', toggle);
+    return () => {
+      panel.removeEventListener('beforetoggle', beforeToggle);
+      panel.removeEventListener('toggle', toggle);
+    };
+  }, [positionPanel]);
 
   useEffect(() => {
     if (!open) return undefined;
-
-    const closeFromOutside = event => {
-      if (!rootRef.current?.contains(event.target)) setOpen(false);
-    };
-    const closeFromEscape = event => {
-      if (event.key === 'Escape') setOpen(false);
-    };
-
-    document.addEventListener('pointerdown', closeFromOutside);
-    document.addEventListener('keydown', closeFromEscape);
+    positionPanel();
+    window.addEventListener('resize', positionPanel);
+    window.addEventListener('scroll', positionPanel, true);
     return () => {
-      document.removeEventListener('pointerdown', closeFromOutside);
-      document.removeEventListener('keydown', closeFromEscape);
+      window.removeEventListener('resize', positionPanel);
+      window.removeEventListener('scroll', positionPanel, true);
     };
-  }, [open]);
+  }, [open, positionPanel]);
 
   const runAction = action => {
-    setOpen(false);
+    panelRef.current.hidePopover();
+    triggerRef.current?.focus();
     action();
   };
 
   return (
-    <div ref={rootRef} style={{ position: 'relative' }}>
+    <div style={{ position: 'relative' }}>
       <button
         type="button"
         aria-label="Job actions"
-        aria-haspopup="menu"
+        ref={triggerRef}
+        popovertarget={panelId}
+        aria-controls={panelId}
         aria-expanded={open}
-        onClick={event => {
-          event.stopPropagation();
-          setOpen(value => !value);
-        }}
+        onClick={event => event.stopPropagation()}
         style={{
           width: 40,
           height: 40,
@@ -65,54 +87,53 @@ export default function JobActionsMenu({ onEdit, onDuplicate, onMoveUp, onMoveDo
       >
         •••
       </button>
-      {open ? (
-        <div
-          role="menu"
-          onClick={event => event.stopPropagation()}
-          style={{
-            position: 'absolute',
-            zIndex: 5,
-            top: 42,
-            right: 0,
-            width: 150,
-            background: color.cardBg,
-            border: `1px solid ${color.cardBorder}`,
-            borderRadius: radius.input,
-            boxShadow: '0 10px 28px rgba(28,39,52,0.14)',
-            padding: 5,
-          }}
+      <div
+        ref={panelRef}
+        id={panelId}
+        popover="auto"
+        role="group"
+        aria-label="Job actions"
+        onClick={event => event.stopPropagation()}
+        style={{
+          position: 'fixed',
+          inset: 'auto',
+          overflowY: 'auto',
+          maxWidth: 'calc(100vw - 16px)',
+          width: 150,
+          background: color.cardBg,
+          border: `1px solid ${color.cardBorder}`,
+          borderRadius: radius.input,
+          boxShadow: shadow.raised,
+          padding: 5,
+        }}
+      >
+        <button type="button" onClick={() => runAction(onEdit)} style={menuButtonStyle}>Edit details</button>
+        <button type="button" onClick={() => runAction(onDuplicate)} style={menuButtonStyle}>Duplicate</button>
+        <button
+          type="button"
+          disabled={!canMoveUp}
+          onClick={() => runAction(onMoveUp)}
+          style={{ ...menuButtonStyle, opacity: canMoveUp ? 1 : 0.42, cursor: canMoveUp ? 'pointer' : 'not-allowed' }}
         >
-          <button type="button" role="menuitem" onClick={() => runAction(onEdit)} style={menuButtonStyle}>Edit details</button>
-          <button type="button" role="menuitem" onClick={() => runAction(onDuplicate)} style={menuButtonStyle}>Duplicate</button>
-          <button
-            type="button"
-            role="menuitem"
-            disabled={!canMoveUp}
-            onClick={() => runAction(onMoveUp)}
-            style={{ ...menuButtonStyle, opacity: canMoveUp ? 1 : 0.42, cursor: canMoveUp ? 'pointer' : 'not-allowed' }}
-          >
-            Move up
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            disabled={!canMoveDown}
-            onClick={() => runAction(onMoveDown)}
-            style={{ ...menuButtonStyle, opacity: canMoveDown ? 1 : 0.42, cursor: canMoveDown ? 'pointer' : 'not-allowed' }}
-          >
-            Move down
-          </button>
-          <div style={{ height: 1, background: color.rowDivider, margin: '4px 0' }} />
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => runAction(onDelete)}
-            style={{ ...menuButtonStyle, color: color.urgent }}
-          >
-            Delete
-          </button>
-        </div>
-      ) : null}
+          Move up
+        </button>
+        <button
+          type="button"
+          disabled={!canMoveDown}
+          onClick={() => runAction(onMoveDown)}
+          style={{ ...menuButtonStyle, opacity: canMoveDown ? 1 : 0.42, cursor: canMoveDown ? 'pointer' : 'not-allowed' }}
+        >
+          Move down
+        </button>
+        <div style={{ height: 1, background: color.rowDivider, margin: '4px 0' }} />
+        <button
+          type="button"
+          onClick={() => runAction(onDelete)}
+          style={{ ...menuButtonStyle, color: color.urgent }}
+        >
+          Delete
+        </button>
+      </div>
     </div>
   );
 }

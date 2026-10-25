@@ -34,7 +34,7 @@ export default function FollowUpsPanel({ followUps = [], onOpenJob, layoutMode }
             <button
               type="button"
               onClick={() => onOpenJob(item.jobId)}
-              style={{ justifySelf: mobile ? 'start' : 'auto', border: `1px solid ${color.inputBorder}`, borderRadius: radius.smallButton, background: '#fff', color: color.accent, padding: '6px 9px', font: `600 10.5px ${font.body}`, cursor: 'pointer' }}
+              style={{ justifySelf: mobile ? 'start' : 'auto', border: `1px solid ${color.inputBorder}`, borderRadius: radius.smallButton, background: color.cardBg, color: color.accent, padding: '6px 9px', font: `600 10.5px ${font.body}`, cursor: 'pointer' }}
             >
               Open job
             </button>

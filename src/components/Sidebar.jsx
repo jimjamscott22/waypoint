@@ -16,8 +16,8 @@ const COMPACT_ITEMS = [
 function Wordmark({ compact = false }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: compact ? 8 : 9 }}>
-      <div style={{ width: compact ? 30 : 34, height: compact ? 30 : 34, borderRadius: 10, display: 'grid', placeItems: 'center', background: color.accent, color: '#fff', font: `700 ${compact ? 13 : 15}px ${font.heading}` }}>W</div>
-      {!compact ? <div style={{ color: '#fff', font: `650 15px ${font.heading}`, letterSpacing: '0.2px' }}>Waypoint</div> : null}
+      <div style={{ width: compact ? 30 : 34, height: compact ? 30 : 34, borderRadius: 10, display: 'grid', placeItems: 'center', background: color.accent, color: color.onAccent, font: `700 ${compact ? 13 : 15}px ${font.heading}` }}>W</div>
+      {!compact ? <div style={{ color: color.onSidebar, font: `650 15px ${font.heading}`, letterSpacing: '0.2px' }}>Waypoint</div> : null}
     </div>
   );
 }
@@ -27,6 +27,7 @@ function NavButton({ item, active, count, horizontal = false, onSelect }) {
     <button
       type="button"
       aria-current={active ? 'page' : undefined}
+      aria-label={count ? `${item.label}, ${count} new ${count === 1 ? 'match' : 'matches'}` : undefined}
       onClick={() => onSelect(item.view)}
       style={{
         border: 'none', minHeight: 46, minWidth: horizontal ? 76 : 0,
@@ -34,13 +35,13 @@ function NavButton({ item, active, count, horizontal = false, onSelect }) {
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
         padding: horizontal ? '7px 9px' : '9px 5px', borderRadius: radius.input,
         background: active ? (horizontal ? color.tideglass : 'rgba(255,255,255,0.11)') : 'transparent',
-        color: horizontal ? (active ? color.ink : color.textSecondary) : (active ? '#fff' : color.sidebarText),
+        color: horizontal ? (active ? color.ink : color.textSecondary) : (active ? color.onSidebar : color.sidebarText),
         cursor: 'pointer',
       }}
     >
       <span aria-hidden="true" style={{ position: 'relative', font: `600 18px ${font.heading}`, lineHeight: 1 }}>
         {item.mark}
-        {count ? <span style={{ position: 'absolute', top: -8, right: -13, minWidth: 16, height: 16, display: 'grid', placeItems: 'center', padding: '0 4px', borderRadius: radius.pill, background: color.accent, color: '#fff', font: `600 9px ${font.utility}` }}>{count}</span> : null}
+        {count ? <span style={{ position: 'absolute', top: -8, right: -13, minWidth: 16, height: 16, display: 'grid', placeItems: 'center', padding: '0 4px', borderRadius: radius.pill, background: color.accent, color: color.onAccent, font: `600 9px ${font.utility}` }}>{count}</span> : null}
       </span>
       <span style={{ font: `600 10.5px ${font.body}` }}>{item.label}</span>
     </button>

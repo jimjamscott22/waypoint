@@ -1,4 +1,6 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { flushSync } from 'react-dom';
+import { createToastTimer } from '../lib/toastTimer.js';
 import { STAGES } from '../lib/seedData';
 import { parseJobUrlWithFallback } from '../lib/parseJobUrl';
 import {
@@ -16,6 +18,14 @@ import { countByDistance, countByWorkType, filterByDistance, filterByWorkType, s
 const STORAGE_KEY = 'waypoint.jobs';
 const TOAST_DURATION_MS = 6000;
 const toastId = () => globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
+
+function withViewTransition(update) {
+  if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    update();
+    return;
+  }
+  document.startViewTransition(() => flushSync(update));
+}
 
 function importCandidate() {
   try {
@@ -54,6 +64,8 @@ export function useJobsStore() {
   const [deletedJobId, setDeletedJobId] = useState(null);
   const [toast, setToast] = useState(null);
   const [followUps, setFollowUps] = useState([]);
+  const toastTimer = useRef(null);
+  const toastPauseReasons = useRef(new Set());
 
   const notify = useCallback((message, tone = 'success', action = null) => {
     if (action !== 'undo-delete') setDeletedJobId(null);
@@ -128,11 +140,27 @@ export function useJobsStore() {
   }, [notify, refresh]);
 
   const dismissToast = useCallback(() => { setToast(null); setDeletedJobId(null); }, []);
+  const pauseToast = useCallback(reason => {
+    toastPauseReasons.current.add(reason);
+    toastTimer.current?.pause(reason);
+  }, []);
+  const resumeToast = useCallback(reason => {
+    toastPauseReasons.current.delete(reason);
+    toastTimer.current?.resume(reason);
+  }, []);
   useEffect(() => {
     if (!toast) return undefined;
-    const timeout = window.setTimeout(dismissToast, TOAST_DURATION_MS);
-    return () => window.clearTimeout(timeout);
+    const timer = createToastTimer(dismissToast, TOAST_DURATION_MS);
+    toastTimer.current = timer;
+    toastPauseReasons.current.forEach(reason => timer.pause(reason));
+    return () => {
+      timer.dispose();
+      toastTimer.current = null;
+    };
   }, [toast, dismissToast]);
+
+  const changeView = useCallback(view => withViewTransition(() => setActiveView(view)), []);
+  const changeStageFilter = useCallback(stage => withViewTransition(() => setStageFilter(stage)), []);
 
   const visibleJobs = useMemo(
     () => jobs.filter(job => job.isDraft || stageFilter === 'All' || job.stage === stageFilter),
@@ -198,7 +226,8 @@ export function useJobsStore() {
       setJobs(previous => replaceJob(previous, id, job));
       await loadFollowUps();
       notify(message);
-    } catch (error) { await fail(error); }
+      return true;
+    } catch (error) { await fail(error); return false; }
   }, [notify, fail, loadFollowUps]);
   const changeJobStage = useCallback((id, stage) => updateJob(id, { stage }, `Job moved to ${stage}.`), [updateJob]);
 
@@ -311,17 +340,17 @@ export function useJobsStore() {
 
   const selectedJob = useMemo(() => jobs.find(job => job.id === selectedJobId) ?? null, [jobs, selectedJobId]);
   return {
-    jobs: visibleJobs, totalCount: jobs.length, stageFilter, setStageFilter, tabs, queue, queries,
+    jobs: visibleJobs, totalCount: jobs.length, stageFilter, setStageFilter: changeStageFilter, tabs, queue, queries,
     visibleQueue, fitFilter, setFitFilter, fitCounts,
     sortBy, setSortBy, workTypeFilter, setWorkTypeFilter, workTypeCounts,
     distanceFilter, setDistanceFilter, distanceCounts,
     latestRun, provider, providerConfigured, running, loading, migration, selectedJob, selectedJobMode, toast,
-    activeView, setActiveView, layoutMode, insightsRange, setInsightsRange, insights, insightsLoading, insightsError,
+    activeView, setActiveView: changeView, layoutMode, insightsRange, setInsightsRange, insights, insightsLoading, insightsError,
     focusedQueryId,
     captureJob, updateDraftField, commitDraft, discardDraft, saveToPipeline, dismissMatch,
     selectJob: id => { setSelectedJobId(id); setSelectedJobMode('view'); },
     editJob: id => { setSelectedJobId(id); setSelectedJobMode('edit'); },
-    clearSelection, updateJob, changeJobStage, reorderJobs, moveJob, duplicateJob, deleteJob, undoDelete, dismissToast,
+    clearSelection, updateJob, changeJobStage, reorderJobs, moveJob, duplicateJob, deleteJob, undoDelete, dismissToast, pauseToast, resumeToast,
     createQuery, updateQuery, deleteQuery, resolveQueryLocation, previewQuery, runScrape, importLocalJobs, discardLocalJobs,
     retryInsights, openInsightJob, openInsightQuery, clearFocusedQuery,
     followUps, refreshFollowUps: loadFollowUps, openFollowUpJob,

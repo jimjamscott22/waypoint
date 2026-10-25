@@ -3,7 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Waypoint</title>
+    <meta name="color-scheme" content="light dark" />
+    <meta name="description" content="Waypoint is a personal job-search dashboard: capture postings, track every application stage, review scored matches, and see where your search moves next." />
+    <meta name="theme-color" content="#183843" />
+    <title>Waypoint · Job search dashboard</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
@@ -21,6 +24,10 @@
     <style>
       html { background: var(--color-pageBg, #f4f7f8); }
       html[data-theme="dark"] { background: var(--color-pageBg, #101c22); }
+      :root {
+        accent-color: var(--color-accent, #a9553e);
+        scrollbar-color: var(--color-scrollbarThumb, #a9bbbd) transparent;
+      }
       body { margin: 0; background: var(--color-pageBg, transparent); font-family: 'IBM Plex Sans', system-ui, sans-serif; color: var(--color-ink, #183843); }
       * { box-sizing: border-box; }
       ::placeholder { color: var(--color-textMuted, #76898d); }
@@ -29,12 +36,58 @@
         outline: 3px solid var(--color-focusRing, #a9553e) !important;
         outline-offset: 2px;
       }
+
+      /*
+        Global rules for what inline styles cannot express (pseudo-classes,
+        pseudo-elements, at-rules). Element/attribute selectors and theme
+        tokens only — components still style themselves inline.
+      */
+      [data-visually-hidden] {
+        position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+        overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+      }
+      /* Validation feedback only after the user has interacted with the field. */
+      input[required]:user-invalid { border-color: var(--color-urgent) !important; }
+
+      /* Popovers: drop UA chrome; components supply their own surface. */
+      [popover] { margin: 0; padding: 0; border: 0; background: transparent; color: inherit; overflow: visible; }
+
+      /* Job detail drawer (<dialog data-drawer>, opened with showModal()). */
+      dialog[data-drawer] {
+        margin: 0 0 0 auto; padding: 0; border: 0; inset-block: 0;
+        height: 100dvh; max-height: none; max-width: 100vw;
+        background: var(--color-cardBg); color: var(--color-ink);
+        translate: 24px 0; opacity: 0;
+        transition: translate 220ms ease-out, opacity 220ms ease-out, display 220ms allow-discrete, overlay 220ms allow-discrete;
+      }
+      dialog[data-drawer][open] { display: flex; translate: 0 0; opacity: 1; }
+      dialog[data-drawer]::backdrop {
+        background: var(--color-backdrop, rgba(24,56,67,0.38)); backdrop-filter: blur(2px);
+        opacity: 0;
+        transition: opacity 220ms ease-out, display 220ms allow-discrete, overlay 220ms allow-discrete;
+      }
+      dialog[data-drawer][open]::backdrop { opacity: 1; }
+      [data-toast] {
+        translate: 0 8px; opacity: 0;
+        transition: translate 180ms ease-out, opacity 180ms ease-out, display 180ms allow-discrete, overlay 180ms allow-discrete;
+      }
+      [data-toast]:popover-open { display: flex; translate: 0 0; opacity: 1; }
+      @starting-style {
+        dialog[data-drawer][open] { translate: 24px 0; opacity: 0; }
+        dialog[data-drawer][open]::backdrop { opacity: 0; }
+        [data-toast]:popover-open { translate: 0 8px; opacity: 0; }
+      }
+
+      /* Same-document view transitions between views and stage filters. */
+      ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 180ms; }
+
       @keyframes route-in {
         from { opacity: 0; transform: translateY(8px); }
         to { opacity: 1; transform: translateY(0); }
       }
       @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+        ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
       }
     </style>
   </head>

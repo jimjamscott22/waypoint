@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import useTheme from './hooks/useTheme';
 import { useJobsStore } from './hooks/useJobsStore';
 import Sidebar from './components/Sidebar';
@@ -15,6 +16,7 @@ import { color, font } from './theme';
 
 export default function App() {
   const store = useJobsStore();
+  const [drawerElement, setDrawerElement] = useState(null);
   const { theme, toggleTheme } = useTheme();
   const mobile = store.layoutMode === 'mobile';
   const wide = store.layoutMode === 'wide';
@@ -22,7 +24,7 @@ export default function App() {
   const showReviewPage = !wide && store.activeView === 'Review';
 
   if (store.loading) {
-    return <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', color: color.textSecondary, font: `500 14px ${font.body}` }}>Connecting to Waypoint…</div>;
+    return <div role="status" style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', color: color.textSecondary, font: `500 14px ${font.body}` }}>Connecting to Waypoint…</div>;
   }
 
   return (
@@ -133,6 +135,7 @@ export default function App() {
 
       {store.selectedJob ? (
         <JobDetailPanel
+          onDialogElement={setDrawerElement}
           key={store.selectedJob.id}
           job={store.selectedJob}
           initialMode={store.selectedJobMode}
@@ -145,7 +148,7 @@ export default function App() {
         />
       ) : null}
 
-      <Toast toast={store.toast} onUndo={store.undoDelete} onDismiss={store.dismissToast} drawerOpen={Boolean(store.selectedJob)} layoutMode={store.layoutMode} />
+      <Toast container={drawerElement} onPause={store.pauseToast} onResume={store.resumeToast} toast={store.toast} onUndo={store.undoDelete} onDismiss={store.dismissToast} drawerOpen={Boolean(store.selectedJob)} layoutMode={store.layoutMode} />
     </div>
   );
 }

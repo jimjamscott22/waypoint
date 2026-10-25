@@ -47,10 +47,10 @@ function SmallButton({ children, onClick, primary = false, danger = false }) {
       type="button"
       onClick={onClick}
       style={{
-        border: primary ? 'none' : `1px solid ${danger ? '#e7bbb7' : color.inputBorder}`,
+        border: primary ? 'none' : `1px solid ${danger ? color.urgentBorder : color.inputBorder}`,
         borderRadius: radius.smallButton,
-        background: primary ? color.accent : '#fff',
-        color: primary ? '#fff' : danger ? color.urgent : color.textBodyMid,
+        background: primary ? color.accent : color.cardBg,
+        color: primary ? color.onAccent : danger ? color.urgent : color.textBodyMid,
         cursor: 'pointer',
         font: `600 11px ${font.body}`,
         padding: '6px 10px',
@@ -154,7 +154,7 @@ export default function JobEngagementPanel({ jobId, onChanged }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      {error ? <div style={{ padding: '8px 10px', borderRadius: radius.input, background: '#fff0ee', color: color.urgent, fontSize: 12 }}>{error}</div> : null}
+      {error ? <div style={{ padding: '8px 10px', borderRadius: radius.input, background: color.urgentSoft, color: color.urgent, fontSize: 12 }}>{error}</div> : null}
 
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
@@ -181,7 +181,7 @@ export default function JobEngagementPanel({ jobId, onChanged }) {
         ) : (
           <ul style={{ listStyle: 'none', padding: 0, margin: '10px 0 0', display: 'flex', flexDirection: 'column', gap: 8 }}>
             {contacts.map(contact => (
-              <li key={contact.id} style={{ padding: 11, borderRadius: radius.input, border: `1px solid ${color.rowDivider}`, background: '#fff' }}>
+              <li key={contact.id} style={{ padding: 11, borderRadius: radius.input, border: `1px solid ${color.rowDivider}`, background: color.cardBg }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 13, color: color.textBodyMid }}>{contact.name}</div>
@@ -237,7 +237,7 @@ export default function JobEngagementPanel({ jobId, onChanged }) {
         ) : (
           <ul style={{ listStyle: 'none', padding: 0, margin: '10px 0 0', display: 'flex', flexDirection: 'column', gap: 8 }}>
             {outreach.map(entry => (
-              <li key={entry.id} style={{ padding: 11, borderRadius: radius.input, border: `1px solid ${color.rowDivider}`, background: '#fff' }}>
+              <li key={entry.id} style={{ padding: 11, borderRadius: radius.input, border: `1px solid ${color.rowDivider}`, background: color.cardBg }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 12.5, color: color.textBodyMid }}>
