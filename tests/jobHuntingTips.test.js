@@ -4,8 +4,10 @@ import {
   JOB_HUNTING_TIPS,
   TIP_INDEX_STORAGE_KEY,
   advanceStoredTip,
+  getStartupTip,
   nextTipIndex,
   normalizeTipIndex,
+  resetSessionTipForTests,
 } from '../src/lib/jobHuntingTips.js';
 
 function memoryStorage(initial = {}) {
@@ -82,4 +84,20 @@ test('advanceStoredTip falls back to the first tip when storage is unavailable o
   const fallback = advanceStoredTip(throwingStorage);
   assert.equal(fallback.index, 0);
   assert.deepEqual(fallback.tip, JOB_HUNTING_TIPS[0]);
+});
+
+test('getStartupTip advances only once per app startup even under React StrictMode double invocation', () => {
+  resetSessionTipForTests();
+  const storage = memoryStorage();
+  const firstMount = getStartupTip(storage);
+  const strictModeRemount = getStartupTip(storage);
+
+  assert.equal(firstMount.index, 0);
+  assert.equal(strictModeRemount.index, 0);
+  assert.equal(storage.getItem(TIP_INDEX_STORAGE_KEY), '1');
+
+  resetSessionTipForTests();
+  const nextVisit = getStartupTip(storage);
+  assert.equal(nextVisit.index, 1);
+  assert.equal(storage.getItem(TIP_INDEX_STORAGE_KEY), '2');
 });

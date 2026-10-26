@@ -13,13 +13,13 @@ import MigrationBanner from './components/MigrationBanner';
 import InsightsView from './components/InsightsView';
 import JobBoardsView from './components/JobBoardsView';
 import JobHuntingTipPopup from './components/JobHuntingTipPopup';
-import { advanceStoredTip } from './lib/jobHuntingTips';
+import { advanceStoredTip, getStartupTip } from './lib/jobHuntingTips';
 import { color, font } from './theme';
 
 export default function App() {
   const store = useJobsStore();
   const [drawerElement, setDrawerElement] = useState(null);
-  const [tipState, setTipState] = useState(() => advanceStoredTip());
+  const [tipState, setTipState] = useState(() => getStartupTip());
   const [tipOpen, setTipOpen] = useState(true);
   const { theme, toggleTheme } = useTheme();
   const mobile = store.layoutMode === 'mobile';

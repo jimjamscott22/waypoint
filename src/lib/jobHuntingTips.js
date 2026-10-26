@@ -115,6 +115,19 @@ export function nextTipIndex(currentIndex, total = JOB_HUNTING_TIPS.length) {
   return (normalizeTipIndex(currentIndex, total) + 1) % total;
 }
 
+let currentSessionTipState = null;
+
+export function getStartupTip(storage = globalThis.localStorage, tips = JOB_HUNTING_TIPS) {
+  if (!currentSessionTipState) {
+    currentSessionTipState = advanceStoredTip(storage, tips);
+  }
+  return currentSessionTipState;
+}
+
+export function resetSessionTipForTests() {
+  currentSessionTipState = null;
+}
+
 export function advanceStoredTip(storage = globalThis.localStorage, tips = JOB_HUNTING_TIPS) {
   const total = tips.length;
   if (total === 0) return { index: 0, total: 0, tip: null };
@@ -135,9 +148,11 @@ export function advanceStoredTip(storage = globalThis.localStorage, tips = JOB_H
     // Still works when storage is unavailable.
   }
 
-  return {
+  const state = {
     index,
     total,
     tip: tips[index],
   };
+  currentSessionTipState = state;
+  return state;
 }
