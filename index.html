@@ -67,6 +67,20 @@
         transition: opacity 220ms ease-out, display 220ms allow-discrete, overlay 220ms allow-discrete;
       }
       dialog[data-drawer][open]::backdrop { opacity: 1; }
+      /* Job hunting tip popup (<dialog data-tip-modal>, opened with showModal()). */
+      dialog[data-tip-modal] {
+        margin: auto; padding: 0; border: 0;
+        background: var(--color-cardBg); color: var(--color-ink);
+        translate: 0 10px; opacity: 0;
+        transition: translate 180ms ease-out, opacity 180ms ease-out, display 180ms allow-discrete, overlay 180ms allow-discrete;
+      }
+      dialog[data-tip-modal][open] { display: flex; translate: 0 0; opacity: 1; }
+      dialog[data-tip-modal]::backdrop {
+        background: var(--color-backdrop, rgba(24,56,67,0.38)); backdrop-filter: blur(2px);
+        opacity: 0;
+        transition: opacity 180ms ease-out, display 180ms allow-discrete, overlay 180ms allow-discrete;
+      }
+      dialog[data-tip-modal][open]::backdrop { opacity: 1; }
       [data-toast] {
         translate: 0 8px; opacity: 0;
         transition: translate 180ms ease-out, opacity 180ms ease-out, display 180ms allow-discrete, overlay 180ms allow-discrete;
@@ -75,6 +89,8 @@
       @starting-style {
         dialog[data-drawer][open] { translate: 24px 0; opacity: 0; }
         dialog[data-drawer][open]::backdrop { opacity: 0; }
+        dialog[data-tip-modal][open] { translate: 0 10px; opacity: 0; }
+        dialog[data-tip-modal][open]::backdrop { opacity: 0; }
         [data-toast]:popover-open { translate: 0 8px; opacity: 0; }
       }
 
