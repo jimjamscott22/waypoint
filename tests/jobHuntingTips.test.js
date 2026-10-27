@@ -4,6 +4,7 @@ import {
   JOB_HUNTING_TIPS,
   TIP_INDEX_STORAGE_KEY,
   advanceStoredTip,
+  advanceTip,
   getStartupTip,
   nextTipIndex,
   normalizeTipIndex,
@@ -84,6 +85,60 @@ test('advanceStoredTip falls back to the first tip when storage is unavailable o
   const fallback = advanceStoredTip(throwingStorage);
   assert.equal(fallback.index, 0);
   assert.deepEqual(fallback.tip, JOB_HUNTING_TIPS[0]);
+});
+
+test('default storage lookup is safe when browser policy blocks localStorage access', () => {
+  const originalDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  Object.defineProperty(globalThis, 'localStorage', {
+    configurable: true,
+    get() {
+      const error = new Error('Access to storage is blocked');
+      error.name = 'SecurityError';
+      throw error;
+    },
+  });
+
+  try {
+    resetSessionTipForTests();
+    const startup = getStartupTip();
+    assert.equal(startup.index, 0);
+    assert.deepEqual(startup.tip, JOB_HUNTING_TIPS[0]);
+
+    resetSessionTipForTests();
+    const direct = advanceStoredTip();
+    assert.equal(direct.index, 0);
+    assert.deepEqual(direct.tip, JOB_HUNTING_TIPS[0]);
+  } finally {
+    if (originalDescriptor) {
+      Object.defineProperty(globalThis, 'localStorage', originalDescriptor);
+    } else {
+      delete globalThis.localStorage;
+    }
+  }
+});
+
+test('next tip advances from in-memory state when storage is unavailable or throws', () => {
+  const throwingStorage = {
+    getItem() {
+      throw new Error('storage blocked');
+    },
+    setItem() {
+      throw new Error('storage blocked');
+    },
+  };
+
+  for (const storage of [null, throwingStorage]) {
+    resetSessionTipForTests();
+    const startup = getStartupTip(storage);
+    const second = advanceTip(startup.index, storage);
+    const third = advanceTip(second.index, storage);
+
+    assert.equal(startup.index, 0);
+    assert.equal(second.index, 1);
+    assert.equal(third.index, 2);
+    assert.deepEqual(second.tip, JOB_HUNTING_TIPS[1]);
+    assert.deepEqual(third.tip, JOB_HUNTING_TIPS[2]);
+  }
 });
 
 test('getStartupTip advances only once per app startup even under React StrictMode double invocation', () => {

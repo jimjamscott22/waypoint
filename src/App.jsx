@@ -13,7 +13,7 @@ import MigrationBanner from './components/MigrationBanner';
 import InsightsView from './components/InsightsView';
 import JobBoardsView from './components/JobBoardsView';
 import JobHuntingTipPopup from './components/JobHuntingTipPopup';
-import { advanceStoredTip, getStartupTip } from './lib/jobHuntingTips';
+import { advanceTip, getStartupTip } from './lib/jobHuntingTips';
 import { color, font } from './theme';
 
 export default function App() {
@@ -155,7 +155,7 @@ export default function App() {
       {tipOpen ? (
         <JobHuntingTipPopup
           tipState={tipState}
-          onNextTip={() => setTipState(advanceStoredTip())}
+          onNextTip={() => setTipState(current => advanceTip(current.index))}
           onClose={() => setTipOpen(false)}
           layoutMode={store.layoutMode}
         />

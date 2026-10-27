@@ -117,7 +117,35 @@ export function nextTipIndex(currentIndex, total = JOB_HUNTING_TIPS.length) {
 
 let currentSessionTipState = null;
 
-export function getStartupTip(storage = globalThis.localStorage, tips = JOB_HUNTING_TIPS) {
+function resolveStorage(storage) {
+  if (storage !== undefined) return storage;
+  try {
+    return globalThis.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+function selectTip(index, storage, tips) {
+  const total = tips.length;
+  const normalizedIndex = normalizeTipIndex(index, total);
+
+  try {
+    storage?.setItem?.(TIP_INDEX_STORAGE_KEY, String(nextTipIndex(normalizedIndex, total)));
+  } catch {
+    // Persisting the next tip is best-effort.
+  }
+
+  const state = {
+    index: normalizedIndex,
+    total,
+    tip: tips[normalizedIndex],
+  };
+  currentSessionTipState = state;
+  return state;
+}
+
+export function getStartupTip(storage, tips = JOB_HUNTING_TIPS) {
   if (!currentSessionTipState) {
     currentSessionTipState = advanceStoredTip(storage, tips);
   }
@@ -128,31 +156,24 @@ export function resetSessionTipForTests() {
   currentSessionTipState = null;
 }
 
-export function advanceStoredTip(storage = globalThis.localStorage, tips = JOB_HUNTING_TIPS) {
+export function advanceStoredTip(storage, tips = JOB_HUNTING_TIPS) {
   const total = tips.length;
   if (total === 0) return { index: 0, total: 0, tip: null };
 
+  const resolvedStorage = resolveStorage(storage);
   let raw = null;
   try {
-    raw = storage?.getItem?.(TIP_INDEX_STORAGE_KEY) ?? null;
+    raw = resolvedStorage?.getItem?.(TIP_INDEX_STORAGE_KEY) ?? null;
   } catch {
     raw = null;
   }
 
-  const index = normalizeTipIndex(raw, total);
-  const next = nextTipIndex(index, total);
+  return selectTip(raw, resolvedStorage, tips);
+}
 
-  try {
-    storage?.setItem?.(TIP_INDEX_STORAGE_KEY, String(next));
-  } catch {
-    // Still works when storage is unavailable.
-  }
+export function advanceTip(currentIndex, storage, tips = JOB_HUNTING_TIPS) {
+  const total = tips.length;
+  if (total === 0) return { index: 0, total: 0, tip: null };
 
-  const state = {
-    index,
-    total,
-    tip: tips[index],
-  };
-  currentSessionTipState = state;
-  return state;
+  return selectTip(nextTipIndex(currentIndex, total), resolveStorage(storage), tips);
 }
