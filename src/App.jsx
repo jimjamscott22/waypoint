@@ -12,11 +12,15 @@ import Toast from './components/Toast';
 import MigrationBanner from './components/MigrationBanner';
 import InsightsView from './components/InsightsView';
 import JobBoardsView from './components/JobBoardsView';
+import JobHuntingTipPopup from './components/JobHuntingTipPopup';
+import { advanceTip, getStartupTip } from './lib/jobHuntingTips';
 import { color, font } from './theme';
 
 export default function App() {
   const store = useJobsStore();
   const [drawerElement, setDrawerElement] = useState(null);
+  const [tipState, setTipState] = useState(() => getStartupTip());
+  const [tipOpen, setTipOpen] = useState(true);
   const { theme, toggleTheme } = useTheme();
   const mobile = store.layoutMode === 'mobile';
   const wide = store.layoutMode === 'wide';
@@ -144,6 +148,15 @@ export default function App() {
           onDuplicate={store.duplicateJob}
           onDelete={store.deleteJob}
           onEngagementChanged={store.refreshFollowUps}
+          layoutMode={store.layoutMode}
+        />
+      ) : null}
+
+      {tipOpen ? (
+        <JobHuntingTipPopup
+          tipState={tipState}
+          onNextTip={() => setTipState(current => advanceTip(current.index))}
+          onClose={() => setTipOpen(false)}
           layoutMode={store.layoutMode}
         />
       ) : null}
